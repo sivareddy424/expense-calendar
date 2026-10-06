@@ -1,0 +1,3435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Expense Calendar</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f6f8;
+    color:#222;
+}
+
+button{
+    border:none;
+    border-radius:8px;
+    padding:10px 15px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+input,select{
+    width:100%;
+    padding:11px;
+    border:1px solid #ccc;
+    border-radius:7px;
+    font-size:14px;
+}
+
+/* LOGIN */
+
+#authScreen{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    background:#f4f6f8;
+}
+
+.auth-box{
+    width:100%;
+    max-width:420px;
+    background:white;
+    padding:30px;
+    border-radius:16px;
+    box-shadow:0 5px 25px rgba(0,0,0,.10);
+}
+
+.auth-box h1{
+    margin-top:0;
+    text-align:center;
+}
+
+.auth-subtitle{
+    text-align:center;
+    color:#666;
+    margin-bottom:25px;
+}
+
+.auth-box label{
+    display:block;
+    font-weight:bold;
+    font-size:13px;
+    margin-bottom:6px;
+}
+
+.auth-box input{
+    margin-bottom:15px;
+}
+
+.auth-btn{
+    width:100%;
+    background:#2563eb;
+    color:white;
+    font-weight:bold;
+}
+
+.signup-btn{
+    width:100%;
+    background:#16a34a;
+    color:white;
+    margin-top:10px;
+}
+
+.auth-message{
+    margin-top:15px;
+    text-align:center;
+    font-size:14px;
+}
+
+.auth-error{color:#dc2626}
+.auth-success{color:#16a34a}
+
+/* HEADER */
+
+header{
+    background:#1f2937;
+    color:white;
+    padding:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.header-left h1{
+    margin:0;
+    font-size:22px;
+}
+
+.header-left small{
+    color:#cbd5e1;
+}
+
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.user-email{
+    font-size:12px;
+    color:#cbd5e1;
+}
+
+.add-btn{
+    background:#22c55e;
+    color:white;
+    font-weight:bold;
+}
+
+.logout-btn{
+    background:#ef4444;
+    color:white;
+}
+
+/* CONTAINER */
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:15px;
+}
+
+/* CLOUD */
+
+.cloud-status{
+    background:#ecfdf5;
+    color:#166534;
+    padding:10px 15px;
+    border-radius:8px;
+    margin-bottom:15px;
+    font-size:13px;
+}
+
+.import-btn{
+    background:#9333ea;
+    color:white;
+    margin-left:8px;
+}
+
+/* DASHBOARD */
+
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:20px;
+}
+
+.card{
+    background:white;
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.card-title{
+    font-size:13px;
+    color:#666;
+    margin-bottom:8px;
+}
+
+.card-value{
+    font-size:24px;
+    font-weight:bold;
+}
+
+.planned{color:#2563eb}
+.paid{color:#16a34a}
+.pending{color:#dc2626}
+.next{color:#9333ea}
+
+/* NEXT PAYMENT */
+
+.next-payment{
+    margin-bottom:20px;
+}
+
+.next-payment-box{
+    background:white;
+    padding:18px;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.next-payment-box h3{
+    margin-top:0;
+}
+
+.next-payment-name{
+    font-size:20px;
+    font-weight:bold;
+}
+
+.next-payment-details{
+    color:#666;
+    margin-top:6px;
+}
+
+/* SECTIONS */
+
+.calendar-section,
+.selected-day,
+.form-section,
+.list-section{
+    background:white;
+    border-radius:12px;
+    padding:15px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    margin-bottom:20px;
+}
+
+/* CALENDAR */
+
+.calendar-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.calendar-header h2{
+    margin:0;
+    font-size:20px;
+}
+
+.month-buttons button{
+    background:#e5e7eb;
+    margin-left:5px;
+}
+
+.weekdays,
+.calendar{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+}
+
+.weekdays div{
+    text-align:center;
+    font-weight:bold;
+    padding:8px 2px;
+    color:#555;
+}
+
+.day{
+    min-height:85px;
+    border:1px solid #eee;
+    padding:5px;
+    cursor:pointer;
+    background:white;
+}
+
+.day:hover{
+    background:#f0f9ff;
+}
+
+.day-number{
+    font-weight:bold;
+    font-size:13px;
+}
+
+.other-month{
+    background:#f7f7f7;
+    color:#aaa;
+}
+
+.today{
+    border:2px solid #2563eb;
+}
+
+.expense-dot{
+    background:#fee2e2;
+    color:#991b1b;
+    border-radius:5px;
+    margin-top:5px;
+    padding:3px;
+    font-size:11px;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+
+/* EXPENSE ROW */
+
+.expense-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid #eee;
+    gap:10px;
+}
+
+.expense-info strong{
+    display:block;
+}
+
+.expense-info small{
+    color:#666;
+}
+
+.status-paid{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status-pending{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.status-btn{
+    padding:7px 10px;
+    border-radius:7px;
+}
+
+/* FORM */
+
+.form-section h2{
+    margin-top:0;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+label{
+    font-size:13px;
+    font-weight:bold;
+    display:block;
+    margin-bottom:5px;
+}
+
+.form-buttons{
+    margin-top:15px;
+}
+
+.save-btn{
+    background:#2563eb;
+    color:white;
+}
+
+.cancel-btn{
+    background:#6b7280;
+    color:white;
+    margin-left:5px;
+}
+
+/* LIST */
+
+.list-item{
+    padding:13px 0;
+    border-bottom:1px solid #eee;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.list-item:last-child{
+    border-bottom:none;
+}
+
+.list-item strong{
+    display:block;
+}
+
+.list-item small{
+    color:#666;
+}
+
+.action-buttons button{
+    margin-left:5px;
+}
+
+.edit-btn{
+    background:#facc15;
+}
+
+.delete-btn{
+    background:#ef4444;
+    color:white;
+}
+
+.upcoming-item{
+    cursor:pointer;
+}
+
+.upcoming-item:hover{
+    background:#f8fafc;
+}
+
+.empty{
+    color:#777;
+    text-align:center;
+    padding:15px;
+}
+
+/* MOBILE */
+
+@media(max-width:800px){
+
+    .dashboard{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .day{
+        min-height:65px;
+    }
+
+    .expense-dot{
+        font-size:9px;
+    }
+
+    .user-email{
+        display:none;
+    }
+}
+
+@media(max-width:500px){
+
+    header{
+        padding:14px;
+    }
+
+    .header-left h1{
+        font-size:18px;
+    }
+
+    .dashboard{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .card{
+        padding:13px;
+    }
+
+    .card-value{
+        font-size:19px;
+    }
+
+    .day{
+        min-height:55px;
+        padding:3px;
+    }
+
+    .day-number{
+        font-size:11px;
+    }
+
+    .weekdays div{
+        font-size:11px;
+    }
+
+    .expense-row,
+    .list-item{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .action-buttons{
+        width:100%;
+    }
+
+    .action-buttons button{
+        margin-left:0;
+        margin-right:5px;
+    }
+
+    .header-right{
+        flex-direction:column;
+        align-items:flex-end;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="authScreen">
+
+    <div class="auth-box">
+
+        <h1>💰 My Expense Calendar</h1>
+
+        <div class="auth-subtitle">
+            Private Online Expense Planner
+        </div>
+
+        <label>Email</label>
+
+        <input
+            type="email"
+            id="authEmail"
+            placeholder="your@email.com"
+        >
+
+        <label>Password</label>
+
+        <input
+            type="password"
+            id="authPassword"
+            placeholder="Your password"
+        >
+
+        <button
+            class="auth-btn"
+            onclick="login()"
+        >
+            Login
+        </button>
+
+        <button
+            class="signup-btn"
+            onclick="signup()"
+        >
+            Create Account
+        </button>
+
+        <div
+            id="authMessage"
+            class="auth-message"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<!-- MAIN APP -->
+
+<div id="mainApp" style="display:none;">
+
+<header>
+
+    <div class="header-left">
+
+        <h1>💰 My Expense Calendar</h1>
+
+        <small>
+            Recurring Expense Planner
+        </small>
+
+    </div>
+
+    <div class="header-right">
+
+        <span
+            class="user-email"
+            id="userEmail"
+        ></span>
+
+        <button
+            class="add-btn"
+            onclick="showAddForm()"
+        >
+            + Add Expense
+        </button>
+
+        <button
+            class="logout-btn"
+            onclick="logout()"
+        >
+            Logout
+        </button>
+
+    </div>
+
+</header>
+
+
+<div class="container">
+
+    <!-- CLOUD STATUS -->
+
+    <div class="cloud-status">
+
+        ☁️ Your expenses are stored securely online.
+
+        <button
+            class="import-btn"
+            onclick="importLocalData()"
+        >
+            Import Old Local Data
+        </button>
+
+    </div>
+
+
+    <!-- DASHBOARD -->
+
+    <div class="dashboard">
+
+        <div class="card">
+
+            <div class="card-title">
+                This Month Planned
+            </div>
+
+            <div
+                class="card-value planned"
+                id="dashboardPlanned"
+            >
+                ₹0
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                This Month Paid
+            </div>
+
+            <div
+                class="card-value paid"
+                id="dashboardPaid"
+            >
+                ₹0
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                This Month Pending
+            </div>
+
+            <div
+                class="card-value pending"
+                id="dashboardPending"
+            >
+                ₹0
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Next Payment
+            </div>
+
+            <div
+                class="card-value next"
+                id="dashboardNext"
+            >
+                --
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- NEXT PAYMENT -->
+
+    <div class="next-payment">
+
+        <div class="next-payment-box">
+
+            <h3>📅 Next Payment</h3>
+
+            <div id="nextPaymentDetails">
+                No upcoming payments
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CALENDAR -->
+
+    <div class="calendar-section">
+
+        <div class="calendar-header">
+
+            <h2 id="monthTitle"></h2>
+
+            <div class="month-buttons">
+
+                <button onclick="previousMonth()">
+                    ◀
+                </button>
+
+                <button onclick="goToday()">
+                    Today
+                </button>
+
+                <button onclick="nextMonth()">
+                    ▶
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="weekdays">
+
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+
+        </div>
+
+
+        <div
+            class="calendar"
+            id="calendar"
+        ></div>
+
+    </div>
+
+
+    <!-- SELECTED DAY -->
+
+    <div class="selected-day">
+
+        <h2 id="selectedDateTitle">
+            Select a date
+        </h2>
+
+        <div id="selectedDayExpenses">
+
+            <div class="empty">
+                Select a calendar date
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADD / EDIT FORM -->
+
+    <div
+        class="form-section"
+        id="formSection"
+        style="display:none;"
+    >
+
+        <h2 id="formTitle">
+            Add Expense
+        </h2>
+
+
+        <div class="form-grid">
+
+            <div>
+
+                <label>
+                    Expense Name
+                </label>
+
+                <input
+                    type="text"
+                    id="expenseName"
+                    placeholder="Example: Rent"
+                >
+
+            </div>
+
+
+            <div>
+
+                <label>
+                    Amount
+                </label>
+
+                <input
+                    type="number"
+                    id="expenseAmount"
+                    placeholder="15000"
+                >
+
+            </div>
+
+
+            <div>
+
+                <label>
+                    Frequency
+                </label>
+
+                <select id="expenseFrequency">
+
+                    <option value="monthly">
+                        Monthly
+                    </option>
+
+                    <option value="quarterly">
+                        Quarterly
+                    </option>
+
+                    <option value="halfyearly">
+                        Half-Yearly
+                    </option>
+
+                    <option value="yearly">
+                        Yearly
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label>
+                    Due Day
+                </label>
+
+                <input
+                    type="number"
+                    id="expenseDay"
+                    min="1"
+                    max="31"
+                    placeholder="5"
+                >
+
+            </div>
+
+
+            <div>
+
+                <label>
+                    Category
+                </label>
+
+                <select id="expenseCategory">
+
+                    <option value="Housing">
+                        Housing
+                    </option>
+
+                    <option value="Utilities">
+                        Utilities
+                    </option>
+
+                    <option value="Insurance">
+                        Insurance
+                    </option>
+
+                    <option value="Loan / EMI">
+                        Loan / EMI
+                    </option>
+
+                    <option value="Investment">
+                        Investment
+                    </option>
+
+                    <option value="Education">
+                        Education
+                    </option>
+
+                    <option value="Shopping">
+                        Shopping
+                    </option>
+
+                    <option value="Food">
+                        Food
+                    </option>
+
+                    <option value="Transport">
+                        Transport
+                    </option>
+
+                    <option value="Other">
+                        Other
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label>
+                    Start Month
+                </label>
+
+                <input
+                    type="month"
+                    id="expenseStartMonth"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="form-buttons">
+
+            <button
+                class="save-btn"
+                onclick="saveExpense()"
+            >
+                Save Expense
+            </button>
+
+            <button
+                class="cancel-btn"
+                onclick="hideForm()"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- UPCOMING -->
+
+    <div class="list-section">
+
+        <h2>
+            📅 Upcoming Payments
+        </h2>
+
+        <div id="upcomingPayments">
+
+            <div class="empty">
+                No upcoming payments
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RECURRING -->
+
+    <div class="list-section">
+
+        <h2>
+            🔄 Recurring Expenses
+        </h2>
+
+        <div id="recurringExpenses">
+
+            <div class="empty">
+                No expenses added
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<!-- SUPABASE LIBRARY -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script>
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+    "https://nxhvfhgspfrcrutnbgux.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_4FPd9eFwEl34tyYJPR2fcg_yc4VPUXw";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+/* =====================================================
+   VARIABLES
+===================================================== */
+
+let expenses = [];
+
+let paymentStatus = {};
+
+let currentDate = new Date();
+
+let selectedDate = new Date();
+
+let editingId = null;
+
+let currentUser = null;
+
+
+/* =====================================================
+   AUTH MESSAGE
+===================================================== */
+
+function showAuthMessage(message, error = false){
+
+    const box =
+        document.getElementById(
+            "authMessage"
+        );
+
+    box.textContent = message;
+
+    box.className =
+        "auth-message " +
+        (
+            error
+            ? "auth-error"
+            : "auth-success"
+        );
+
+}
+
+
+/* =====================================================
+   SIGN UP
+===================================================== */
+
+async function signup(){
+
+    const email =
+        document.getElementById(
+            "authEmail"
+        ).value.trim();
+
+    const password =
+        document.getElementById(
+            "authPassword"
+        ).value;
+
+
+    if(!email || !password){
+
+        showAuthMessage(
+            "Enter email and password.",
+            true
+        );
+
+        return;
+    }
+
+
+    if(password.length < 6){
+
+        showAuthMessage(
+            "Password must be at least 6 characters.",
+            true
+        );
+
+        return;
+    }
+
+
+    showAuthMessage(
+        "Creating account..."
+    );
+
+
+    const {
+        data,
+        error
+    } =
+    await supabaseClient.auth.signUp({
+
+        email:email,
+
+        password:password
+
+    });
+
+
+    if(error){
+
+        showAuthMessage(
+            error.message,
+            true
+        );
+
+        return;
+    }
+
+
+    if(!data.session){
+
+        showAuthMessage(
+            "Account created. Please check your email if email confirmation is enabled."
+        );
+
+    }
+    else{
+
+        showAuthMessage(
+            "Account created successfully."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+async function login(){
+
+    const email =
+        document.getElementById(
+            "authEmail"
+        ).value.trim();
+
+    const password =
+        document.getElementById(
+            "authPassword"
+        ).value;
+
+
+    if(!email || !password){
+
+        showAuthMessage(
+            "Enter email and password.",
+            true
+        );
+
+        return;
+    }
+
+
+    showAuthMessage(
+        "Logging in..."
+    );
+
+
+    const {
+        data,
+        error
+    } =
+    await supabaseClient.auth.signInWithPassword({
+
+        email:email,
+
+        password:password
+
+    });
+
+
+    if(error){
+
+        showAuthMessage(
+            error.message,
+            true
+        );
+
+        return;
+    }
+
+
+    showAuthMessage(
+        "Login successful."
+    );
+
+}
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+async function logout(){
+
+    await supabaseClient.auth.signOut();
+
+}
+
+
+/* =====================================================
+   AUTH STATE
+===================================================== */
+
+supabaseClient.auth.onAuthStateChange(
+    async(event,session)=>{
+
+        if(session && session.user){
+
+            currentUser =
+                session.user;
+
+
+            document.getElementById(
+                "authScreen"
+            ).style.display =
+                "none";
+
+
+            document.getElementById(
+                "mainApp"
+            ).style.display =
+                "block";
+
+
+            document.getElementById(
+                "userEmail"
+            ).textContent =
+                currentUser.email;
+
+
+            await loadCloudData();
+
+
+            refreshAll();
+
+            showSelectedDay();
+
+        }
+        else{
+
+            currentUser = null;
+
+
+            document.getElementById(
+                "authScreen"
+            ).style.display =
+                "flex";
+
+
+            document.getElementById(
+                "mainApp"
+            ).style.display =
+                "none";
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   LOAD CLOUD DATA
+===================================================== */
+
+async function loadCloudData(){
+
+    if(!currentUser) return;
+
+
+    const {
+        data,
+        error
+    } =
+    await supabaseClient
+        .from("expenses")
+        .select("*")
+        .eq(
+            "user_id",
+            currentUser.id
+        )
+        .order(
+            "created_at",
+            {
+                ascending:true
+            }
+        );
+
+
+    if(error){
+
+        console.error(error);
+
+        alert(
+            "Could not load expenses: " +
+            error.message
+        );
+
+        return;
+    }
+
+
+    expenses =
+        (data || []).map(e=>({
+
+            id:e.id,
+
+            name:e.name,
+
+            amount:Number(e.amount),
+
+            frequency:e.frequency,
+
+            day:Number(e.due_day),
+
+            category:e.category,
+
+            startMonth:e.start_month
+
+        }));
+
+
+    await loadPaymentStatus();
+
+}
+
+
+/* =====================================================
+   LOAD PAYMENT STATUS
+===================================================== */
+
+async function loadPaymentStatus(){
+
+    paymentStatus = {};
+
+
+    const {
+        data,
+        error
+    } =
+    await supabaseClient
+        .from("payment_status")
+        .select("*")
+        .eq(
+            "user_id",
+            currentUser.id
+        );
+
+
+    if(error){
+
+        console.error(error);
+
+        return;
+    }
+
+
+    (data || []).forEach(item=>{
+
+        if(item.paid){
+
+            paymentStatus[
+                item.expense_id +
+                "_" +
+                item.payment_date
+            ] = true;
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   MONEY
+===================================================== */
+
+function money(amount){
+
+    return "₹" +
+        Number(amount || 0)
+        .toLocaleString("en-IN");
+
+}
+
+
+/* =====================================================
+   FREQUENCY
+===================================================== */
+
+function frequencyText(freq){
+
+    if(freq==="monthly")
+        return "Monthly";
+
+    if(freq==="quarterly")
+        return "Quarterly";
+
+    if(freq==="halfyearly")
+        return "Half-Yearly";
+
+    if(freq==="yearly")
+        return "Yearly";
+
+    return freq;
+
+}
+
+
+/* =====================================================
+   DATE STRING
+===================================================== */
+
+function dateString(date){
+
+    return date.getFullYear() +
+        "-" +
+        String(
+            date.getMonth()+1
+        ).padStart(2,"0") +
+        "-" +
+        String(
+            date.getDate()
+        ).padStart(2,"0");
+
+}
+
+
+/* =====================================================
+   PAYMENT KEY
+===================================================== */
+
+function paymentKey(expense,date){
+
+    return expense.id +
+        "_" +
+        dateString(date);
+
+}
+
+
+/* =====================================================
+   EXPENSES FOR DATE
+===================================================== */
+
+function getExpensesForDate(date){
+
+    const result = [];
+
+
+    expenses.forEach(expense=>{
+
+        const day =
+            Number(expense.day);
+
+
+        if(!day) return;
+
+
+        const year =
+            date.getFullYear();
+
+        const month =
+            date.getMonth();
+
+
+        const lastDay =
+            new Date(
+                year,
+                month+1,
+                0
+            ).getDate();
+
+
+        const actualDay =
+            Math.min(
+                day,
+                lastDay
+            );
+
+
+        if(
+            date.getDate() !==
+            actualDay
+        ){
+
+            return;
+
+        }
+
+
+        if(!expense.startMonth){
+
+            result.push(expense);
+
+            return;
+
+        }
+
+
+        const parts =
+            String(
+                expense.startMonth
+            ).split("-");
+
+
+        const startYear =
+            Number(parts[0]);
+
+        const startMonthIndex =
+            Number(parts[1])-1;
+
+
+        const monthsDifference =
+            (year-startYear)*12 +
+            (month-startMonthIndex);
+
+
+        if(
+            monthsDifference < 0
+        ){
+
+            return;
+
+        }
+
+
+        if(
+            expense.frequency==="monthly"
+        ){
+
+            result.push(expense);
+
+        }
+
+        else if(
+            expense.frequency==="quarterly" &&
+            monthsDifference % 3 === 0
+        ){
+
+            result.push(expense);
+
+        }
+
+        else if(
+            expense.frequency==="halfyearly" &&
+            monthsDifference % 6 === 0
+        ){
+
+            result.push(expense);
+
+        }
+
+        else if(
+            expense.frequency==="yearly" &&
+            monthsDifference % 12 === 0
+        ){
+
+            result.push(expense);
+
+        }
+
+    });
+
+
+    return result;
+
+}
+
+
+/* =====================================================
+   CALENDAR
+===================================================== */
+
+function renderCalendar(){
+
+    const year =
+        currentDate.getFullYear();
+
+    const month =
+        currentDate.getMonth();
+
+
+    const monthNames = [
+
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+
+    ];
+
+
+    document.getElementById(
+        "monthTitle"
+    ).textContent =
+        monthNames[month] +
+        " " +
+        year;
+
+
+    const calendar =
+        document.getElementById(
+            "calendar"
+        );
+
+
+    calendar.innerHTML = "";
+
+
+    const firstDay =
+        new Date(
+            year,
+            month,
+            1
+        ).getDay();
+
+
+    const daysInMonth =
+        new Date(
+            year,
+            month+1,
+            0
+        ).getDate();
+
+
+    const daysInPreviousMonth =
+        new Date(
+            year,
+            month,
+            0
+        ).getDate();
+
+
+    for(
+        let i=firstDay-1;
+        i>=0;
+        i--
+    ){
+
+        const dayNumber =
+            daysInPreviousMonth-i;
+
+
+        const cell =
+            document.createElement(
+                "div"
+            );
+
+
+        cell.className =
+            "day other-month";
+
+
+        cell.innerHTML =
+            `<div class="day-number">
+                ${dayNumber}
+             </div>`;
+
+
+        calendar.appendChild(cell);
+
+    }
+
+
+    for(
+        let day=1;
+        day<=daysInMonth;
+        day++
+    ){
+
+        const date =
+            new Date(
+                year,
+                month,
+                day
+            );
+
+
+        const cell =
+            document.createElement(
+                "div"
+            );
+
+
+        cell.className =
+            "day";
+
+
+        const today =
+            new Date();
+
+
+        if(
+            date.getFullYear()===
+            today.getFullYear() &&
+
+            date.getMonth()===
+            today.getMonth() &&
+
+            date.getDate()===
+            today.getDate()
+        ){
+
+            cell.classList.add(
+                "today"
+            );
+
+        }
+
+
+        const number =
+            document.createElement(
+                "div"
+            );
+
+
+        number.className =
+            "day-number";
+
+        number.textContent =
+            day;
+
+
+        cell.appendChild(
+            number
+        );
+
+
+        const dayExpenses =
+            getExpensesForDate(
+                date
+            );
+
+
+        dayExpenses.forEach(
+            expense=>{
+
+                const dot =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                dot.className =
+                    "expense-dot";
+
+
+                dot.textContent =
+                    expense.name +
+                    " " +
+                    money(
+                        expense.amount
+                    );
+
+
+                cell.appendChild(
+                    dot
+                );
+
+            }
+        );
+
+
+        cell.onclick =
+            function(){
+
+                selectedDate =
+                    new Date(
+                        year,
+                        month,
+                        day
+                    );
+
+                showSelectedDay();
+
+            };
+
+
+        calendar.appendChild(
+            cell
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   SELECTED DAY
+===================================================== */
+
+function showSelectedDay(){
+
+    const title =
+        document.getElementById(
+            "selectedDateTitle"
+        );
+
+
+    title.textContent =
+        selectedDate.toLocaleDateString(
+            "en-IN",
+            {
+                day:"numeric",
+                month:"long",
+                year:"numeric"
+            }
+        );
+
+
+    const container =
+        document.getElementById(
+            "selectedDayExpenses"
+        );
+
+
+    container.innerHTML = "";
+
+
+    const dayExpenses =
+        getExpensesForDate(
+            selectedDate
+        );
+
+
+    if(dayExpenses.length===0){
+
+        container.innerHTML =
+            `<div class="empty">
+                No expenses on this date
+             </div>`;
+
+        return;
+
+    }
+
+
+    dayExpenses.forEach(
+        expense=>{
+
+            const key =
+                paymentKey(
+                    expense,
+                    selectedDate
+                );
+
+
+            const paid =
+                paymentStatus[key]===true;
+
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "expense-row";
+
+
+            row.innerHTML = `
+
+                <div class="expense-info">
+
+                    <strong>
+                        ${expense.name}
+                    </strong>
+
+                    <small>
+                        ${money(expense.amount)}
+                        • ${expense.category}
+                    </small>
+
+                </div>
+
+                <button
+                    class="status-btn ${
+                        paid
+                        ? "status-paid"
+                        : "status-pending"
+                    }"
+                    onclick="togglePayment(
+                        '${expense.id}',
+                        '${dateString(selectedDate)}'
+                    )"
+                >
+                    ${
+                        paid
+                        ? "✓ Paid"
+                        : "Pending"
+                    }
+                </button>
+
+            `;
+
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   TOGGLE PAYMENT
+===================================================== */
+
+async function togglePayment(
+    expenseId,
+    paymentDate
+){
+
+    if(!currentUser) return;
+
+
+    const key =
+        expenseId +
+        "_" +
+        paymentDate;
+
+
+    const currentlyPaid =
+        paymentStatus[key]===true;
+
+
+    const newValue =
+        !currentlyPaid;
+
+
+    const {
+        error
+    } =
+    await supabaseClient
+        .from("payment_status")
+        .upsert(
+            {
+
+                user_id:
+                    currentUser.id,
+
+                expense_id:
+                    expenseId,
+
+                payment_date:
+                    paymentDate,
+
+                paid:
+                    newValue
+
+            },
+            {
+                onConflict:
+                    "user_id,expense_id,payment_date"
+            }
+        );
+
+
+    if(error){
+
+        alert(
+            "Could not update payment: " +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    if(newValue){
+
+        paymentStatus[key]=true;
+
+    }
+    else{
+
+        delete paymentStatus[key];
+
+    }
+
+
+    refreshAll();
+
+    showSelectedDay();
+
+}
+
+
+/* =====================================================
+   DASHBOARD
+===================================================== */
+
+function updateDashboard(){
+
+    const year =
+        currentDate.getFullYear();
+
+    const month =
+        currentDate.getMonth();
+
+
+    const daysInMonth =
+        new Date(
+            year,
+            month+1,
+            0
+        ).getDate();
+
+
+    let planned=0;
+
+    let paid=0;
+
+
+    for(
+        let day=1;
+        day<=daysInMonth;
+        day++
+    ){
+
+        const date =
+            new Date(
+                year,
+                month,
+                day
+            );
+
+
+        const dayExpenses =
+            getExpensesForDate(
+                date
+            );
+
+
+        dayExpenses.forEach(
+            expense=>{
+
+                const amount =
+                    Number(
+                        expense.amount
+                    )||0;
+
+
+                planned+=amount;
+
+
+                const key =
+                    paymentKey(
+                        expense,
+                        date
+                    );
+
+
+                if(
+                    paymentStatus[key]
+                ){
+
+                    paid+=amount;
+
+                }
+
+            }
+        );
+
+    }
+
+
+    const pending =
+        planned-paid;
+
+
+    document.getElementById(
+        "dashboardPlanned"
+    ).textContent =
+        money(planned);
+
+
+    document.getElementById(
+        "dashboardPaid"
+    ).textContent =
+        money(paid);
+
+
+    document.getElementById(
+        "dashboardPending"
+    ).textContent =
+        money(pending);
+
+
+    updateNextPayment();
+
+}
+
+
+/* =====================================================
+   UPCOMING PAYMENTS
+===================================================== */
+
+function getUpcomingPayments(){
+
+    const results=[];
+
+
+    const today =
+        new Date();
+
+
+    today.setHours(
+        0,0,0,0
+    );
+
+
+    for(
+        let i=0;
+        i<365;
+        i++
+    ){
+
+        const date =
+            new Date(today);
+
+
+        date.setDate(
+            today.getDate()+i
+        );
+
+
+        const dayExpenses =
+            getExpensesForDate(
+                date
+            );
+
+
+        dayExpenses.forEach(
+            expense=>{
+
+                const key =
+                    paymentKey(
+                        expense,
+                        date
+                    );
+
+
+                if(
+                    !paymentStatus[key]
+                ){
+
+                    results.push({
+
+                        expense:expense,
+
+                        date:
+                            new Date(date)
+
+                    });
+
+                }
+
+            }
+        );
+
+
+        if(
+            results.length>=10
+        ){
+
+            break;
+
+        }
+
+    }
+
+
+    return results;
+
+}
+
+
+/* =====================================================
+   NEXT PAYMENT
+===================================================== */
+
+function updateNextPayment(){
+
+    const upcoming =
+        getUpcomingPayments();
+
+
+    const box =
+        document.getElementById(
+            "nextPaymentDetails"
+        );
+
+
+    const dashboardNext =
+        document.getElementById(
+            "dashboardNext"
+        );
+
+
+    if(upcoming.length===0){
+
+        box.innerHTML =
+            "🎉 No pending payments in the next 365 days.";
+
+        dashboardNext.textContent =
+            "--";
+
+        return;
+
+    }
+
+
+    const item =
+        upcoming[0];
+
+
+    const dateText =
+        item.date.toLocaleDateString(
+            "en-IN",
+            {
+                day:"numeric",
+                month:"short",
+                year:"numeric"
+            }
+        );
+
+
+    dashboardNext.textContent =
+        dateText;
+
+
+    box.innerHTML = `
+
+        <div class="next-payment-name">
+            ${item.expense.name}
+        </div>
+
+        <div class="next-payment-details">
+            ${money(item.expense.amount)}
+            • ${item.expense.category}
+            • Due ${dateText}
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   SHOW UPCOMING
+===================================================== */
+
+function showUpcomingPayments(){
+
+    const container =
+        document.getElementById(
+            "upcomingPayments"
+        );
+
+
+    const upcoming =
+        getUpcomingPayments();
+
+
+    container.innerHTML = "";
+
+
+    if(upcoming.length===0){
+
+        container.innerHTML =
+            `<div class="empty">
+                No upcoming payments
+             </div>`;
+
+        return;
+
+    }
+
+
+    upcoming.forEach(
+        item=>{
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "list-item upcoming-item";
+
+
+            const dateText =
+                item.date.toLocaleDateString(
+                    "en-IN",
+                    {
+                        day:"numeric",
+                        month:"short",
+                        year:"numeric"
+                    }
+                );
+
+
+            row.innerHTML = `
+
+                <div>
+
+                    <strong>
+                        ${item.expense.name}
+                    </strong>
+
+                    <small>
+                        ${dateText}
+                        • ${item.expense.category}
+                    </small>
+
+                </div>
+
+                <strong>
+                    ${money(
+                        item.expense.amount
+                    )}
+                </strong>
+
+            `;
+
+
+            row.onclick =
+                function(){
+
+                    currentDate =
+                        new Date(
+                            item.date.getFullYear(),
+                            item.date.getMonth(),
+                            1
+                        );
+
+
+                    selectedDate =
+                        new Date(
+                            item.date
+                        );
+
+
+                    refreshAll();
+
+                    showSelectedDay();
+
+
+                    window.scrollTo({
+
+                        top:0,
+
+                        behavior:"smooth"
+
+                    });
+
+                };
+
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   RECURRING EXPENSES
+===================================================== */
+
+function showRecurringExpenses(){
+
+    const container =
+        document.getElementById(
+            "recurringExpenses"
+        );
+
+
+    container.innerHTML = "";
+
+
+    if(expenses.length===0){
+
+        container.innerHTML =
+            `<div class="empty">
+                No recurring expenses added
+             </div>`;
+
+        return;
+
+    }
+
+
+    expenses.forEach(
+        expense=>{
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "list-item";
+
+
+            row.innerHTML = `
+
+                <div>
+
+                    <strong>
+                        ${expense.name}
+                    </strong>
+
+                    <small>
+
+                        ${money(
+                            expense.amount
+                        )}
+
+                        •
+                        ${frequencyText(
+                            expense.frequency
+                        )}
+
+                        • Day
+                        ${expense.day}
+
+                        •
+                        ${expense.category}
+
+                        • Start
+                        ${expense.startMonth}
+
+                    </small>
+
+                </div>
+
+
+                <div class="action-buttons">
+
+                    <button
+                        class="edit-btn"
+                        onclick="editExpense(
+                            '${expense.id}'
+                        )"
+                    >
+                        Edit
+                    </button>
+
+
+                    <button
+                        class="delete-btn"
+                        onclick="deleteExpense(
+                            '${expense.id}'
+                        )"
+                    >
+                        Delete
+                    </button>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   ADD FORM
+===================================================== */
+
+function showAddForm(){
+
+    editingId=null;
+
+
+    document.getElementById(
+        "formTitle"
+    ).textContent =
+        "Add Expense";
+
+
+    document.getElementById(
+        "expenseName"
+    ).value="";
+
+
+    document.getElementById(
+        "expenseAmount"
+    ).value="";
+
+
+    document.getElementById(
+        "expenseFrequency"
+    ).value="monthly";
+
+
+    document.getElementById(
+        "expenseDay"
+    ).value="";
+
+
+    document.getElementById(
+        "expenseCategory"
+    ).value="Housing";
+
+
+    const now =
+        new Date();
+
+
+    document.getElementById(
+        "expenseStartMonth"
+    ).value =
+
+        now.getFullYear() +
+        "-" +
+        String(
+            now.getMonth()+1
+        ).padStart(2,"0");
+
+
+    document.getElementById(
+        "formSection"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "formSection"
+    ).scrollIntoView({
+        behavior:"smooth"
+    });
+
+}
+
+
+/* =====================================================
+   HIDE FORM
+===================================================== */
+
+function hideForm(){
+
+    document.getElementById(
+        "formSection"
+    ).style.display =
+        "none";
+
+
+    editingId=null;
+
+}
+
+
+/* =====================================================
+   SAVE EXPENSE
+===================================================== */
+
+async function saveExpense(){
+
+    if(!currentUser) return;
+
+
+    const name =
+        document.getElementById(
+            "expenseName"
+        ).value.trim();
+
+
+    const amount =
+        Number(
+            document.getElementById(
+                "expenseAmount"
+            ).value
+        );
+
+
+    const frequency =
+        document.getElementById(
+            "expenseFrequency"
+        ).value;
+
+
+    const day =
+        Number(
+            document.getElementById(
+                "expenseDay"
+            ).value
+        );
+
+
+    const category =
+        document.getElementById(
+            "expenseCategory"
+        ).value;
+
+
+    const startMonth =
+        document.getElementById(
+            "expenseStartMonth"
+        ).value;
+
+
+    if(!name){
+
+        alert(
+            "Please enter expense name."
+        );
+
+        return;
+
+    }
+
+
+    if(!amount || amount<=0){
+
+        alert(
+            "Please enter a valid amount."
+        );
+
+        return;
+
+    }
+
+
+    if(!day || day<1 || day>31){
+
+        alert(
+            "Please enter a due day between 1 and 31."
+        );
+
+        return;
+
+    }
+
+
+    if(!startMonth){
+
+        alert(
+            "Please select start month."
+        );
+
+        return;
+
+    }
+
+
+    /* EDIT */
+
+    if(editingId){
+
+        const {
+            error
+        } =
+        await supabaseClient
+            .from("expenses")
+            .update({
+
+                name:name,
+
+                amount:amount,
+
+                frequency:frequency,
+
+                due_day:day,
+
+                category:category,
+
+                start_month:startMonth
+
+            })
+            .eq(
+                "id",
+                editingId
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            );
+
+
+        if(error){
+
+            alert(
+                "Could not update expense: " +
+                error.message
+            );
+
+            return;
+
+        }
+
+    }
+
+    /* ADD */
+
+    else{
+
+        const {
+            error
+        } =
+        await supabaseClient
+            .from("expenses")
+            .insert({
+
+                user_id:
+                    currentUser.id,
+
+                name:name,
+
+                amount:amount,
+
+                frequency:frequency,
+
+                due_day:day,
+
+                category:category,
+
+                start_month:startMonth
+
+            });
+
+
+        if(error){
+
+            alert(
+                "Could not save expense: " +
+                error.message
+            );
+
+            return;
+
+        }
+
+    }
+
+
+    hideForm();
+
+    await loadCloudData();
+
+    refreshAll();
+
+    showSelectedDay();
+
+}
+
+
+/* =====================================================
+   EDIT EXPENSE
+===================================================== */
+
+function editExpense(id){
+
+    const expense =
+        expenses.find(
+            e=>e.id===id
+        );
+
+
+    if(!expense) return;
+
+
+    editingId=id;
+
+
+    document.getElementById(
+        "formTitle"
+    ).textContent =
+        "Edit Expense";
+
+
+    document.getElementById(
+        "expenseName"
+    ).value =
+        expense.name;
+
+
+    document.getElementById(
+        "expenseAmount"
+    ).value =
+        expense.amount;
+
+
+    document.getElementById(
+        "expenseFrequency"
+    ).value =
+        expense.frequency;
+
+
+    document.getElementById(
+        "expenseDay"
+    ).value =
+        expense.day;
+
+
+    document.getElementById(
+        "expenseCategory"
+    ).value =
+        expense.category;
+
+
+    document.getElementById(
+        "expenseStartMonth"
+    ).value =
+        expense.startMonth;
+
+
+    document.getElementById(
+        "formSection"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "formSection"
+    ).scrollIntoView({
+        behavior:"smooth"
+    });
+
+}
+
+
+/* =====================================================
+   DELETE EXPENSE
+===================================================== */
+
+async function deleteExpense(id){
+
+    const expense =
+        expenses.find(
+            e=>e.id===id
+        );
+
+
+    if(!expense) return;
+
+
+    if(
+        !confirm(
+            "Delete " +
+            expense.name +
+            "?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } =
+    await supabaseClient
+        .from("expenses")
+        .delete()
+        .eq(
+            "id",
+            id
+        )
+        .eq(
+            "user_id",
+            currentUser.id
+        );
+
+
+    if(error){
+
+        alert(
+            "Could not delete expense: " +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    await loadCloudData();
+
+    refreshAll();
+
+}
+
+
+/* =====================================================
+   IMPORT OLD LOCAL DATA
+===================================================== */
+
+async function importLocalData(){
+
+    if(!currentUser){
+
+        alert(
+            "Please login first."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Get old expenses
+    */
+
+    const oldExpenses =
+        JSON.parse(
+            localStorage.getItem(
+                "myExpenses"
+            ) || "[]"
+        );
+
+
+    /*
+       Get old paid records
+    */
+
+    const oldPayments =
+        JSON.parse(
+            localStorage.getItem(
+                "paymentStatus"
+            ) || "{}"
+        );
+
+
+    if(oldExpenses.length===0){
+
+        alert(
+            "No old local expenses were found on this browser."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !confirm(
+            "Import " +
+            oldExpenses.length +
+            " old expense(s) into your online account?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    /*
+       Map old expense IDs
+       to new Supabase IDs
+    */
+
+    const idMap={};
+
+
+    for(
+        const oldExpense of oldExpenses
+    ){
+
+        /*
+           OLD APP MAY HAVE USED:
+
+           dueDay
+
+           OR
+
+           day
+        */
+
+       let dueDay =
+    Number(
+        oldExpense.dueDay ??
+        oldExpense.day
+    );
+
+if (dueDay === 0) {
+    dueDay = 1;
+}
+
+
+        /*
+           SAFETY CHECK
+        */
+
+        if(
+            dueDay<1 ||
+            dueDay>31
+        ){
+
+            alert(
+                "Could not import " +
+                (
+                    oldExpense.name ||
+                    "an expense"
+                ) +
+                " because its due day is missing."
+            );
+
+            return;
+
+        }
+
+
+        /*
+           Start month
+        */
+
+        let startMonth =
+            oldExpense.startMonth;
+
+
+        /*
+           If old data used
+           numeric month,
+           convert it.
+
+           Example:
+           10 -> current year October
+        */
+
+        if(
+            typeof startMonth ===
+            "number"
+        ){
+
+            const now =
+                new Date();
+
+
+            startMonth =
+                now.getFullYear() +
+                "-" +
+                String(
+                    startMonth
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+        }
+
+
+        /*
+           If no start month
+        */
+
+        if(!startMonth){
+
+            startMonth =
+                new Date()
+                    .toISOString()
+                    .slice(
+                        0,
+                        7
+                    );
+
+        }
+
+
+        /*
+           Insert into Supabase
+        */
+
+        const {
+            data,
+            error
+        } =
+        await supabaseClient
+            .from("expenses")
+            .insert({
+
+                user_id:
+                    currentUser.id,
+
+                name:
+                    oldExpense.name,
+
+                amount:
+                    Number(
+                        oldExpense.amount
+                    ),
+
+                frequency:
+                    oldExpense.frequency,
+
+                due_day:
+                    dueDay,
+
+                start_month:
+                    startMonth,
+
+                category:
+                    oldExpense.category ||
+                    "Other"
+
+            })
+            .select()
+            .single();
+
+
+        if(error){
+
+            alert(
+                "Import error for " +
+                (
+                    oldExpense.name ||
+                    "expense"
+                ) +
+                ":\n\n" +
+                error.message
+            );
+
+            return;
+
+        }
+
+
+        /*
+           Save ID mapping
+        */
+
+        idMap[
+            oldExpense.id
+        ] =
+            data.id;
+
+    }
+
+
+    /*
+       IMPORT OLD PAID PAYMENTS
+    */
+
+    const paymentRows=[];
+
+
+    for(
+        const key in oldPayments
+    ){
+
+        if(
+            !oldPayments[key]
+        ){
+
+            continue;
+
+        }
+
+
+        /*
+           OLD PAYMENT KEY FORMAT:
+
+           expenseId_year_month_day
+
+           Old month was JavaScript
+           month number 0-11.
+
+           Example:
+
+           123_2026_9_10
+
+           means:
+
+           10 October 2026
+        */
+
+        const parts =
+            key.split("_");
+
+
+        if(parts.length<4){
+
+            continue;
+
+        }
+
+
+        const oldId =
+            parts[0];
+
+
+        const year =
+            Number(parts[1]);
+
+
+        const oldMonth =
+            Number(parts[2]);
+
+
+        const day =
+            Number(parts[3]);
+
+
+        const newId =
+            idMap[oldId];
+
+
+        if(!newId){
+
+            continue;
+
+        }
+
+
+        const paymentDate =
+            year +
+            "-" +
+            String(
+                oldMonth+1
+            ).padStart(
+                2,
+                "0"
+            ) +
+            "-" +
+            String(
+                day
+            ).padStart(
+                2,
+                "0"
+            );
+
+
+        paymentRows.push({
+
+            user_id:
+                currentUser.id,
+
+            expense_id:
+                newId,
+
+            payment_date:
+                paymentDate,
+
+            paid:true
+
+        });
+
+    }
+
+
+    /*
+       Save paid records
+    */
+
+    if(
+        paymentRows.length>0
+    ){
+
+        const {
+            error
+        } =
+        await supabaseClient
+            .from("payment_status")
+            .upsert(
+                paymentRows,
+                {
+                    onConflict:
+                        "user_id,expense_id,payment_date"
+                }
+            );
+
+
+        if(error){
+
+            console.error(
+                "Payment import error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /*
+       Reload cloud data
+    */
+
+    await loadCloudData();
+
+    refreshAll();
+
+    showSelectedDay();
+
+
+    alert(
+        "✅ Old expenses imported successfully!"
+    );
+
+}
+
+
+/* =====================================================
+   MONTH NAVIGATION
+===================================================== */
+
+function previousMonth(){
+
+    currentDate.setMonth(
+        currentDate.getMonth()-1
+    );
+
+    refreshAll();
+
+}
+
+
+function nextMonth(){
+
+    currentDate.setMonth(
+        currentDate.getMonth()+1
+    );
+
+    refreshAll();
+
+}
+
+
+function goToday(){
+
+    currentDate =
+        new Date();
+
+    selectedDate =
+        new Date();
+
+    refreshAll();
+
+    showSelectedDay();
+
+}
+
+
+/* =====================================================
+   REFRESH
+===================================================== */
+
+function refreshAll(){
+
+    renderCalendar();
+
+    updateDashboard();
+
+    showUpcomingPayments();
+
+    showRecurringExpenses();
+
+}
+
+
+/* =====================================================
+   INITIAL SESSION CHECK
+===================================================== */
+
+(async function(){
+
+    const {
+        data
+    } =
+    await supabaseClient.auth.getSession();
+
+
+    if(
+        data &&
+        data.session
+    ){
+
+        currentUser =
+            data.session.user;
+
+    }
+
+})();
+
+</script>
+
+</body>
+</html>
