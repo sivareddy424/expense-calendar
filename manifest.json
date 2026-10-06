@@ -1,0 +1,18 @@
+{
+  "name": "Expense Calendar",
+  "short_name": "Expenses",
+  "description": "Personal recurring expense and income calendar",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
