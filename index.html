@@ -3,281 +3,237 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Expense Calendar</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="description" content="Personal Expense Calendar">
+
+<link rel="manifest" href="manifest.json">
+
+<title>Expense Calendar</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box;
+}
 
 body{
     margin:0;
-    font-family:Arial,sans-serif;
+    font-family:Arial,Helvetica,sans-serif;
     background:#f4f6f8;
-    color:#222;
+    color:#1f2937;
+}
+
+header{
+    background:#2563eb;
+    color:white;
+    padding:15px 20px;
+    position:sticky;
+    top:0;
+    z-index:20;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.header-inner{
+    max-width:1200px;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+}
+
+header h1{
+    margin:0;
+    font-size:21px;
+}
+
+.header-actions{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
 }
 
 button{
-    border:none;
+    border:0;
     border-radius:8px;
-    padding:10px 15px;
+    padding:9px 13px;
     cursor:pointer;
     font-size:14px;
 }
 
-input,select{
-    width:100%;
-    padding:11px;
-    border:1px solid #ccc;
-    border-radius:7px;
-    font-size:14px;
-}
-
-/* LOGIN */
-
-#authScreen{
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    padding:20px;
-    background:#f4f6f8;
-}
-
-.auth-box{
-    width:100%;
-    max-width:420px;
-    background:white;
-    padding:30px;
-    border-radius:16px;
-    box-shadow:0 5px 25px rgba(0,0,0,.10);
-}
-
-.auth-box h1{
-    margin-top:0;
-    text-align:center;
-}
-
-.auth-subtitle{
-    text-align:center;
-    color:#666;
-    margin-bottom:25px;
-}
-
-.auth-box label{
-    display:block;
-    font-weight:bold;
-    font-size:13px;
-    margin-bottom:6px;
-}
-
-.auth-box input{
-    margin-bottom:15px;
-}
-
-.auth-btn{
-    width:100%;
+.btn{
     background:#2563eb;
     color:white;
-    font-weight:bold;
 }
 
-.signup-btn{
-    width:100%;
+.btn:hover{
+    opacity:.9;
+}
+
+.btn-light{
+    background:white;
+    color:#2563eb;
+}
+
+.btn-danger{
+    background:#dc2626;
+    color:white;
+}
+
+.btn-green{
     background:#16a34a;
     color:white;
-    margin-top:10px;
 }
 
-.auth-message{
-    margin-top:15px;
-    text-align:center;
-    font-size:14px;
-}
-
-.auth-error{color:#dc2626}
-.auth-success{color:#16a34a}
-
-/* HEADER */
-
-header{
-    background:#1f2937;
-    color:white;
-    padding:18px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-}
-
-.header-left h1{
-    margin:0;
-    font-size:22px;
-}
-
-.header-left small{
-    color:#cbd5e1;
-}
-
-.header-right{
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.user-email{
-    font-size:12px;
-    color:#cbd5e1;
-}
-
-.add-btn{
-    background:#22c55e;
-    color:white;
-    font-weight:bold;
-}
-
-.logout-btn{
-    background:#ef4444;
+.btn-gray{
+    background:#6b7280;
     color:white;
 }
-
-/* CONTAINER */
 
 .container{
     max-width:1200px;
     margin:auto;
-    padding:15px;
+    padding:18px;
 }
 
-/* CLOUD */
-
-.cloud-status{
-    background:#ecfdf5;
-    color:#166534;
-    padding:10px 15px;
-    border-radius:8px;
+.user-bar{
+    background:white;
+    border-radius:12px;
+    padding:12px 15px;
     margin-bottom:15px;
-    font-size:13px;
+    box-shadow:0 2px 7px rgba(0,0,0,.08);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
 }
-
-.import-btn{
-    background:#9333ea;
-    color:white;
-    margin-left:8px;
-}
-
-/* DASHBOARD */
 
 .dashboard{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(6,1fr);
     gap:12px;
-    margin-bottom:20px;
+    margin-bottom:18px;
 }
 
 .card{
     background:white;
     border-radius:12px;
-    padding:18px;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    padding:15px;
+    box-shadow:0 2px 7px rgba(0,0,0,.08);
 }
 
-.card-title{
+.stat-title{
+    color:#6b7280;
     font-size:13px;
-    color:#666;
     margin-bottom:8px;
 }
 
-.card-value{
-    font-size:24px;
+.stat-value{
+    font-size:21px;
     font-weight:bold;
 }
 
-.planned{color:#2563eb}
-.paid{color:#16a34a}
-.pending{color:#dc2626}
-.next{color:#9333ea}
-
-/* NEXT PAYMENT */
-
-.next-payment{
-    margin-bottom:20px;
+.green{
+    color:#16a34a;
 }
 
-.next-payment-box{
+.red{
+    color:#dc2626;
+}
+
+.blue{
+    color:#2563eb;
+}
+
+.orange{
+    color:#ea580c;
+}
+
+.section{
     background:white;
+    border-radius:12px;
     padding:18px;
-    border-radius:12px;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
+    margin-bottom:18px;
+    box-shadow:0 2px 7px rgba(0,0,0,.08);
 }
 
-.next-payment-box h3{
+.section h2{
     margin-top:0;
+    font-size:19px;
 }
 
-.next-payment-name{
-    font-size:20px;
-    font-weight:bold;
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
 }
 
-.next-payment-details{
-    color:#666;
-    margin-top:6px;
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
 }
 
-/* SECTIONS */
-
-.calendar-section,
-.selected-day,
-.form-section,
-.list-section{
+input,select{
+    width:100%;
+    padding:10px;
+    border:1px solid #d1d5db;
+    border-radius:8px;
     background:white;
-    border-radius:12px;
-    padding:15px;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
-    margin-bottom:20px;
 }
 
-/* CALENDAR */
+label{
+    font-size:13px;
+    color:#4b5563;
+    display:block;
+    margin-bottom:4px;
+}
+
+.form-group{
+    margin-bottom:5px;
+}
 
 .calendar-header{
     display:flex;
-    justify-content:space-between;
     align-items:center;
-    margin-bottom:15px;
+    justify-content:space-between;
+    margin-bottom:12px;
+    gap:8px;
 }
 
 .calendar-header h2{
     margin:0;
-    font-size:20px;
-}
-
-.month-buttons button{
-    background:#e5e7eb;
-    margin-left:5px;
 }
 
 .weekdays,
 .calendar{
     display:grid;
     grid-template-columns:repeat(7,1fr);
+    gap:5px;
 }
 
-.weekdays div{
+.weekday{
     text-align:center;
     font-weight:bold;
-    padding:8px 2px;
-    color:#555;
+    font-size:12px;
+    color:#6b7280;
+    padding:6px;
 }
 
 .day{
     min-height:85px;
-    border:1px solid #eee;
+    background:#f8fafc;
+    border:1px solid #e5e7eb;
+    border-radius:7px;
     padding:5px;
     cursor:pointer;
-    background:white;
+    position:relative;
 }
 
 .day:hover{
-    background:#f0f9ff;
+    background:#eef2ff;
 }
 
 .day-number{
@@ -285,154 +241,203 @@ header{
     font-size:13px;
 }
 
-.other-month{
-    background:#f7f7f7;
-    color:#aaa;
-}
-
 .today{
     border:2px solid #2563eb;
 }
 
-.expense-dot{
-    background:#fee2e2;
-    color:#991b1b;
-    border-radius:5px;
-    margin-top:5px;
-    padding:3px;
+.has-expense{
+    background:#eff6ff;
+}
+
+.day-expense{
     font-size:11px;
-    overflow:hidden;
+    margin-top:3px;
+    padding:2px 4px;
+    border-radius:4px;
+    background:#dbeafe;
     white-space:nowrap;
+    overflow:hidden;
     text-overflow:ellipsis;
 }
 
-/* EXPENSE ROW */
-
-.expense-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:12px 0;
-    border-bottom:1px solid #eee;
-    gap:10px;
+.day-paid{
+    background:#dcfce7;
 }
 
-.expense-info strong{
-    display:block;
+.day-pending{
+    background:#fee2e2;
 }
 
-.expense-info small{
-    color:#666;
+.table-wrap{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    text-align:left;
+    padding:9px;
+    border-bottom:1px solid #e5e7eb;
+    font-size:14px;
+}
+
+th{
+    background:#f8fafc;
 }
 
 .status-paid{
+    color:#16a34a;
+    font-weight:bold;
+}
+
+.status-pending{
+    color:#dc2626;
+    font-weight:bold;
+}
+
+.actions{
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+}
+
+.search-row{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.progress{
+    height:9px;
+    background:#e5e7eb;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:5px;
+}
+
+.progress-bar{
+    height:100%;
+    width:0%;
+    background:#2563eb;
+}
+
+.report-row{
+    margin-bottom:12px;
+}
+
+.report-head{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+}
+
+.login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.login-box{
+    width:100%;
+    max-width:420px;
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 5px 25px rgba(0,0,0,.12);
+}
+
+.login-box h1{
+    margin-top:0;
+    text-align:center;
+}
+
+.message{
+    padding:10px;
+    border-radius:8px;
+    margin:10px 0;
+    display:none;
+}
+
+.message.error{
+    display:block;
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.message.success{
+    display:block;
     background:#dcfce7;
     color:#166534;
 }
 
-.status-pending{
-    background:#fee2e2;
-    color:#991b1b;
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:15px;
+    z-index:100;
 }
 
-.status-btn{
-    padding:7px 10px;
-    border-radius:7px;
+.modal-box{
+    background:white;
+    width:100%;
+    max-width:600px;
+    max-height:90vh;
+    overflow:auto;
+    border-radius:14px;
+    padding:20px;
 }
 
-/* FORM */
-
-.form-section h2{
-    margin-top:0;
-}
-
-.form-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:12px;
-}
-
-label{
-    font-size:13px;
-    font-weight:bold;
-    display:block;
-    margin-bottom:5px;
-}
-
-.form-buttons{
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
     margin-top:15px;
 }
 
-.save-btn{
-    background:#2563eb;
-    color:white;
-}
-
-.cancel-btn{
-    background:#6b7280;
-    color:white;
-    margin-left:5px;
-}
-
-/* LIST */
-
-.list-item{
-    padding:13px 0;
-    border-bottom:1px solid #eee;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-}
-
-.list-item:last-child{
-    border-bottom:none;
-}
-
-.list-item strong{
-    display:block;
-}
-
-.list-item small{
-    color:#666;
-}
-
-.action-buttons button{
-    margin-left:5px;
-}
-
-.edit-btn{
-    background:#facc15;
-}
-
-.delete-btn{
-    background:#ef4444;
-    color:white;
-}
-
-.upcoming-item{
-    cursor:pointer;
-}
-
-.upcoming-item:hover{
-    background:#f8fafc;
+.small{
+    font-size:12px;
+    color:#6b7280;
 }
 
 .empty{
-    color:#777;
     text-align:center;
-    padding:15px;
+    color:#6b7280;
+    padding:20px;
 }
 
-/* MOBILE */
+.install-box{
+    display:none;
+    background:#eff6ff;
+    border:1px solid #bfdbfe;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:15px;
+}
 
-@media(max-width:800px){
+@media(max-width:1000px){
+    .dashboard{
+        grid-template-columns:repeat(3,1fr);
+    }
+}
 
+@media(max-width:700px){
     .dashboard{
         grid-template-columns:repeat(2,1fr);
     }
 
-    .form-grid{
+    .grid,
+    .form-grid,
+    .search-row{
         grid-template-columns:1fr;
     }
 
@@ -440,68 +445,12 @@ label{
         min-height:65px;
     }
 
-    .expense-dot{
+    .day-expense{
         font-size:9px;
     }
 
-    .user-email{
-        display:none;
-    }
-}
-
-@media(max-width:500px){
-
-    header{
-        padding:14px;
-    }
-
-    .header-left h1{
+    header h1{
         font-size:18px;
-    }
-
-    .dashboard{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .card{
-        padding:13px;
-    }
-
-    .card-value{
-        font-size:19px;
-    }
-
-    .day{
-        min-height:55px;
-        padding:3px;
-    }
-
-    .day-number{
-        font-size:11px;
-    }
-
-    .weekdays div{
-        font-size:11px;
-    }
-
-    .expense-row,
-    .list-item{
-        align-items:flex-start;
-        flex-direction:column;
-    }
-
-    .action-buttons{
-        width:100%;
-    }
-
-    .action-buttons button{
-        margin-left:0;
-        margin-right:5px;
-    }
-
-    .header-right{
-        flex-direction:column;
-        align-items:flex-end;
     }
 }
 </style>
@@ -509,775 +458,510 @@ label{
 
 <body>
 
-<!-- LOGIN -->
+<div id="loginScreen" class="login-screen">
+    <div class="login-box">
+        <h1>💰 Expense Calendar</h1>
 
-<div id="authScreen">
+        <div id="loginMessage" class="message"></div>
 
-    <div class="auth-box">
-
-        <h1>💰 My Expense Calendar</h1>
-
-        <div class="auth-subtitle">
-            Private Online Expense Planner
+        <div class="form-group">
+            <label>Email</label>
+            <input id="loginEmail" type="email" placeholder="Email">
         </div>
 
-        <label>Email</label>
+        <div class="form-group">
+            <label>Password</label>
+            <input id="loginPassword" type="password" placeholder="Password">
+        </div>
 
-        <input
-            type="email"
-            id="authEmail"
-            placeholder="your@email.com"
-        >
-
-        <label>Password</label>
-
-        <input
-            type="password"
-            id="authPassword"
-            placeholder="Your password"
-        >
-
-        <button
-            class="auth-btn"
-            onclick="login()"
-        >
+        <button class="btn" style="width:100%;margin-top:10px" onclick="login()">
             Login
         </button>
 
-        <button
-            class="signup-btn"
-            onclick="signup()"
-        >
+        <button class="btn-gray" style="width:100%;margin-top:8px" onclick="signup()">
             Create Account
         </button>
-
-        <div
-            id="authMessage"
-            class="auth-message"
-        ></div>
-
     </div>
-
 </div>
 
-
-<!-- MAIN APP -->
-
-<div id="mainApp" style="display:none;">
+<div id="app" style="display:none">
 
 <header>
+    <div class="header-inner">
+        <h1>💰 Expense Calendar</h1>
 
-    <div class="header-left">
-
-        <h1>💰 My Expense Calendar</h1>
-
-        <small>
-            Recurring Expense Planner
-        </small>
-
+        <div class="header-actions">
+            <button class="btn-light" onclick="openExpenseModal()">+ Expense</button>
+            <button class="btn-light" onclick="openIncomeModal()">+ Income</button>
+            <button class="btn-light" onclick="requestNotifications()">🔔 Alerts</button>
+            <button class="btn-light" onclick="exportBackup()">Backup</button>
+            <button class="btn-light" onclick="document.getElementById('importFile').click()">Restore</button>
+            <button class="btn-danger" onclick="logout()">Logout</button>
+            <input id="importFile" type="file" accept=".json" style="display:none" onchange="importBackup(event)">
+        </div>
     </div>
-
-    <div class="header-right">
-
-        <span
-            class="user-email"
-            id="userEmail"
-        ></span>
-
-        <button
-            class="add-btn"
-            onclick="showAddForm()"
-        >
-            + Add Expense
-        </button>
-
-        <button
-            class="logout-btn"
-            onclick="logout()"
-        >
-            Logout
-        </button>
-
-    </div>
-
 </header>
-
 
 <div class="container">
 
-    <!-- CLOUD STATUS -->
-
-    <div class="cloud-status">
-
-        ☁️ Your expenses are stored securely online.
-
-        <button
-            class="import-btn"
-            onclick="importLocalData()"
-        >
-            Import Old Local Data
-        </button>
-
+<div class="user-bar">
+    <div>
+        <b id="userEmail"></b>
     </div>
 
+    <div class="small">
+        Cloud synced with Supabase
+    </div>
+</div>
 
-    <!-- DASHBOARD -->
+<div id="installBox" class="install-box">
+    📱 <b>Install this app:</b>
+    You can install Expense Calendar on your phone or computer for quick access.
+    <button class="btn" onclick="installApp()">Install</button>
+</div>
 
-    <div class="dashboard">
+<!-- DASHBOARD -->
 
-        <div class="card">
+<div class="dashboard">
 
-            <div class="card-title">
-                This Month Planned
-            </div>
-
-            <div
-                class="card-value planned"
-                id="dashboardPlanned"
-            >
-                ₹0
-            </div>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-title">
-                This Month Paid
-            </div>
-
-            <div
-                class="card-value paid"
-                id="dashboardPaid"
-            >
-                ₹0
-            </div>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-title">
-                This Month Pending
-            </div>
-
-            <div
-                class="card-value pending"
-                id="dashboardPending"
-            >
-                ₹0
-            </div>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-title">
-                Next Payment
-            </div>
-
-            <div
-                class="card-value next"
-                id="dashboardNext"
-            >
-                --
-            </div>
-
-        </div>
-
+    <div class="card">
+        <div class="stat-title">Monthly Income</div>
+        <div id="dashIncome" class="stat-value green">₹0</div>
     </div>
 
-
-    <!-- NEXT PAYMENT -->
-
-    <div class="next-payment">
-
-        <div class="next-payment-box">
-
-            <h3>📅 Next Payment</h3>
-
-            <div id="nextPaymentDetails">
-                No upcoming payments
-            </div>
-
-        </div>
-
+    <div class="card">
+        <div class="stat-title">Planned Expenses</div>
+        <div id="dashPlanned" class="stat-value">₹0</div>
     </div>
 
-
-    <!-- CALENDAR -->
-
-    <div class="calendar-section">
-
-        <div class="calendar-header">
-
-            <h2 id="monthTitle"></h2>
-
-            <div class="month-buttons">
-
-                <button onclick="previousMonth()">
-                    ◀
-                </button>
-
-                <button onclick="goToday()">
-                    Today
-                </button>
-
-                <button onclick="nextMonth()">
-                    ▶
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <div class="weekdays">
-
-            <div>Sun</div>
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-
-        </div>
-
-
-        <div
-            class="calendar"
-            id="calendar"
-        ></div>
-
+    <div class="card">
+        <div class="stat-title">Paid</div>
+        <div id="dashPaid" class="stat-value green">₹0</div>
     </div>
 
-
-    <!-- SELECTED DAY -->
-
-    <div class="selected-day">
-
-        <h2 id="selectedDateTitle">
-            Select a date
-        </h2>
-
-        <div id="selectedDayExpenses">
-
-            <div class="empty">
-                Select a calendar date
-            </div>
-
-        </div>
-
+    <div class="card">
+        <div class="stat-title">Pending</div>
+        <div id="dashPending" class="stat-value red">₹0</div>
     </div>
 
-
-    <!-- ADD / EDIT FORM -->
-
-    <div
-        class="form-section"
-        id="formSection"
-        style="display:none;"
-    >
-
-        <h2 id="formTitle">
-            Add Expense
-        </h2>
-
-
-        <div class="form-grid">
-
-            <div>
-
-                <label>
-                    Expense Name
-                </label>
-
-                <input
-                    type="text"
-                    id="expenseName"
-                    placeholder="Example: Rent"
-                >
-
-            </div>
-
-
-            <div>
-
-                <label>
-                    Amount
-                </label>
-
-                <input
-                    type="number"
-                    id="expenseAmount"
-                    placeholder="15000"
-                >
-
-            </div>
-
-
-            <div>
-
-                <label>
-                    Frequency
-                </label>
-
-                <select id="expenseFrequency">
-
-                    <option value="monthly">
-                        Monthly
-                    </option>
-
-                    <option value="quarterly">
-                        Quarterly
-                    </option>
-
-                    <option value="halfyearly">
-                        Half-Yearly
-                    </option>
-
-                    <option value="yearly">
-                        Yearly
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div>
-
-                <label>
-                    Due Day
-                </label>
-
-                <input
-                    type="number"
-                    id="expenseDay"
-                    min="1"
-                    max="31"
-                    placeholder="5"
-                >
-
-            </div>
-
-
-            <div>
-
-                <label>
-                    Category
-                </label>
-
-                <select id="expenseCategory">
-
-                    <option value="Housing">
-                        Housing
-                    </option>
-
-                    <option value="Utilities">
-                        Utilities
-                    </option>
-
-                    <option value="Insurance">
-                        Insurance
-                    </option>
-
-                    <option value="Loan / EMI">
-                        Loan / EMI
-                    </option>
-
-                    <option value="Investment">
-                        Investment
-                    </option>
-
-                    <option value="Education">
-                        Education
-                    </option>
-
-                    <option value="Shopping">
-                        Shopping
-                    </option>
-
-                    <option value="Food">
-                        Food
-                    </option>
-
-                    <option value="Transport">
-                        Transport
-                    </option>
-
-                    <option value="Other">
-                        Other
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div>
-
-                <label>
-                    Start Month
-                </label>
-
-                <input
-                    type="month"
-                    id="expenseStartMonth"
-                >
-
-            </div>
-
-        </div>
-
-
-        <div class="form-buttons">
-
-            <button
-                class="save-btn"
-                onclick="saveExpense()"
-            >
-                Save Expense
-            </button>
-
-            <button
-                class="cancel-btn"
-                onclick="hideForm()"
-            >
-                Cancel
-            </button>
-
-        </div>
-
+    <div class="card">
+        <div class="stat-title">Balance</div>
+        <div id="dashBalance" class="stat-value blue">₹0</div>
     </div>
 
-
-    <!-- UPCOMING -->
-
-    <div class="list-section">
-
-        <h2>
-            📅 Upcoming Payments
-        </h2>
-
-        <div id="upcomingPayments">
-
-            <div class="empty">
-                No upcoming payments
-            </div>
-
-        </div>
-
+    <div class="card">
+        <div class="stat-title">Next Payment</div>
+        <div id="dashNext" class="stat-value orange">-</div>
     </div>
 
+</div>
 
-    <!-- RECURRING -->
+<!-- SEARCH -->
 
-    <div class="list-section">
+<div class="section">
 
-        <h2>
-            🔄 Recurring Expenses
-        </h2>
+<h2>🔎 Search & Filter</h2>
 
-        <div id="recurringExpenses">
+<div class="search-row">
 
-            <div class="empty">
-                No expenses added
-            </div>
+    <input id="searchBox"
+           placeholder="Search expenses or income..."
+           oninput="renderAll()">
 
-        </div>
+    <select id="categoryFilter" onchange="renderAll()">
+        <option value="">All Categories</option>
+        <option>Housing</option>
+        <option>Utilities</option>
+        <option>Insurance</option>
+        <option>Loan / EMI</option>
+        <option>Investment</option>
+        <option>Education</option>
+        <option>Shopping</option>
+        <option>Food</option>
+        <option>Transport</option>
+        <option>Other</option>
+    </select>
 
-    </div>
+    <input id="monthFilter"
+           type="month"
+           onchange="renderAll()">
 
 </div>
 
 </div>
 
+<!-- CALENDAR -->
 
-<!-- SUPABASE LIBRARY -->
+<div class="section">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div class="calendar-header">
 
+    <button class="btn-gray" onclick="changeMonth(-1)">◀</button>
+
+    <h2 id="calendarTitle"></h2>
+
+    <button class="btn-gray" onclick="changeMonth(1)">▶</button>
+
+</div>
+
+<div style="text-align:center;margin-bottom:10px">
+    <button class="btn" onclick="goToday()">Today</button>
+</div>
+
+<div class="weekdays">
+    <div class="weekday">Sun</div>
+    <div class="weekday">Mon</div>
+    <div class="weekday">Tue</div>
+    <div class="weekday">Wed</div>
+    <div class="weekday">Thu</div>
+    <div class="weekday">Fri</div>
+    <div class="weekday">Sat</div>
+</div>
+
+<div id="calendar" class="calendar"></div>
+
+</div>
+
+<div class="grid">
+
+<!-- SELECTED DAY -->
+
+<div class="section">
+
+<h2>📅 Selected Day</h2>
+
+<div id="selectedDateTitle" class="small"></div>
+
+<div id="selectedDayDetails">
+    <div class="empty">Select a date</div>
+</div>
+
+</div>
+
+<!-- UPCOMING -->
+
+<div class="section">
+
+<h2>⏰ Upcoming Payments</h2>
+
+<div id="upcomingPayments"></div>
+
+</div>
+
+</div>
+
+<!-- REPORTS -->
+
+<div class="section">
+
+<h2>📊 Monthly Report</h2>
+
+<div class="grid">
+
+<div>
+    <h3>Category Spending</h3>
+    <div id="categoryReport"></div>
+</div>
+
+<div>
+    <h3>Special Categories</h3>
+    <div id="specialReport"></div>
+</div>
+
+</div>
+
+<h3>Last 6 Months</h3>
+<div id="monthlyReport"></div>
+
+</div>
+
+<!-- INCOME -->
+
+<div class="section">
+
+<h2>💵 Income</h2>
+
+<div id="incomeList"></div>
+
+</div>
+
+<!-- EXPENSES -->
+
+<div class="section">
+
+<h2>🔁 Recurring Expenses</h2>
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Amount</th>
+<th>Frequency</th>
+<th>Due</th>
+<th>Category</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="expenseList"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- EXPENSE MODAL -->
+
+<div id="expenseModal" class="modal">
+
+<div class="modal-box">
+
+<h2 id="expenseModalTitle">Add Expense</h2>
+
+<input type="hidden" id="expenseId">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>Name</label>
+<input id="expenseName" placeholder="Electricity">
+</div>
+
+<div class="form-group">
+<label>Amount</label>
+<input id="expenseAmount" type="number" step="0.01">
+</div>
+
+<div class="form-group">
+<label>Frequency</label>
+<select id="expenseFrequency">
+<option>Monthly</option>
+<option>Quarterly</option>
+<option>Half-Yearly</option>
+<option>Yearly</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Due Day</label>
+<input id="expenseDueDay" type="number" min="1" max="31">
+</div>
+
+<div class="form-group">
+<label>Start Month</label>
+<input id="expenseStartMonth" type="month">
+</div>
+
+<div class="form-group">
+<label>Category</label>
+<select id="expenseCategory">
+<option>Housing</option>
+<option>Utilities</option>
+<option>Insurance</option>
+<option>Loan / EMI</option>
+<option>Investment</option>
+<option>Education</option>
+<option>Shopping</option>
+<option>Food</option>
+<option>Transport</option>
+<option>Other</option>
+</select>
+</div>
+
+</div>
+
+<div class="modal-actions">
+
+<button class="btn-gray" onclick="closeExpenseModal()">Cancel</button>
+
+<button class="btn" onclick="saveExpense()">Save</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- INCOME MODAL -->
+
+<div id="incomeModal" class="modal">
+
+<div class="modal-box">
+
+<h2>Add Income</h2>
+
+<input type="hidden" id="incomeId">
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>Income Source</label>
+<input id="incomeName" placeholder="Salary">
+</div>
+
+<div class="form-group">
+<label>Amount</label>
+<input id="incomeAmount" type="number" step="0.01">
+</div>
+
+<div class="form-group">
+<label>Date</label>
+<input id="incomeDate" type="date">
+</div>
+
+</div>
+
+<div class="modal-actions">
+
+<button class="btn-gray" onclick="closeIncomeModal()">Cancel</button>
+
+<button class="btn-green" onclick="saveIncome()">Save</button>
+
+</div>
+
+</div>
+
+</div>
 
 <script>
 
-/* =====================================================
-   SUPABASE
-===================================================== */
-
 const SUPABASE_URL =
-    "https://nxhvfhgspfrcrutnbgux.supabase.co";
+"https://nxhvfhgspfrcrutnbgux.supabase.co";
 
 const SUPABASE_KEY =
-    "sb_publishable_4FPd9eFwEl34tyYJPR2fcg_yc4VPUXw";
+"sb_publishable_4FPd9eFwEl34tyYJPR2fcg_yc4VPUXw";
 
 const supabaseClient =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-    );
-
-
-/* =====================================================
-   VARIABLES
-===================================================== */
-
-let expenses = [];
-
-let paymentStatus = {};
-
-let currentDate = new Date();
-
-let selectedDate = new Date();
-
-let editingId = null;
+window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 
 let currentUser = null;
+let expenses = [];
+let income = [];
+let payments = [];
+
+let currentDate = new Date();
+let selectedDate = new Date();
+
+let deferredInstallPrompt = null;
 
 
-/* =====================================================
-   AUTH MESSAGE
-===================================================== */
-
-function showAuthMessage(message, error = false){
-
-    const box =
-        document.getElementById(
-            "authMessage"
-        );
-
-    box.textContent = message;
-
-    box.className =
-        "auth-message " +
-        (
-            error
-            ? "auth-error"
-            : "auth-success"
-        );
-
-}
-
-
-/* =====================================================
-   SIGN UP
-===================================================== */
-
-async function signup(){
-
-    const email =
-        document.getElementById(
-            "authEmail"
-        ).value.trim();
-
-    const password =
-        document.getElementById(
-            "authPassword"
-        ).value;
-
-
-    if(!email || !password){
-
-        showAuthMessage(
-            "Enter email and password.",
-            true
-        );
-
-        return;
-    }
-
-
-    if(password.length < 6){
-
-        showAuthMessage(
-            "Password must be at least 6 characters.",
-            true
-        );
-
-        return;
-    }
-
-
-    showAuthMessage(
-        "Creating account..."
-    );
-
-
-    const {
-        data,
-        error
-    } =
-    await supabaseClient.auth.signUp({
-
-        email:email,
-
-        password:password
-
-    });
-
-
-    if(error){
-
-        showAuthMessage(
-            error.message,
-            true
-        );
-
-        return;
-    }
-
-
-    if(!data.session){
-
-        showAuthMessage(
-            "Account created. Please check your email if email confirmation is enabled."
-        );
-
-    }
-    else{
-
-        showAuthMessage(
-            "Account created successfully."
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   LOGIN
-===================================================== */
+/* ---------------- AUTH ---------------- */
 
 async function login(){
 
     const email =
-        document.getElementById(
-            "authEmail"
-        ).value.trim();
+        document.getElementById("loginEmail").value.trim();
 
     const password =
-        document.getElementById(
-            "authPassword"
-        ).value;
+        document.getElementById("loginPassword").value;
 
+    showLoginMessage("");
 
-    if(!email || !password){
-
-        showAuthMessage(
-            "Enter email and password.",
-            true
-        );
-
-        return;
-    }
-
-
-    showAuthMessage(
-        "Logging in..."
-    );
-
-
-    const {
-        data,
-        error
-    } =
-    await supabaseClient.auth.signInWithPassword({
-
-        email:email,
-
-        password:password
-
-    });
-
+    const {error} =
+        await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
 
     if(error){
-
-        showAuthMessage(
-            error.message,
-            true
-        );
-
-        return;
+        showLoginMessage(error.message,true);
     }
-
-
-    showAuthMessage(
-        "Login successful."
-    );
 
 }
 
 
-/* =====================================================
-   LOGOUT
-===================================================== */
+async function signup(){
+
+    const email =
+        document.getElementById("loginEmail").value.trim();
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    showLoginMessage("");
+
+    const {error} =
+        await supabaseClient.auth.signUp({
+            email,
+            password
+        });
+
+    if(error){
+        showLoginMessage(error.message,true);
+    }else{
+        showLoginMessage(
+            "Account created. You can now login.",
+            false
+        );
+    }
+
+}
+
 
 async function logout(){
 
     await supabaseClient.auth.signOut();
 
+    currentUser = null;
+
+    document.getElementById("app").style.display="none";
+    document.getElementById("loginScreen").style.display="flex";
 }
 
 
-/* =====================================================
-   AUTH STATE
-===================================================== */
+function showLoginMessage(text,error=false){
+
+    const box =
+        document.getElementById("loginMessage");
+
+    box.textContent=text;
+
+    box.className =
+        "message " + (error ? "error" : "success");
+}
+
+
+/* ---------------- INIT ---------------- */
+
+async function init(){
+
+    const {data} =
+        await supabaseClient.auth.getSession();
+
+    if(data.session){
+
+        currentUser=data.session.user;
+
+        await startApp();
+
+    }else{
+
+        document.getElementById("loginScreen").style.display="flex";
+
+    }
+
+}
+
 
 supabaseClient.auth.onAuthStateChange(
     async(event,session)=>{
 
-        if(session && session.user){
+        if(session && !currentUser){
 
-            currentUser =
-                session.user;
+            currentUser=session.user;
 
-
-            document.getElementById(
-                "authScreen"
-            ).style.display =
-                "none";
-
-
-            document.getElementById(
-                "mainApp"
-            ).style.display =
-                "block";
-
-
-            document.getElementById(
-                "userEmail"
-            ).textContent =
-                currentUser.email;
-
-
-            await loadCloudData();
-
-
-            refreshAll();
-
-            showSelectedDay();
-
-        }
-        else{
-
-            currentUser = null;
-
-
-            document.getElementById(
-                "authScreen"
-            ).style.display =
-                "flex";
-
-
-            document.getElementById(
-                "mainApp"
-            ).style.display =
-                "none";
+            await startApp();
 
         }
 
@@ -1285,558 +969,516 @@ supabaseClient.auth.onAuthStateChange(
 );
 
 
-/* =====================================================
-   LOAD CLOUD DATA
-===================================================== */
+/* ---------------- APP START ---------------- */
 
-async function loadCloudData(){
+async function startApp(){
 
-    if(!currentUser) return;
+    document.getElementById("loginScreen").style.display="none";
+    document.getElementById("app").style.display="block";
+
+    document.getElementById("userEmail").textContent =
+        currentUser.email;
+
+    await loadData();
+
+    setDefaultMonthFilter();
+
+    renderAll();
+
+    checkReminders();
+}
 
 
-    const {
-        data,
-        error
-    } =
-    await supabaseClient
+/* ---------------- DATA ---------------- */
+
+async function loadData(){
+
+    const exp =
+        await supabaseClient
         .from("expenses")
         .select("*")
-        .eq(
-            "user_id",
-            currentUser.id
-        )
-        .order(
-            "created_at",
+        .eq("user_id",currentUser.id)
+        .order("created_at",{ascending:true});
+
+    if(exp.error){
+        alert(exp.error.message);
+        return;
+    }
+
+    expenses=exp.data || [];
+
+
+    const pay =
+        await supabaseClient
+        .from("payment_status")
+        .select("*")
+        .eq("user_id",currentUser.id);
+
+    if(pay.error){
+        alert(pay.error.message);
+        return;
+    }
+
+    payments=pay.data || [];
+
+
+    const inc =
+        await supabaseClient
+        .from("income")
+        .select("*")
+        .eq("user_id",currentUser.id)
+        .order("income_date",{ascending:false});
+
+    if(inc.error){
+        alert(inc.error.message);
+        return;
+    }
+
+    income=inc.data || [];
+
+}
+
+
+/* ---------------- HELPERS ---------------- */
+
+function money(value){
+
+    return "₹" +
+        Number(value || 0).toLocaleString(
+            "en-IN",
             {
-                ascending:true
+                maximumFractionDigits:2
             }
         );
 
-
-    if(error){
-
-        console.error(error);
-
-        alert(
-            "Could not load expenses: " +
-            error.message
-        );
-
-        return;
-    }
+}
 
 
-    expenses =
-        (data || []).map(e=>({
+function dateKey(date){
 
-            id:e.id,
+    const y=date.getFullYear();
 
-            name:e.name,
+    const m=String(date.getMonth()+1).padStart(2,"0");
 
-            amount:Number(e.amount),
+    const d=String(date.getDate()).padStart(2,"0");
 
-            frequency:e.frequency,
-
-            day:Number(e.due_day),
-
-            category:e.category,
-
-            startMonth:e.start_month
-
-        }));
-
-
-    await loadPaymentStatus();
+    return `${y}-${m}-${d}`;
 
 }
 
 
-/* =====================================================
-   LOAD PAYMENT STATUS
-===================================================== */
-
-async function loadPaymentStatus(){
-
-    paymentStatus = {};
-
-
-    const {
-        data,
-        error
-    } =
-    await supabaseClient
-        .from("payment_status")
-        .select("*")
-        .eq(
-            "user_id",
-            currentUser.id
-        );
-
-
-    if(error){
-
-        console.error(error);
-
-        return;
-    }
-
-
-    (data || []).forEach(item=>{
-
-        if(item.paid){
-
-            paymentStatus[
-                item.expense_id +
-                "_" +
-                item.payment_date
-            ] = true;
-
-        }
-
-    });
-
-}
-
-
-/* =====================================================
-   MONEY
-===================================================== */
-
-function money(amount){
-
-    return "₹" +
-        Number(amount || 0)
-        .toLocaleString("en-IN");
-
-}
-
-
-/* =====================================================
-   FREQUENCY
-===================================================== */
-
-function frequencyText(freq){
-
-    if(freq==="monthly")
-        return "Monthly";
-
-    if(freq==="quarterly")
-        return "Quarterly";
-
-    if(freq==="halfyearly")
-        return "Half-Yearly";
-
-    if(freq==="yearly")
-        return "Yearly";
-
-    return freq;
-
-}
-
-
-/* =====================================================
-   DATE STRING
-===================================================== */
-
-function dateString(date){
+function monthKey(date){
 
     return date.getFullYear() +
         "-" +
-        String(
-            date.getMonth()+1
-        ).padStart(2,"0") +
-        "-" +
-        String(
-            date.getDate()
-        ).padStart(2,"0");
+        String(date.getMonth()+1).padStart(2,"0");
 
 }
 
 
-/* =====================================================
-   PAYMENT KEY
-===================================================== */
+function firstDay(date){
 
-function paymentKey(expense,date){
-
-    return expense.id +
-        "_" +
-        dateString(date);
+    return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        1
+    );
 
 }
 
 
-/* =====================================================
-   EXPENSES FOR DATE
-===================================================== */
+function lastDay(date){
 
-function getExpensesForDate(date){
+    return new Date(
+        date.getFullYear(),
+        date.getMonth()+1,
+        0
+    );
 
-    const result = [];
-
-
-    expenses.forEach(expense=>{
-
-        const day =
-            Number(expense.day);
+}
 
 
-        if(!day) return;
+function monthName(date){
+
+    return date.toLocaleString(
+        "en-IN",
+        {
+            month:"long",
+            year:"numeric"
+        }
+    );
+
+}
 
 
-        const year =
-            date.getFullYear();
+function getDueDate(expense,year,month){
 
-        const month =
-            date.getMonth();
+    let day=Number(expense.due_day);
 
+    const last =
+        new Date(year,month+1,0).getDate();
 
-        const lastDay =
-            new Date(
-                year,
-                month+1,
-                0
-            ).getDate();
+    if(day>last) day=last;
 
+    return new Date(year,month,day);
 
-        const actualDay =
-            Math.min(
-                day,
-                lastDay
-            );
+}
 
 
-        if(
-            date.getDate() !==
-            actualDay
-        ){
+function frequencyMonths(freq){
 
+    if(freq==="Monthly") return 1;
+
+    if(freq==="Quarterly") return 3;
+
+    if(freq==="Half-Yearly") return 6;
+
+    if(freq==="Yearly") return 12;
+
+    return 1;
+
+}
+
+
+function isExpenseDueInMonth(expense,date){
+
+    const start =
+        String(expense.start_month || "");
+
+    const current =
+        monthKey(date);
+
+    if(current < start) return false;
+
+    const startDate =
+        new Date(start+"-01T00:00:00");
+
+    const diff =
+        (date.getFullYear()-startDate.getFullYear())*12 +
+        (date.getMonth()-startDate.getMonth());
+
+    return diff %
+        frequencyMonths(expense.frequency) === 0;
+
+}
+
+
+function occurrenceForExpense(expense,date){
+
+    if(!isExpenseDueInMonth(expense,date))
+        return null;
+
+    return getDueDate(
+        expense,
+        date.getFullYear(),
+        date.getMonth()
+    );
+
+}
+
+
+function getPayment(expenseId,date){
+
+    const key=dateKey(date);
+
+    return payments.find(
+        p =>
+            p.expense_id===expenseId &&
+            p.payment_date===key
+    );
+
+}
+
+
+async function setPaid(expense,date,paid){
+
+    const existing =
+        getPayment(expense.id,date);
+
+    const key=dateKey(date);
+
+    if(existing){
+
+        const {error} =
+            await supabaseClient
+            .from("payment_status")
+            .update({paid})
+            .eq("id",existing.id);
+
+        if(error){
+            alert(error.message);
             return;
-
         }
 
+        existing.paid=paid;
 
-        if(!expense.startMonth){
+    }else{
 
-            result.push(expense);
+        const {data,error} =
+            await supabaseClient
+            .from("payment_status")
+            .insert({
+                user_id:currentUser.id,
+                expense_id:expense.id,
+                payment_date:key,
+                paid
+            })
+            .select()
+            .single();
 
+        if(error){
+            alert(error.message);
             return;
+        }
+
+        payments.push(data);
+
+    }
+
+    renderAll();
+
+}
+
+
+/* ---------------- MONTH CALCULATIONS ---------------- */
+
+function getMonthExpenses(date){
+
+    const result=[];
+
+    for(const expense of expenses){
+
+        const due =
+            occurrenceForExpense(expense,date);
+
+        if(due){
+
+            result.push({
+                expense,
+                date:due,
+                payment:getPayment(expense.id,due)
+            });
 
         }
 
-
-        const parts =
-            String(
-                expense.startMonth
-            ).split("-");
-
-
-        const startYear =
-            Number(parts[0]);
-
-        const startMonthIndex =
-            Number(parts[1])-1;
-
-
-        const monthsDifference =
-            (year-startYear)*12 +
-            (month-startMonthIndex);
-
-
-        if(
-            monthsDifference < 0
-        ){
-
-            return;
-
-        }
-
-
-        if(
-            expense.frequency==="monthly"
-        ){
-
-            result.push(expense);
-
-        }
-
-        else if(
-            expense.frequency==="quarterly" &&
-            monthsDifference % 3 === 0
-        ){
-
-            result.push(expense);
-
-        }
-
-        else if(
-            expense.frequency==="halfyearly" &&
-            monthsDifference % 6 === 0
-        ){
-
-            result.push(expense);
-
-        }
-
-        else if(
-            expense.frequency==="yearly" &&
-            monthsDifference % 12 === 0
-        ){
-
-            result.push(expense);
-
-        }
-
-    });
-
+    }
 
     return result;
 
 }
 
 
-/* =====================================================
-   CALENDAR
-===================================================== */
+function getMonthIncome(date){
 
-function renderCalendar(){
+    const key=monthKey(date);
 
-    const year =
-        currentDate.getFullYear();
+    return income.filter(
+        x => String(x.income_date).slice(0,7)===key
+    );
 
-    const month =
-        currentDate.getMonth();
+}
 
 
-    const monthNames = [
+/* ---------------- DASHBOARD ---------------- */
 
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
+function renderDashboard(){
 
-    ];
+    const monthExpenses =
+        getMonthExpenses(currentDate);
 
+    const monthIncome =
+        getMonthIncome(currentDate);
 
-    document.getElementById(
-        "monthTitle"
-    ).textContent =
-        monthNames[month] +
-        " " +
-        year;
-
-
-    const calendar =
-        document.getElementById(
-            "calendar"
+    const totalIncome =
+        monthIncome.reduce(
+            (sum,x)=>sum+Number(x.amount),0
         );
 
-
-    calendar.innerHTML = "";
-
-
-    const firstDay =
-        new Date(
-            year,
-            month,
-            1
-        ).getDay();
-
-
-    const daysInMonth =
-        new Date(
-            year,
-            month+1,
-            0
-        ).getDate();
-
-
-    const daysInPreviousMonth =
-        new Date(
-            year,
-            month,
-            0
-        ).getDate();
-
-
-    for(
-        let i=firstDay-1;
-        i>=0;
-        i--
-    ){
-
-        const dayNumber =
-            daysInPreviousMonth-i;
-
-
-        const cell =
-            document.createElement(
-                "div"
-            );
-
-
-        cell.className =
-            "day other-month";
-
-
-        cell.innerHTML =
-            `<div class="day-number">
-                ${dayNumber}
-             </div>`;
-
-
-        calendar.appendChild(cell);
-
-    }
-
-
-    for(
-        let day=1;
-        day<=daysInMonth;
-        day++
-    ){
-
-        const date =
-            new Date(
-                year,
-                month,
-                day
-            );
-
-
-        const cell =
-            document.createElement(
-                "div"
-            );
-
-
-        cell.className =
-            "day";
-
-
-        const today =
-            new Date();
-
-
-        if(
-            date.getFullYear()===
-            today.getFullYear() &&
-
-            date.getMonth()===
-            today.getMonth() &&
-
-            date.getDate()===
-            today.getDate()
-        ){
-
-            cell.classList.add(
-                "today"
-            );
-
-        }
-
-
-        const number =
-            document.createElement(
-                "div"
-            );
-
-
-        number.className =
-            "day-number";
-
-        number.textContent =
-            day;
-
-
-        cell.appendChild(
-            number
+    const planned =
+        monthExpenses.reduce(
+            (sum,x)=>sum+Number(x.expense.amount),0
         );
 
-
-        const dayExpenses =
-            getExpensesForDate(
-                date
-            );
-
-
-        dayExpenses.forEach(
-            expense=>{
-
-                const dot =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                dot.className =
-                    "expense-dot";
-
-
-                dot.textContent =
-                    expense.name +
-                    " " +
-                    money(
-                        expense.amount
-                    );
-
-
-                cell.appendChild(
-                    dot
-                );
-
-            }
+    const paid =
+        monthExpenses
+        .filter(x=>x.payment && x.payment.paid)
+        .reduce(
+            (sum,x)=>sum+Number(x.expense.amount),0
         );
 
+    const pending=planned-paid;
 
-        cell.onclick =
-            function(){
+    document.getElementById("dashIncome").textContent=
+        money(totalIncome);
 
-                selectedDate =
-                    new Date(
-                        year,
-                        month,
-                        day
-                    );
+    document.getElementById("dashPlanned").textContent=
+        money(planned);
 
-                showSelectedDay();
+    document.getElementById("dashPaid").textContent=
+        money(paid);
 
-            };
+    document.getElementById("dashPending").textContent=
+        money(pending);
+
+    document.getElementById("dashBalance").textContent=
+        money(totalIncome-planned);
 
 
-        calendar.appendChild(
-            cell
-        );
+    const today=new Date();
+
+    const upcoming=getUpcoming(1);
+
+    if(upcoming.length){
+
+        const x=upcoming[0];
+
+        document.getElementById("dashNext").textContent =
+            `${x.expense.name} ${dateKey(x.date)}`;
+
+    }else{
+
+        document.getElementById("dashNext").textContent="-";
 
     }
 
 }
 
 
-/* =====================================================
-   SELECTED DAY
-===================================================== */
+/* ---------------- CALENDAR ---------------- */
 
-function showSelectedDay(){
+function renderCalendar(){
 
-    const title =
-        document.getElementById(
-            "selectedDateTitle"
+    document.getElementById("calendarTitle").textContent =
+        monthName(currentDate);
+
+    const calendar =
+        document.getElementById("calendar");
+
+    calendar.innerHTML="";
+
+    const first =
+        firstDay(currentDate);
+
+    const last =
+        lastDay(currentDate);
+
+    for(let i=0;i<first.getDay();i++){
+
+        calendar.appendChild(
+            document.createElement("div")
         );
 
+    }
+
+
+    const monthExpenses =
+        getMonthExpenses(currentDate);
+
+
+    for(let day=1;day<=last.getDate();day++){
+
+        const date =
+            new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                day
+            );
+
+        const div =
+            document.createElement("div");
+
+        div.className="day";
+
+        if(dateKey(date)===dateKey(new Date()))
+            div.classList.add("today");
+
+
+        const dayExpenses =
+            monthExpenses.filter(
+                x=>dateKey(x.date)===dateKey(date)
+            );
+
+
+        if(dayExpenses.length)
+            div.classList.add("has-expense");
+
+
+        div.innerHTML =
+            `<div class="day-number">${day}</div>`;
+
+
+        for(const x of dayExpenses){
+
+            const status =
+                x.payment && x.payment.paid
+                ? "day-paid"
+                : "day-pending";
+
+            div.innerHTML +=
+                `<div class="day-expense ${status}">
+                    ${escapeHtml(x.expense.name)}
+                    - ${money(x.expense.amount)}
+                </div>`;
+
+        }
+
+
+        div.onclick=()=>{
+
+            selectedDate=new Date(date);
+
+            renderSelectedDay();
+
+        };
+
+
+        calendar.appendChild(div);
+
+    }
+
+}
+
+
+function changeMonth(amount){
+
+    currentDate =
+        new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth()+amount,
+            1
+        );
+
+    selectedDate =
+        new Date(currentDate);
+
+    renderAll();
+
+}
+
+
+function goToday(){
+
+    currentDate=new Date();
+
+    selectedDate=new Date();
+
+    renderAll();
+
+}
+
+
+/* ---------------- SELECTED DAY ---------------- */
+
+function renderSelectedDay(){
+
+    const title =
+        document.getElementById("selectedDateTitle");
 
     title.textContent =
         selectedDate.toLocaleDateString(
             "en-IN",
             {
+                weekday:"long",
                 day:"numeric",
                 month:"long",
                 year:"numeric"
@@ -1844,1590 +1486,1206 @@ function showSelectedDay(){
         );
 
 
-    const container =
-        document.getElementById(
-            "selectedDayExpenses"
-        );
+    const box =
+        document.getElementById("selectedDayDetails");
 
+    const items=[];
 
-    container.innerHTML = "";
+    for(const expense of expenses){
 
-
-    const dayExpenses =
-        getExpensesForDate(
-            selectedDate
-        );
-
-
-    if(dayExpenses.length===0){
-
-        container.innerHTML =
-            `<div class="empty">
-                No expenses on this date
-             </div>`;
-
-        return;
-
-    }
-
-
-    dayExpenses.forEach(
-        expense=>{
-
-            const key =
-                paymentKey(
-                    expense,
-                    selectedDate
-                );
-
-
-            const paid =
-                paymentStatus[key]===true;
-
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-
-            row.className =
-                "expense-row";
-
-
-            row.innerHTML = `
-
-                <div class="expense-info">
-
-                    <strong>
-                        ${expense.name}
-                    </strong>
-
-                    <small>
-                        ${money(expense.amount)}
-                        • ${expense.category}
-                    </small>
-
-                </div>
-
-                <button
-                    class="status-btn ${
-                        paid
-                        ? "status-paid"
-                        : "status-pending"
-                    }"
-                    onclick="togglePayment(
-                        '${expense.id}',
-                        '${dateString(selectedDate)}'
-                    )"
-                >
-                    ${
-                        paid
-                        ? "✓ Paid"
-                        : "Pending"
-                    }
-                </button>
-
-            `;
-
-
-            container.appendChild(
-                row
+        const due =
+            occurrenceForExpense(
+                expense,
+                selectedDate
             );
+
+        if(due && dateKey(due)===dateKey(selectedDate)){
+
+            items.push({
+                expense,
+                due,
+                payment:getPayment(expense.id,due)
+            });
 
         }
-    );
 
-}
-
-
-/* =====================================================
-   TOGGLE PAYMENT
-===================================================== */
-
-async function togglePayment(
-    expenseId,
-    paymentDate
-){
-
-    if(!currentUser) return;
+    }
 
 
-    const key =
-        expenseId +
-        "_" +
-        paymentDate;
+    if(!items.length){
 
-
-    const currentlyPaid =
-        paymentStatus[key]===true;
-
-
-    const newValue =
-        !currentlyPaid;
-
-
-    const {
-        error
-    } =
-    await supabaseClient
-        .from("payment_status")
-        .upsert(
-            {
-
-                user_id:
-                    currentUser.id,
-
-                expense_id:
-                    expenseId,
-
-                payment_date:
-                    paymentDate,
-
-                paid:
-                    newValue
-
-            },
-            {
-                onConflict:
-                    "user_id,expense_id,payment_date"
-            }
-        );
-
-
-    if(error){
-
-        alert(
-            "Could not update payment: " +
-            error.message
-        );
+        box.innerHTML =
+            `<div class="empty">No payments on this date.</div>`;
 
         return;
 
     }
 
 
-    if(newValue){
+    box.innerHTML="";
 
-        paymentStatus[key]=true;
+
+    for(const item of items){
+
+        const paid =
+            item.payment &&
+            item.payment.paid;
+
+
+        const div =
+            document.createElement("div");
+
+        div.className="card";
+        div.style.marginBottom="10px";
+
+        div.innerHTML=`
+            <b>${escapeHtml(item.expense.name)}</b>
+            <div>${money(item.expense.amount)}</div>
+            <div class="small">${escapeHtml(item.expense.category)}</div>
+            <div style="margin-top:8px">
+                Status:
+                <span class="${paid ? "status-paid":"status-pending"}">
+                    ${paid ? "PAID":"PENDING"}
+                </span>
+            </div>
+        `;
+
+
+        const button =
+            document.createElement("button");
+
+        button.className =
+            paid ? "btn-gray" : "btn-green";
+
+        button.style.marginTop="8px";
+
+        button.textContent =
+            paid ? "Mark Pending" : "Mark Paid";
+
+        button.onclick=()=>{
+
+            setPaid(
+                item.expense,
+                item.due,
+                !paid
+            );
+
+        };
+
+
+        div.appendChild(button);
+
+        box.appendChild(div);
 
     }
-    else{
-
-        delete paymentStatus[key];
-
-    }
-
-
-    refreshAll();
-
-    showSelectedDay();
 
 }
 
 
-/* =====================================================
-   DASHBOARD
-===================================================== */
+/* ---------------- UPCOMING ---------------- */
 
-function updateDashboard(){
+function getUpcoming(limit=10){
 
-    const year =
-        currentDate.getFullYear();
+    const today=new Date();
 
-    const month =
-        currentDate.getMonth();
+    today.setHours(0,0,0,0);
 
+    const end =
+        new Date(today);
 
-    const daysInMonth =
-        new Date(
-            year,
-            month+1,
-            0
-        ).getDate();
-
-
-    let planned=0;
-
-    let paid=0;
-
-
-    for(
-        let day=1;
-        day<=daysInMonth;
-        day++
-    ){
-
-        const date =
-            new Date(
-                year,
-                month,
-                day
-            );
-
-
-        const dayExpenses =
-            getExpensesForDate(
-                date
-            );
-
-
-        dayExpenses.forEach(
-            expense=>{
-
-                const amount =
-                    Number(
-                        expense.amount
-                    )||0;
-
-
-                planned+=amount;
-
-
-                const key =
-                    paymentKey(
-                        expense,
-                        date
-                    );
-
-
-                if(
-                    paymentStatus[key]
-                ){
-
-                    paid+=amount;
-
-                }
-
-            }
-        );
-
-    }
-
-
-    const pending =
-        planned-paid;
-
-
-    document.getElementById(
-        "dashboardPlanned"
-    ).textContent =
-        money(planned);
-
-
-    document.getElementById(
-        "dashboardPaid"
-    ).textContent =
-        money(paid);
-
-
-    document.getElementById(
-        "dashboardPending"
-    ).textContent =
-        money(pending);
-
-
-    updateNextPayment();
-
-}
-
-
-/* =====================================================
-   UPCOMING PAYMENTS
-===================================================== */
-
-function getUpcomingPayments(){
-
-    const results=[];
-
-
-    const today =
-        new Date();
-
-
-    today.setHours(
-        0,0,0,0
+    end.setDate(
+        end.getDate()+365
     );
 
+    const result=[];
 
-    for(
-        let i=0;
-        i<365;
-        i++
-    ){
+
+    for(let offset=0;offset<=365;offset++){
 
         const date =
             new Date(today);
 
-
         date.setDate(
-            today.getDate()+i
+            date.getDate()+offset
         );
 
 
-        const dayExpenses =
-            getExpensesForDate(
-                date
-            );
+        for(const expense of expenses){
 
+            const due =
+                occurrenceForExpense(
+                    expense,
+                    date
+                );
 
-        dayExpenses.forEach(
-            expense=>{
+            if(
+                due &&
+                dateKey(due)===dateKey(date)
+            ){
 
-                const key =
-                    paymentKey(
-                        expense,
-                        date
+                const payment =
+                    getPayment(
+                        expense.id,
+                        due
                     );
 
 
-                if(
-                    !paymentStatus[key]
-                ){
+                if(!payment || !payment.paid){
 
-                    results.push({
-
-                        expense:expense,
-
-                        date:
-                            new Date(date)
-
+                    result.push({
+                        expense,
+                        date:due
                     });
 
                 }
 
             }
-        );
-
-
-        if(
-            results.length>=10
-        ){
-
-            break;
 
         }
 
     }
 
 
-    return results;
+    result.sort(
+        (a,b)=>a.date-b.date
+    );
+
+    return result.slice(0,limit);
 
 }
 
 
-/* =====================================================
-   NEXT PAYMENT
-===================================================== */
-
-function updateNextPayment(){
-
-    const upcoming =
-        getUpcomingPayments();
-
+function renderUpcoming(){
 
     const box =
-        document.getElementById(
-            "nextPaymentDetails"
-        );
+        document.getElementById("upcomingPayments");
 
+    const items =
+        getUpcoming(10);
 
-    const dashboardNext =
-        document.getElementById(
-            "dashboardNext"
-        );
-
-
-    if(upcoming.length===0){
+    if(!items.length){
 
         box.innerHTML =
-            "🎉 No pending payments in the next 365 days.";
-
-        dashboardNext.textContent =
-            "--";
+            `<div class="empty">No upcoming payments.</div>`;
 
         return;
 
     }
 
-
-    const item =
-        upcoming[0];
+    box.innerHTML="";
 
 
-    const dateText =
-        item.date.toLocaleDateString(
-            "en-IN",
-            {
-                day:"numeric",
-                month:"short",
-                year:"numeric"
-            }
-        );
+    for(const item of items){
+
+        const div =
+            document.createElement("div");
+
+        div.className="card";
+        div.style.marginBottom="8px";
+        div.style.cursor="pointer";
+
+        div.innerHTML=`
+            <b>${escapeHtml(item.expense.name)}</b>
+            <div>${money(item.expense.amount)}</div>
+            <div class="small">
+                ${item.date.toLocaleDateString("en-IN")}
+                · ${escapeHtml(item.expense.category)}
+            </div>
+        `;
 
 
-    dashboardNext.textContent =
-        dateText;
+        div.onclick=()=>{
+
+            currentDate =
+                new Date(
+                    item.date.getFullYear(),
+                    item.date.getMonth(),
+                    1
+                );
+
+            selectedDate =
+                new Date(item.date);
+
+            renderAll();
+
+        };
 
 
-    box.innerHTML = `
-
-        <div class="next-payment-name">
-            ${item.expense.name}
-        </div>
-
-        <div class="next-payment-details">
-            ${money(item.expense.amount)}
-            • ${item.expense.category}
-            • Due ${dateText}
-        </div>
-
-    `;
-
-}
-
-
-/* =====================================================
-   SHOW UPCOMING
-===================================================== */
-
-function showUpcomingPayments(){
-
-    const container =
-        document.getElementById(
-            "upcomingPayments"
-        );
-
-
-    const upcoming =
-        getUpcomingPayments();
-
-
-    container.innerHTML = "";
-
-
-    if(upcoming.length===0){
-
-        container.innerHTML =
-            `<div class="empty">
-                No upcoming payments
-             </div>`;
-
-        return;
+        box.appendChild(div);
 
     }
 
-
-    upcoming.forEach(
-        item=>{
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-
-            row.className =
-                "list-item upcoming-item";
-
-
-            const dateText =
-                item.date.toLocaleDateString(
-                    "en-IN",
-                    {
-                        day:"numeric",
-                        month:"short",
-                        year:"numeric"
-                    }
-                );
-
-
-            row.innerHTML = `
-
-                <div>
-
-                    <strong>
-                        ${item.expense.name}
-                    </strong>
-
-                    <small>
-                        ${dateText}
-                        • ${item.expense.category}
-                    </small>
-
-                </div>
-
-                <strong>
-                    ${money(
-                        item.expense.amount
-                    )}
-                </strong>
-
-            `;
-
-
-            row.onclick =
-                function(){
-
-                    currentDate =
-                        new Date(
-                            item.date.getFullYear(),
-                            item.date.getMonth(),
-                            1
-                        );
-
-
-                    selectedDate =
-                        new Date(
-                            item.date
-                        );
-
-
-                    refreshAll();
-
-                    showSelectedDay();
-
-
-                    window.scrollTo({
-
-                        top:0,
-
-                        behavior:"smooth"
-
-                    });
-
-                };
-
-
-            container.appendChild(
-                row
-            );
-
-        }
-    );
-
 }
 
 
-/* =====================================================
-   RECURRING EXPENSES
-===================================================== */
+/* ---------------- EXPENSE CRUD ---------------- */
 
-function showRecurringExpenses(){
+function openExpenseModal(id=null){
 
-    const container =
-        document.getElementById(
-            "recurringExpenses"
-        );
+    document.getElementById("expenseModal").style.display="flex";
 
+    if(id){
 
-    container.innerHTML = "";
+        const e =
+            expenses.find(x=>x.id===id);
 
+        if(!e) return;
 
-    if(expenses.length===0){
+        document.getElementById("expenseModalTitle")
+            .textContent="Edit Expense";
 
-        container.innerHTML =
-            `<div class="empty">
-                No recurring expenses added
-             </div>`;
+        document.getElementById("expenseId")
+            .value=e.id;
 
-        return;
+        document.getElementById("expenseName")
+            .value=e.name;
+
+        document.getElementById("expenseAmount")
+            .value=e.amount;
+
+        document.getElementById("expenseFrequency")
+            .value=e.frequency;
+
+        document.getElementById("expenseDueDay")
+            .value=e.due_day;
+
+        document.getElementById("expenseStartMonth")
+            .value=e.start_month;
+
+        document.getElementById("expenseCategory")
+            .value=e.category;
+
+    }else{
+
+        document.getElementById("expenseModalTitle")
+            .textContent="Add Expense";
+
+        document.getElementById("expenseId").value="";
+        document.getElementById("expenseName").value="";
+        document.getElementById("expenseAmount").value="";
+        document.getElementById("expenseFrequency").value="Monthly";
+        document.getElementById("expenseDueDay").value="1";
+        document.getElementById("expenseStartMonth").value=monthKey(new Date());
+        document.getElementById("expenseCategory").value="Other";
 
     }
 
-
-    expenses.forEach(
-        expense=>{
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-
-            row.className =
-                "list-item";
-
-
-            row.innerHTML = `
-
-                <div>
-
-                    <strong>
-                        ${expense.name}
-                    </strong>
-
-                    <small>
-
-                        ${money(
-                            expense.amount
-                        )}
-
-                        •
-                        ${frequencyText(
-                            expense.frequency
-                        )}
-
-                        • Day
-                        ${expense.day}
-
-                        •
-                        ${expense.category}
-
-                        • Start
-                        ${expense.startMonth}
-
-                    </small>
-
-                </div>
-
-
-                <div class="action-buttons">
-
-                    <button
-                        class="edit-btn"
-                        onclick="editExpense(
-                            '${expense.id}'
-                        )"
-                    >
-                        Edit
-                    </button>
-
-
-                    <button
-                        class="delete-btn"
-                        onclick="deleteExpense(
-                            '${expense.id}'
-                        )"
-                    >
-                        Delete
-                    </button>
-
-                </div>
-
-            `;
-
-
-            container.appendChild(
-                row
-            );
-
-        }
-    );
-
 }
 
 
-/* =====================================================
-   ADD FORM
-===================================================== */
+function closeExpenseModal(){
 
-function showAddForm(){
-
-    editingId=null;
-
-
-    document.getElementById(
-        "formTitle"
-    ).textContent =
-        "Add Expense";
-
-
-    document.getElementById(
-        "expenseName"
-    ).value="";
-
-
-    document.getElementById(
-        "expenseAmount"
-    ).value="";
-
-
-    document.getElementById(
-        "expenseFrequency"
-    ).value="monthly";
-
-
-    document.getElementById(
-        "expenseDay"
-    ).value="";
-
-
-    document.getElementById(
-        "expenseCategory"
-    ).value="Housing";
-
-
-    const now =
-        new Date();
-
-
-    document.getElementById(
-        "expenseStartMonth"
-    ).value =
-
-        now.getFullYear() +
-        "-" +
-        String(
-            now.getMonth()+1
-        ).padStart(2,"0");
-
-
-    document.getElementById(
-        "formSection"
-    ).style.display =
-        "block";
-
-
-    document.getElementById(
-        "formSection"
-    ).scrollIntoView({
-        behavior:"smooth"
-    });
+    document.getElementById("expenseModal").style.display="none";
 
 }
 
-
-/* =====================================================
-   HIDE FORM
-===================================================== */
-
-function hideForm(){
-
-    document.getElementById(
-        "formSection"
-    ).style.display =
-        "none";
-
-
-    editingId=null;
-
-}
-
-
-/* =====================================================
-   SAVE EXPENSE
-===================================================== */
 
 async function saveExpense(){
 
-    if(!currentUser) return;
-
+    const id =
+        document.getElementById("expenseId").value;
 
     const name =
-        document.getElementById(
-            "expenseName"
-        ).value.trim();
-
+        document.getElementById("expenseName").value.trim();
 
     const amount =
-        Number(
-            document.getElementById(
-                "expenseAmount"
-            ).value
-        );
-
+        Number(document.getElementById("expenseAmount").value);
 
     const frequency =
-        document.getElementById(
-            "expenseFrequency"
-        ).value;
+        document.getElementById("expenseFrequency").value;
 
-
-    const day =
-        Number(
-            document.getElementById(
-                "expenseDay"
-            ).value
-        );
-
-
-    const category =
-        document.getElementById(
-            "expenseCategory"
-        ).value;
-
+    const dueDay =
+        Number(document.getElementById("expenseDueDay").value);
 
     const startMonth =
-        document.getElementById(
-            "expenseStartMonth"
-        ).value;
+        document.getElementById("expenseStartMonth").value;
+
+    const category =
+        document.getElementById("expenseCategory").value;
 
 
-    if(!name){
+    if(!name || !amount || !dueDay || !startMonth){
 
-        alert(
-            "Please enter expense name."
-        );
-
-        return;
-
-    }
-
-
-    if(!amount || amount<=0){
-
-        alert(
-            "Please enter a valid amount."
-        );
+        alert("Please fill all required fields.");
 
         return;
 
     }
 
 
-    if(!day || day<1 || day>31){
+    if(dueDay<1 || dueDay>31){
 
-        alert(
-            "Please enter a due day between 1 and 31."
-        );
+        alert("Due day must be between 1 and 31.");
 
         return;
 
     }
 
 
-    if(!startMonth){
+    const row={
+        name,
+        amount,
+        frequency,
+        due_day:dueDay,
+        start_month:startMonth,
+        category
+    };
 
-        alert(
-            "Please select start month."
-        );
 
-        return;
+    if(id){
 
-    }
-
-
-    /* EDIT */
-
-    if(editingId){
-
-        const {
-            error
-        } =
-        await supabaseClient
+        const {data,error} =
+            await supabaseClient
             .from("expenses")
-            .update({
-
-                name:name,
-
-                amount:amount,
-
-                frequency:frequency,
-
-                due_day:day,
-
-                category:category,
-
-                start_month:startMonth
-
-            })
-            .eq(
-                "id",
-                editingId
-            )
-            .eq(
-                "user_id",
-                currentUser.id
-            );
-
+            .update(row)
+            .eq("id",id)
+            .eq("user_id",currentUser.id)
+            .select()
+            .single();
 
         if(error){
 
-            alert(
-                "Could not update expense: " +
-                error.message
-            );
+            alert(error.message);
 
             return;
 
         }
 
-    }
+        const index =
+            expenses.findIndex(x=>x.id===id);
 
-    /* ADD */
+        if(index>=0)
+            expenses[index]=data;
 
-    else{
+    }else{
 
-        const {
-            error
-        } =
-        await supabaseClient
+        const {data,error} =
+            await supabaseClient
             .from("expenses")
             .insert({
-
-                user_id:
-                    currentUser.id,
-
-                name:name,
-
-                amount:amount,
-
-                frequency:frequency,
-
-                due_day:day,
-
-                category:category,
-
-                start_month:startMonth
-
-            });
-
-
-        if(error){
-
-            alert(
-                "Could not save expense: " +
-                error.message
-            );
-
-            return;
-
-        }
-
-    }
-
-
-    hideForm();
-
-    await loadCloudData();
-
-    refreshAll();
-
-    showSelectedDay();
-
-}
-
-
-/* =====================================================
-   EDIT EXPENSE
-===================================================== */
-
-function editExpense(id){
-
-    const expense =
-        expenses.find(
-            e=>e.id===id
-        );
-
-
-    if(!expense) return;
-
-
-    editingId=id;
-
-
-    document.getElementById(
-        "formTitle"
-    ).textContent =
-        "Edit Expense";
-
-
-    document.getElementById(
-        "expenseName"
-    ).value =
-        expense.name;
-
-
-    document.getElementById(
-        "expenseAmount"
-    ).value =
-        expense.amount;
-
-
-    document.getElementById(
-        "expenseFrequency"
-    ).value =
-        expense.frequency;
-
-
-    document.getElementById(
-        "expenseDay"
-    ).value =
-        expense.day;
-
-
-    document.getElementById(
-        "expenseCategory"
-    ).value =
-        expense.category;
-
-
-    document.getElementById(
-        "expenseStartMonth"
-    ).value =
-        expense.startMonth;
-
-
-    document.getElementById(
-        "formSection"
-    ).style.display =
-        "block";
-
-
-    document.getElementById(
-        "formSection"
-    ).scrollIntoView({
-        behavior:"smooth"
-    });
-
-}
-
-
-/* =====================================================
-   DELETE EXPENSE
-===================================================== */
-
-async function deleteExpense(id){
-
-    const expense =
-        expenses.find(
-            e=>e.id===id
-        );
-
-
-    if(!expense) return;
-
-
-    if(
-        !confirm(
-            "Delete " +
-            expense.name +
-            "?"
-        )
-    ){
-
-        return;
-
-    }
-
-
-    const {
-        error
-    } =
-    await supabaseClient
-        .from("expenses")
-        .delete()
-        .eq(
-            "id",
-            id
-        )
-        .eq(
-            "user_id",
-            currentUser.id
-        );
-
-
-    if(error){
-
-        alert(
-            "Could not delete expense: " +
-            error.message
-        );
-
-        return;
-
-    }
-
-
-    await loadCloudData();
-
-    refreshAll();
-
-}
-
-
-/* =====================================================
-   IMPORT OLD LOCAL DATA
-===================================================== */
-
-async function importLocalData(){
-
-    if(!currentUser){
-
-        alert(
-            "Please login first."
-        );
-
-        return;
-
-    }
-
-
-    /*
-       Get old expenses
-    */
-
-    const oldExpenses =
-        JSON.parse(
-            localStorage.getItem(
-                "myExpenses"
-            ) || "[]"
-        );
-
-
-    /*
-       Get old paid records
-    */
-
-    const oldPayments =
-        JSON.parse(
-            localStorage.getItem(
-                "paymentStatus"
-            ) || "{}"
-        );
-
-
-    if(oldExpenses.length===0){
-
-        alert(
-            "No old local expenses were found on this browser."
-        );
-
-        return;
-
-    }
-
-
-    if(
-        !confirm(
-            "Import " +
-            oldExpenses.length +
-            " old expense(s) into your online account?"
-        )
-    ){
-
-        return;
-
-    }
-
-
-    /*
-       Map old expense IDs
-       to new Supabase IDs
-    */
-
-    const idMap={};
-
-
-    for(
-        const oldExpense of oldExpenses
-    ){
-
-        /*
-           OLD APP MAY HAVE USED:
-
-           dueDay
-
-           OR
-
-           day
-        */
-
-       let dueDay =
-    Number(
-        oldExpense.dueDay ??
-        oldExpense.day
-    );
-
-if (dueDay === 0) {
-    dueDay = 1;
-}
-
-
-        /*
-           SAFETY CHECK
-        */
-
-        if(
-            dueDay<1 ||
-            dueDay>31
-        ){
-
-            alert(
-                "Could not import " +
-                (
-                    oldExpense.name ||
-                    "an expense"
-                ) +
-                " because its due day is missing."
-            );
-
-            return;
-
-        }
-
-
-        /*
-           Start month
-        */
-
-        let startMonth =
-            oldExpense.startMonth;
-
-
-        /*
-           If old data used
-           numeric month,
-           convert it.
-
-           Example:
-           10 -> current year October
-        */
-
-        if(
-            typeof startMonth ===
-            "number"
-        ){
-
-            const now =
-                new Date();
-
-
-            startMonth =
-                now.getFullYear() +
-                "-" +
-                String(
-                    startMonth
-                ).padStart(
-                    2,
-                    "0"
-                );
-
-        }
-
-
-        /*
-           If no start month
-        */
-
-        if(!startMonth){
-
-            startMonth =
-                new Date()
-                    .toISOString()
-                    .slice(
-                        0,
-                        7
-                    );
-
-        }
-
-
-        /*
-           Insert into Supabase
-        */
-
-        const {
-            data,
-            error
-        } =
-        await supabaseClient
-            .from("expenses")
-            .insert({
-
-                user_id:
-                    currentUser.id,
-
-                name:
-                    oldExpense.name,
-
-                amount:
-                    Number(
-                        oldExpense.amount
-                    ),
-
-                frequency:
-                    oldExpense.frequency,
-
-                due_day:
-                    dueDay,
-
-                start_month:
-                    startMonth,
-
-                category:
-                    oldExpense.category ||
-                    "Other"
-
+                ...row,
+                user_id:currentUser.id
             })
             .select()
             .single();
 
-
         if(error){
 
-            alert(
-                "Import error for " +
-                (
-                    oldExpense.name ||
-                    "expense"
-                ) +
-                ":\n\n" +
-                error.message
+            alert(error.message);
+
+            return;
+
+        }
+
+        expenses.push(data);
+
+    }
+
+
+    closeExpenseModal();
+
+    renderAll();
+
+}
+
+
+async function deleteExpense(id){
+
+    if(!confirm("Delete this recurring expense?"))
+        return;
+
+
+    const {error} =
+        await supabaseClient
+        .from("expenses")
+        .delete()
+        .eq("id",id)
+        .eq("user_id",currentUser.id);
+
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+
+    }
+
+
+    expenses =
+        expenses.filter(x=>x.id!==id);
+
+    payments =
+        payments.filter(x=>x.expense_id!==id);
+
+    renderAll();
+
+}
+
+
+/* ---------------- EXPENSE LIST ---------------- */
+
+function renderExpenseList(){
+
+    const body =
+        document.getElementById("expenseList");
+
+    const search =
+        document.getElementById("searchBox")
+        .value
+        .toLowerCase();
+
+    const category =
+        document.getElementById("categoryFilter").value;
+
+
+    const filtered =
+        expenses.filter(e=>{
+
+            const matchesSearch =
+                !search ||
+                e.name.toLowerCase().includes(search) ||
+                e.category.toLowerCase().includes(search);
+
+            const matchesCategory =
+                !category ||
+                e.category===category;
+
+            return matchesSearch && matchesCategory;
+
+        });
+
+
+    if(!filtered.length){
+
+        body.innerHTML =
+            `<tr><td colspan="6" class="empty">
+                No expenses found.
+            </td></tr>`;
+
+        return;
+
+    }
+
+
+    body.innerHTML="";
+
+
+    for(const e of filtered){
+
+        const tr =
+            document.createElement("tr");
+
+        tr.innerHTML=`
+            <td>${escapeHtml(e.name)}</td>
+            <td>${money(e.amount)}</td>
+            <td>${escapeHtml(e.frequency)}</td>
+            <td>${e.due_day}</td>
+            <td>${escapeHtml(e.category)}</td>
+            <td></td>
+        `;
+
+
+        const td=tr.lastElementChild;
+
+        const edit =
+            document.createElement("button");
+
+        edit.className="btn";
+        edit.textContent="Edit";
+
+        edit.onclick=()=>openExpenseModal(e.id);
+
+
+        const del =
+            document.createElement("button");
+
+        del.className="btn-danger";
+        del.textContent="Delete";
+
+        del.onclick=()=>deleteExpense(e.id);
+
+
+        td.appendChild(edit);
+        td.appendChild(del);
+
+        body.appendChild(tr);
+
+    }
+
+}
+
+
+/* ---------------- INCOME ---------------- */
+
+function openIncomeModal(){
+
+    document.getElementById("incomeModal").style.display="flex";
+
+    document.getElementById("incomeId").value="";
+
+    document.getElementById("incomeName").value="";
+
+    document.getElementById("incomeAmount").value="";
+
+    document.getElementById("incomeDate").value=
+        dateKey(new Date());
+
+}
+
+
+function closeIncomeModal(){
+
+    document.getElementById("incomeModal").style.display="none";
+
+}
+
+
+async function saveIncome(){
+
+    const name =
+        document.getElementById("incomeName").value.trim();
+
+    const amount =
+        Number(document.getElementById("incomeAmount").value);
+
+    const date =
+        document.getElementById("incomeDate").value;
+
+
+    if(!name || !amount || !date){
+
+        alert("Please fill all fields.");
+
+        return;
+
+    }
+
+
+    const {data,error} =
+        await supabaseClient
+        .from("income")
+        .insert({
+            user_id:currentUser.id,
+            name,
+            amount,
+            income_date:date
+        })
+        .select()
+        .single();
+
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+
+    }
+
+
+    income.unshift(data);
+
+    closeIncomeModal();
+
+    renderAll();
+
+}
+
+
+async function deleteIncome(id){
+
+    if(!confirm("Delete this income entry?"))
+        return;
+
+
+    const {error} =
+        await supabaseClient
+        .from("income")
+        .delete()
+        .eq("id",id)
+        .eq("user_id",currentUser.id);
+
+
+    if(error){
+
+        alert(error.message);
+
+        return;
+
+    }
+
+
+    income =
+        income.filter(x=>x.id!==id);
+
+    renderAll();
+
+}
+
+
+function renderIncome(){
+
+    const box =
+        document.getElementById("incomeList");
+
+    const search =
+        document.getElementById("searchBox")
+        .value
+        .toLowerCase();
+
+
+    const filtered =
+        income.filter(x=>
+            !search ||
+            x.name.toLowerCase().includes(search)
+        );
+
+
+    if(!filtered.length){
+
+        box.innerHTML =
+            `<div class="empty">No income entries.</div>`;
+
+        return;
+
+    }
+
+
+    box.innerHTML="";
+
+
+    for(const x of filtered){
+
+        const div =
+            document.createElement("div");
+
+        div.className="card";
+        div.style.marginBottom="8px";
+
+        div.innerHTML=`
+            <b>${escapeHtml(x.name)}</b>
+            <div class="green">${money(x.amount)}</div>
+            <div class="small">${x.income_date}</div>
+        `;
+
+
+        const button =
+            document.createElement("button");
+
+        button.className="btn-danger";
+        button.style.marginTop="7px";
+        button.textContent="Delete";
+
+        button.onclick=()=>deleteIncome(x.id);
+
+        div.appendChild(button);
+
+        box.appendChild(div);
+
+    }
+
+}
+
+
+/* ---------------- REPORTS ---------------- */
+
+function renderReports(){
+
+    const monthExpenses =
+        getMonthExpenses(currentDate);
+
+    const categories={};
+
+    for(const item of monthExpenses){
+
+        const cat=item.expense.category;
+
+        categories[cat] =
+            (categories[cat] || 0) +
+            Number(item.expense.amount);
+
+    }
+
+
+    const total =
+        Object.values(categories)
+        .reduce((a,b)=>a+b,0);
+
+
+    const box =
+        document.getElementById("categoryReport");
+
+    box.innerHTML="";
+
+
+    const sorted =
+        Object.entries(categories)
+        .sort((a,b)=>b[1]-a[1]);
+
+
+    if(!sorted.length){
+
+        box.innerHTML=
+            `<div class="empty">No expenses this month.</div>`;
+
+    }
+
+
+    for(const [cat,value] of sorted){
+
+        const percent =
+            total ? value/total*100 : 0;
+
+
+        const div =
+            document.createElement("div");
+
+        div.className="report-row";
+
+        div.innerHTML=`
+            <div class="report-head">
+                <span>${escapeHtml(cat)}</span>
+                <b>${money(value)}</b>
+            </div>
+
+            <div class="progress">
+                <div class="progress-bar"
+                     style="width:${percent}%"></div>
+            </div>
+        `;
+
+        box.appendChild(div);
+
+    }
+
+
+    const special={
+
+        "Investment":
+            monthExpenses
+            .filter(x=>x.expense.category==="Investment")
+            .reduce((s,x)=>s+Number(x.expense.amount),0),
+
+        "Loan / EMI":
+            monthExpenses
+            .filter(x=>x.expense.category==="Loan / EMI")
+            .reduce((s,x)=>s+Number(x.expense.amount),0),
+
+        "Insurance":
+            monthExpenses
+            .filter(x=>x.expense.category==="Insurance")
+            .reduce((s,x)=>s+Number(x.expense.amount),0)
+
+    };
+
+
+    const specialBox =
+        document.getElementById("specialReport");
+
+    specialBox.innerHTML="";
+
+
+    for(const [name,value] of Object.entries(special)){
+
+        specialBox.innerHTML +=
+            `<div class="card" style="margin-bottom:8px">
+                <div class="small">${name}</div>
+                <b>${money(value)}</b>
+            </div>`;
+
+    }
+
+
+    const monthlyBox =
+        document.getElementById("monthlyReport");
+
+    monthlyBox.innerHTML="";
+
+
+    for(let i=5;i>=0;i--){
+
+        const d =
+            new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth()-i,
+                1
             );
+
+
+        const items =
+            getMonthExpenses(d);
+
+
+        const planned =
+            items.reduce(
+                (s,x)=>s+Number(x.expense.amount),0
+            );
+
+
+        const paid =
+            items
+            .filter(x=>x.payment && x.payment.paid)
+            .reduce(
+                (s,x)=>s+Number(x.expense.amount),0
+            );
+
+
+        monthlyBox.innerHTML +=
+            `<div class="card" style="margin-bottom:8px">
+                <b>${monthName(d)}</b>
+                <div>Planned: ${money(planned)}</div>
+                <div class="green">Paid: ${money(paid)}</div>
+                <div class="red">Pending: ${money(planned-paid)}</div>
+            </div>`;
+
+    }
+
+}
+
+
+/* ---------------- BACKUP ---------------- */
+
+async function exportBackup(){
+
+    const backup={
+
+        version:2,
+
+        exportedAt:new Date().toISOString(),
+
+        expenses,
+
+        payments,
+
+        income
+
+    };
+
+
+    const blob =
+        new Blob(
+            [JSON.stringify(backup,null,2)],
+            {type:"application/json"}
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href=url;
+
+    a.download=
+        "expense-calendar-backup-" +
+        dateKey(new Date()) +
+        ".json";
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+async function importBackup(event){
+
+    const file =
+        event.target.files[0];
+
+    if(!file) return;
+
+
+    try{
+
+        const text =
+            await file.text();
+
+        const backup =
+            JSON.parse(text);
+
+
+        if(!backup.expenses){
+
+            alert("Invalid backup file.");
 
             return;
 
         }
 
 
-        /*
-           Save ID mapping
-        */
-
-        idMap[
-            oldExpense.id
-        ] =
-            data.id;
-
-    }
-
-
-    /*
-       IMPORT OLD PAID PAYMENTS
-    */
-
-    const paymentRows=[];
-
-
-    for(
-        const key in oldPayments
-    ){
-
         if(
-            !oldPayments[key]
-        ){
-
-            continue;
-
-        }
+            !confirm(
+                "Restore this backup? Existing data will not be deleted."
+            )
+        ) return;
 
 
-        /*
-           OLD PAYMENT KEY FORMAT:
-
-           expenseId_year_month_day
-
-           Old month was JavaScript
-           month number 0-11.
-
-           Example:
-
-           123_2026_9_10
-
-           means:
-
-           10 October 2026
-        */
-
-        const parts =
-            key.split("_");
+        const idMap={};
 
 
-        if(parts.length<4){
+        for(const oldExpense of backup.expenses){
 
-            continue;
-
-        }
-
-
-        const oldId =
-            parts[0];
-
-
-        const year =
-            Number(parts[1]);
+            const row={
+                user_id:currentUser.id,
+                name:oldExpense.name,
+                amount:oldExpense.amount,
+                frequency:oldExpense.frequency,
+                due_day:oldExpense.due_day ?? oldExpense.dueDay ?? oldExpense.day ?? 1,
+                start_month:oldExpense.start_month ?? oldExpense.startMonth,
+                category:oldExpense.category || "Other"
+            };
 
 
-        const oldMonth =
-            Number(parts[2]);
+            if(row.due_day===0)
+                row.due_day=1;
 
 
-        const day =
-            Number(parts[3]);
+            const {data,error} =
+                await supabaseClient
+                .from("expenses")
+                .insert(row)
+                .select()
+                .single();
 
 
-        const newId =
-            idMap[oldId];
+            if(error)
+                throw error;
 
 
-        if(!newId){
-
-            continue;
+            idMap[oldExpense.id]=data.id;
 
         }
 
 
-        const paymentDate =
-            year +
-            "-" +
-            String(
-                oldMonth+1
-            ).padStart(
-                2,
-                "0"
-            ) +
-            "-" +
-            String(
-                day
-            ).padStart(
-                2,
-                "0"
-            );
+        if(Array.isArray(backup.income)){
+
+            for(const x of backup.income){
+
+                const {error} =
+                    await supabaseClient
+                    .from("income")
+                    .insert({
+                        user_id:currentUser.id,
+                        name:x.name,
+                        amount:x.amount,
+                        income_date:x.income_date
+                    });
+
+                if(error)
+                    throw error;
+
+            }
+
+        }
 
 
-        paymentRows.push({
+        await loadData();
 
-            user_id:
-                currentUser.id,
+        renderAll();
 
-            expense_id:
-                newId,
+        alert("Backup restored successfully.");
 
-            payment_date:
-                paymentDate,
+    }catch(error){
 
-            paid:true
-
-        });
+        alert(
+            "Restore failed: " +
+            error.message
+        );
 
     }
 
 
-    /*
-       Save paid records
-    */
+    event.target.value="";
+
+}
+
+
+/* ---------------- NOTIFICATIONS ---------------- */
+
+async function requestNotifications(){
+
+    if(!("Notification" in window)){
+
+        alert(
+            "This browser does not support notifications."
+        );
+
+        return;
+
+    }
+
+
+    const permission =
+        await Notification.requestPermission();
+
+
+    if(permission==="granted"){
+
+        alert("Notifications enabled.");
+
+        checkReminders();
+
+    }else{
+
+        alert("Notification permission was not granted.");
+
+    }
+
+}
+
+
+function checkReminders(){
 
     if(
-        paymentRows.length>0
-    ){
-
-        const {
-            error
-        } =
-        await supabaseClient
-            .from("payment_status")
-            .upsert(
-                paymentRows,
-                {
-                    onConflict:
-                        "user_id,expense_id,payment_date"
-                }
-            );
+        !("Notification" in window) ||
+        Notification.permission!=="granted"
+    )
+        return;
 
 
-        if(error){
+    const upcoming =
+        getUpcoming(10);
 
-            console.error(
-                "Payment import error:",
-                error
-            );
 
-        }
+    const todayKey=
+        dateKey(new Date());
+
+
+    const already =
+        localStorage.getItem(
+            "expenseReminder-"+todayKey
+        );
+
+
+    if(already)
+        return;
+
+
+    const todayPayments =
+        upcoming.filter(
+            x=>dateKey(x.date)===todayKey
+        );
+
+
+    if(todayPayments.length){
+
+        new Notification(
+            "Expense Calendar",
+            {
+                body:
+                    `${todayPayments.length} payment(s) due today.`
+            }
+        );
+
+
+        localStorage.setItem(
+            "expenseReminder-"+todayKey,
+            "1"
+        );
 
     }
 
-
-    /*
-       Reload cloud data
-    */
-
-    await loadCloudData();
-
-    refreshAll();
-
-    showSelectedDay();
+}
 
 
-    alert(
-        "✅ Old expenses imported successfully!"
+/* ---------------- PWA ---------------- */
+
+window.addEventListener(
+    "beforeinstallprompt",
+    event=>{
+
+        event.preventDefault();
+
+        deferredInstallPrompt=event;
+
+        document.getElementById("installBox")
+            .style.display="block";
+
+    }
+);
+
+
+async function installApp(){
+
+    if(!deferredInstallPrompt)
+        return;
+
+    deferredInstallPrompt.prompt();
+
+    await deferredInstallPrompt.userChoice;
+
+    deferredInstallPrompt=null;
+
+    document.getElementById("installBox")
+        .style.display="none";
+
+}
+
+
+if("serviceWorker" in navigator){
+
+    window.addEventListener(
+        "load",
+        ()=>{
+            navigator.serviceWorker.register("./sw.js")
+            .catch(()=>{});
+        }
     );
 
 }
 
 
-/* =====================================================
-   MONTH NAVIGATION
-===================================================== */
+/* ---------------- FILTER ---------------- */
 
-function previousMonth(){
+function setDefaultMonthFilter(){
 
-    currentDate.setMonth(
-        currentDate.getMonth()-1
-    );
-
-    refreshAll();
+    document.getElementById("monthFilter")
+        .value=monthKey(new Date());
 
 }
 
 
-function nextMonth(){
+/* ---------------- RENDER ALL ---------------- */
 
-    currentDate.setMonth(
-        currentDate.getMonth()+1
-    );
+function renderAll(){
 
-    refreshAll();
-
-}
-
-
-function goToday(){
-
-    currentDate =
-        new Date();
-
-    selectedDate =
-        new Date();
-
-    refreshAll();
-
-    showSelectedDay();
-
-}
-
-
-/* =====================================================
-   REFRESH
-===================================================== */
-
-function refreshAll(){
+    renderDashboard();
 
     renderCalendar();
 
-    updateDashboard();
+    renderSelectedDay();
 
-    showUpcomingPayments();
+    renderUpcoming();
 
-    showRecurringExpenses();
+    renderExpenseList();
+
+    renderIncome();
+
+    renderReports();
 
 }
 
 
-/* =====================================================
-   INITIAL SESSION CHECK
-===================================================== */
+/* ---------------- SAFETY ---------------- */
 
-(async function(){
+function escapeHtml(value){
 
-    const {
-        data
-    } =
-    await supabaseClient.auth.getSession();
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
 
 
-    if(
-        data &&
-        data.session
-    ){
+/* ---------------- START ---------------- */
 
-        currentUser =
-            data.session.user;
-
-    }
-
-})();
+init();
 
 </script>
 
