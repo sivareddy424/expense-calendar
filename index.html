@@ -453,6 +453,9 @@ th{
         font-size:18px;
     }
 }
+
+/* VERSION 3 */
+.v3-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}.v3-tab{background:#e5e7eb;color:#1f2937}.v3-tab.active{background:#2563eb;color:#fff}.v3-view{display:none}.v3-view.active{display:block}.v3-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.v3-progress{height:9px;background:#e5e7eb;border-radius:10px;overflow:hidden}.v3-bar{height:100%;background:#2563eb}.v3-item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;padding:12px;margin-bottom:8px}.v3-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}@media(max-width:700px){.v3-grid{grid-template-columns:1fr}}
 </style>
 </head>
 
@@ -493,6 +496,9 @@ th{
         <div class="header-actions">
             <button class="btn-light" onclick="openExpenseModal()">+ Expense</button>
             <button class="btn-light" onclick="openIncomeModal()">+ Income</button>
+            <button class="btn-light" onclick="openRecurringIncomeModal()">+ Salary</button>
+            <button class="btn-light" onclick="openLoanModal()">+ Loan</button>
+            <button class="btn-light" onclick="openGoalModal()">+ Goal</button>
             <button class="btn-light" onclick="requestNotifications()">🔔 Alerts</button>
             <button class="btn-light" onclick="exportBackup()">Backup</button>
             <button class="btn-light" onclick="document.getElementById('importFile').click()">Restore</button>
@@ -519,6 +525,29 @@ th{
     You can install Expense Calendar on your phone or computer for quick access.
     <button class="btn" onclick="installApp()">Install</button>
 </div>
+
+<div class="v3-tabs">
+<button class="v3-tab active" onclick="showV3('overview',this)">💰 Finance Overview</button>
+<button class="v3-tab" onclick="showV3('loans',this)">🏦 Loans & EMI</button>
+<button class="v3-tab" onclick="showV3('goals',this)">🎯 Savings Goals</button>
+<button class="v3-tab" onclick="showV3('yearly',this)">📊 Yearly Finance</button>
+</div>
+
+<div id="v3-overview" class="v3-view active">
+<div class="section"><h2>Version 3 Financial Overview</h2><div class="dashboard">
+<div class="card"><div class="stat-title">Recurring Income</div><div id="v3RecurringIncome" class="stat-value green">₹0</div></div>
+<div class="card"><div class="stat-title">Total Debt</div><div id="v3Debt" class="stat-value red">₹0</div></div>
+<div class="card"><div class="stat-title">Monthly EMI</div><div id="v3Emi" class="stat-value orange">₹0</div></div>
+<div class="card"><div class="stat-title">Monthly Savings</div><div id="v3Savings" class="stat-value blue">₹0</div></div>
+<div class="card"><div class="stat-title">Savings Goals</div><div id="v3GoalTotal" class="stat-value">₹0</div></div>
+<div class="card"><div class="stat-title">Goal Progress</div><div id="v3GoalProgress" class="stat-value green">0%</div></div>
+</div></div>
+<div class="v3-grid"><div class="section"><h2>💼 Recurring Income</h2><div id="v3RecurringIncomeList"></div></div><div class="section"><h2>🎯 Savings Goals</h2><div id="v3GoalMini"></div></div></div>
+</div>
+
+<div id="v3-loans" class="v3-view"><div class="section"><h2>🏦 Loans & EMI</h2><div id="v3LoanList"></div></div></div>
+<div id="v3-goals" class="v3-view"><div class="section"><h2>🎯 Savings Goals</h2><div id="v3GoalList"></div></div></div>
+<div id="v3-yearly" class="v3-view"><div class="section"><h2>📊 12-Month Financial Summary</h2><div id="v3YearlyReport"></div></div></div>
 
 <!-- DASHBOARD -->
 
@@ -831,6 +860,28 @@ th{
 
 </div>
 
+
+<!-- VERSION 3 MODALS -->
+<div id="recurringIncomeModal" class="modal"><div class="modal-box"><h2>Add Recurring Income</h2><div class="form-grid">
+<div class="form-group"><label>Source</label><input id="riName" placeholder="Salary"></div>
+<div class="form-group"><label>Amount</label><input id="riAmount" type="number"></div>
+<div class="form-group"><label>Frequency</label><select id="riFrequency"><option>Monthly</option><option>Quarterly</option><option>Yearly</option></select></div>
+<div class="form-group"><label>Start Date</label><input id="riStart" type="date"></div>
+<div class="form-group"><label>End Date (optional)</label><input id="riEnd" type="date"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV3Modal('recurringIncomeModal')">Cancel</button><button class="btn-green" onclick="saveRecurringIncome()">Save</button></div></div></div>
+
+<div id="loanModal" class="modal"><div class="modal-box"><h2>Add Loan / EMI</h2><div class="form-grid">
+<div class="form-group"><label>Loan Name</label><input id="loanName"></div><div class="form-group"><label>Lender</label><input id="loanLender"></div>
+<div class="form-group"><label>Original Amount</label><input id="loanOriginal" type="number"></div><div class="form-group"><label>Outstanding Amount</label><input id="loanOutstanding" type="number"></div>
+<div class="form-group"><label>Interest Rate %</label><input id="loanRate" type="number" step="0.01"></div><div class="form-group"><label>EMI Amount</label><input id="loanEmi" type="number"></div>
+<div class="form-group"><label>Start Date</label><input id="loanStart" type="date"></div><div class="form-group"><label>Tenure (months)</label><input id="loanTenure" type="number"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV3Modal('loanModal')">Cancel</button><button class="btn" onclick="saveLoan()">Save</button></div></div></div>
+
+<div id="goalModal" class="modal"><div class="modal-box"><h2>Add Savings Goal</h2><div class="form-grid">
+<div class="form-group"><label>Goal Name</label><input id="goalName"></div><div class="form-group"><label>Target Amount</label><input id="goalTarget" type="number"></div>
+<div class="form-group"><label>Current Amount</label><input id="goalCurrent" type="number" value="0"></div><div class="form-group"><label>Target Date</label><input id="goalDate" type="date"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV3Modal('goalModal')">Cancel</button><button class="btn-green" onclick="saveGoal()">Save</button></div></div></div>
+
 <script>
 
 const SUPABASE_URL =
@@ -849,6 +900,10 @@ let currentUser = null;
 let expenses = [];
 let income = [];
 let payments = [];
+let recurringIncome = [];
+let loans = [];
+let savingsGoals = [];
+let savingsTransactions = [];
 
 let currentDate = new Date();
 let selectedDate = new Date();
@@ -1035,6 +1090,22 @@ async function loadData(){
     }
 
     income=inc.data || [];
+
+    const ri = await supabaseClient.from("recurring_income").select("*").eq("user_id",currentUser.id);
+    if(ri.error){ alert(ri.error.message); return; }
+    recurringIncome = ri.data || [];
+
+    const loan = await supabaseClient.from("loans").select("*").eq("user_id",currentUser.id);
+    if(loan.error){ alert(loan.error.message); return; }
+    loans = loan.data || [];
+
+    const goal = await supabaseClient.from("savings_goals").select("*").eq("user_id",currentUser.id);
+    if(goal.error){ alert(goal.error.message); return; }
+    savingsGoals = goal.data || [];
+
+    const st = await supabaseClient.from("savings_transactions").select("*").eq("user_id",currentUser.id);
+    if(st.error){ alert(st.error.message); return; }
+    savingsTransactions = st.data || [];
 
 }
 
@@ -1292,7 +1363,7 @@ function renderDashboard(){
     const totalIncome =
         monthIncome.reduce(
             (sum,x)=>sum+Number(x.amount),0
-        );
+        ) + recurringIncomeForMonth(currentDate);
 
     const planned =
         monthExpenses.reduce(
@@ -2350,7 +2421,15 @@ async function exportBackup(){
 
     const backup={
 
-        version:2,
+        version:3,
+
+        recurring_income:recurringIncome,
+
+        loans,
+
+        savings_goals:savingsGoals,
+
+        savings_transactions:savingsTransactions,
 
         exportedAt:new Date().toISOString(),
 
@@ -2392,116 +2471,168 @@ async function exportBackup(){
 
 async function importBackup(event){
 
-    const file =
-        event.target.files[0];
-
+    const file = event.target.files[0];
     if(!file) return;
 
-
     try{
+        const backup = JSON.parse(await file.text());
 
-        const text =
-            await file.text();
-
-        const backup =
-            JSON.parse(text);
-
-
-        if(!backup.expenses){
-
+        if(!Array.isArray(backup.expenses)){
             alert("Invalid backup file.");
-
             return;
-
         }
 
+        if(!confirm("Restore this backup? Existing data will not be deleted.")) return;
 
-        if(
-            !confirm(
-                "Restore this backup? Existing data will not be deleted."
-            )
-        ) return;
-
-
-        const idMap={};
-
+        const expenseMap = {};
+        const goalMap = {};
 
         for(const oldExpense of backup.expenses){
+            let dueDay = Number(oldExpense.due_day ?? oldExpense.dueDay ?? oldExpense.day ?? 1);
+            if(dueDay === 0) dueDay = 1;
 
-            const row={
-                user_id:currentUser.id,
-                name:oldExpense.name,
-                amount:oldExpense.amount,
-                frequency:oldExpense.frequency,
-                due_day:oldExpense.due_day ?? oldExpense.dueDay ?? oldExpense.day ?? 1,
-                start_month:oldExpense.start_month ?? oldExpense.startMonth,
-                category:oldExpense.category || "Other"
+            const row = {
+                user_id: currentUser.id,
+                name: oldExpense.name,
+                amount: oldExpense.amount,
+                frequency: oldExpense.frequency,
+                due_day: dueDay,
+                start_month: oldExpense.start_month ?? oldExpense.startMonth,
+                category: oldExpense.category || "Other"
             };
 
-
-            if(row.due_day===0)
-                row.due_day=1;
-
-
-            const {data,error} =
-                await supabaseClient
-                .from("expenses")
-                .insert(row)
-                .select()
-                .single();
-
-
-            if(error)
-                throw error;
-
-
-            idMap[oldExpense.id]=data.id;
-
+            const {data,error} = await supabaseClient
+                .from("expenses").insert(row).select().single();
+            if(error) throw error;
+            expenseMap[oldExpense.id] = data.id;
         }
 
+        if(Array.isArray(backup.payments)){
+            for(const oldPayment of backup.payments){
+                const newExpenseId = expenseMap[oldPayment.expense_id];
+                if(!newExpenseId) continue;
+                const {error} = await supabaseClient.from("payment_status").insert({
+                    user_id: currentUser.id,
+                    expense_id: newExpenseId,
+                    payment_date: oldPayment.payment_date,
+                    paid: !!oldPayment.paid
+                });
+                if(error) throw error;
+            }
+        }
 
         if(Array.isArray(backup.income)){
-
             for(const x of backup.income){
-
-                const {error} =
-                    await supabaseClient
-                    .from("income")
-                    .insert({
-                        user_id:currentUser.id,
-                        name:x.name,
-                        amount:x.amount,
-                        income_date:x.income_date
-                    });
-
-                if(error)
-                    throw error;
-
+                const {error} = await supabaseClient.from("income").insert({
+                    user_id: currentUser.id,
+                    name: x.name,
+                    amount: x.amount,
+                    income_date: x.income_date
+                });
+                if(error) throw error;
             }
-
         }
 
+        if(Array.isArray(backup.recurring_income)){
+            for(const x of backup.recurring_income){
+                const {error} = await supabaseClient.from("recurring_income").insert({
+                    user_id: currentUser.id,
+                    name: x.name,
+                    amount: x.amount,
+                    frequency: x.frequency,
+                    start_date: x.start_date,
+                    end_date: x.end_date || null
+                });
+                if(error) throw error;
+            }
+        }
+
+        if(Array.isArray(backup.loans)){
+            for(const x of backup.loans){
+                const {error} = await supabaseClient.from("loans").insert({
+                    user_id: currentUser.id,
+                    name: x.name,
+                    lender: x.lender || null,
+                    original_amount: x.original_amount,
+                    outstanding_amount: x.outstanding_amount,
+                    interest_rate: x.interest_rate || 0,
+                    emi_amount: x.emi_amount,
+                    start_date: x.start_date,
+                    tenure_months: x.tenure_months
+                });
+                if(error) throw error;
+            }
+        }
+
+        if(Array.isArray(backup.savings_goals)){
+            for(const x of backup.savings_goals){
+                const {data,error} = await supabaseClient.from("savings_goals").insert({
+                    user_id: currentUser.id,
+                    name: x.name,
+                    target_amount: x.target_amount,
+                    current_amount: x.current_amount || 0,
+                    target_date: x.target_date || null
+                }).select().single();
+                if(error) throw error;
+                goalMap[x.id] = data.id;
+            }
+        }
+
+        if(Array.isArray(backup.savings_transactions)){
+            for(const x of backup.savings_transactions){
+                const newGoalId = goalMap[x.goal_id];
+                if(!newGoalId) continue;
+                const {error} = await supabaseClient.from("savings_transactions").insert({
+                    user_id: currentUser.id,
+                    goal_id: newGoalId,
+                    amount: x.amount,
+                    transaction_date: x.transaction_date,
+                    note: x.note || null
+                });
+                if(error) throw error;
+            }
+        }
 
         await loadData();
-
         renderAll();
-
         alert("Backup restored successfully.");
 
     }catch(error){
-
-        alert(
-            "Restore failed: " +
-            error.message
-        );
-
+        alert("Restore failed: " + error.message);
     }
 
-
     event.target.value="";
-
 }
 
+/* ---------------- VERSION 3 ---------------- */
+function showV3(id,button){
+ document.querySelectorAll('.v3-view').forEach(x=>x.classList.remove('active'));
+ document.getElementById('v3-'+id).classList.add('active');
+ document.querySelectorAll('.v3-tab').forEach(x=>x.classList.remove('active'));
+ button.classList.add('active'); renderV3();
+}
+function closeV3Modal(id){document.getElementById(id).style.display='none'}
+function openRecurringIncomeModal(){document.getElementById('recurringIncomeModal').style.display='flex';document.getElementById('riName').value='';document.getElementById('riAmount').value='';document.getElementById('riFrequency').value='Monthly';document.getElementById('riStart').value=dateKey(new Date());document.getElementById('riEnd').value=''}
+async function saveRecurringIncome(){const row={user_id:currentUser.id,name:document.getElementById('riName').value.trim(),amount:Number(document.getElementById('riAmount').value),frequency:document.getElementById('riFrequency').value,start_date:document.getElementById('riStart').value,end_date:document.getElementById('riEnd').value||null};if(!row.name||!row.amount||!row.start_date)return alert('Please fill required fields.');const {data,error}=await supabaseClient.from('recurring_income').insert(row).select().single();if(error)return alert(error.message);recurringIncome.push(data);closeV3Modal('recurringIncomeModal');renderAll()}
+async function deleteRecurringIncome(id){if(!confirm('Delete this recurring income?'))return;const {error}=await supabaseClient.from('recurring_income').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);recurringIncome=recurringIncome.filter(x=>x.id!==id);renderAll()}
+function recurringIncomeForMonth(d){let total=0;recurringIncome.forEach(x=>{let st=new Date(x.start_date+'T00:00:00'),end=x.end_date?new Date(x.end_date+'T23:59:59'):null;if(d<new Date(st.getFullYear(),st.getMonth(),1)|| (end&&d>end))return;let diff=(d.getFullYear()-st.getFullYear())*12+d.getMonth()-st.getMonth();let step=x.frequency==='Monthly'?1:x.frequency==='Quarterly'?3:12;if(diff%step===0)total+=Number(x.amount)});return total}
+function openLoanModal(){document.getElementById('loanModal').style.display='flex';['loanName','loanLender','loanOriginal','loanOutstanding','loanRate','loanEmi','loanTenure'].forEach(id=>document.getElementById(id).value='');document.getElementById('loanStart').value=dateKey(new Date())}
+async function saveLoan(){const row={user_id:currentUser.id,name:document.getElementById('loanName').value.trim(),lender:document.getElementById('loanLender').value,original_amount:Number(document.getElementById('loanOriginal').value),outstanding_amount:Number(document.getElementById('loanOutstanding').value),interest_rate:Number(document.getElementById('loanRate').value||0),emi_amount:Number(document.getElementById('loanEmi').value),start_date:document.getElementById('loanStart').value,tenure_months:Number(document.getElementById('loanTenure').value)};if(!row.name||!row.original_amount||!row.emi_amount||!row.start_date||!row.tenure_months)return alert('Please fill required loan fields.');const {data,error}=await supabaseClient.from('loans').insert(row).select().single();if(error)return alert(error.message);loans.push(data);closeV3Modal('loanModal');renderAll()}
+async function deleteLoan(id){if(!confirm('Delete this loan?'))return;const {error}=await supabaseClient.from('loans').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);loans=loans.filter(x=>x.id!==id);renderAll()}
+async function updateLoanBalance(id){const loan=loans.find(x=>x.id===id);if(!loan)return;const value=prompt('Enter current outstanding balance:',loan.outstanding_amount);if(value===null)return;const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return alert('Enter a valid non-negative amount.');const {data,error}=await supabaseClient.from('loans').update({outstanding_amount:amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(error)return alert(error.message);Object.assign(loan,data);renderAll()}
+function openGoalModal(){document.getElementById('goalModal').style.display='flex';document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalCurrent').value='0';document.getElementById('goalDate').value=''}
+async function saveGoal(){const row={user_id:currentUser.id,name:document.getElementById('goalName').value.trim(),target_amount:Number(document.getElementById('goalTarget').value),current_amount:Number(document.getElementById('goalCurrent').value||0),target_date:document.getElementById('goalDate').value||null};if(!row.name||!row.target_amount)return alert('Please fill goal fields.');const {data,error}=await supabaseClient.from('savings_goals').insert(row).select().single();if(error)return alert(error.message);savingsGoals.push(data);closeV3Modal('goalModal');renderAll()}
+async function deleteGoal(id){if(!confirm('Delete this savings goal?'))return;const {error}=await supabaseClient.from('savings_goals').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);savingsGoals=savingsGoals.filter(x=>x.id!==id);savingsTransactions=savingsTransactions.filter(x=>x.goal_id!==id);renderAll()}
+async function addGoalSaving(id){const amount=Number(prompt('Amount to add to this goal:'));if(!amount||amount<=0)return;const {data,error}=await supabaseClient.from('savings_transactions').insert({user_id:currentUser.id,goal_id:id,amount,transaction_date:dateKey(new Date()),note:'Goal contribution'}).select().single();if(error)return alert(error.message);savingsTransactions.push(data);const g=savingsGoals.find(x=>x.id===id);const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:Number(g.current_amount)+amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(ue)return alert(ue.message);Object.assign(g,updated);renderAll()}
+function renderV3(){
+ const ri=recurringIncomeForMonth(currentDate),oneTime=getMonthIncome(currentDate).reduce((s,x)=>s+Number(x.amount),0),totalIncome=ri+oneTime,debt=loans.reduce((s,x)=>s+Number(x.outstanding_amount),0),emi=loans.reduce((s,x)=>s+Number(x.emi_amount),0),goaltarget=savingsGoals.reduce((s,x)=>s+Number(x.target_amount),0),goalsaved=savingsGoals.reduce((s,x)=>s+Number(x.current_amount),0),goalpct=goaltarget?goalsaved/goaltarget*100:0;
+ const planned=getMonthExpenses(currentDate).reduce((s,x)=>s+Number(x.expense.amount),0);document.getElementById('v3RecurringIncome').textContent=money(totalIncome);document.getElementById('v3Debt').textContent=money(debt);document.getElementById('v3Emi').textContent=money(emi);document.getElementById('v3Savings').textContent=money(totalIncome-planned);document.getElementById('v3GoalTotal').textContent=money(goalsaved);document.getElementById('v3GoalProgress').textContent=goalpct.toFixed(1)+'%';
+ document.getElementById('v3RecurringIncomeList').innerHTML=recurringIncome.length?recurringIncome.map(x=>`<div class="v3-item"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">From ${x.start_date}${x.end_date?' to '+x.end_date:''}</div><div class="v3-actions"><button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring income yet.</div>';
+ document.getElementById('v3GoalMini').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div></div>`}).join(''):'<div class="empty">No savings goals yet.</div>';
+ document.getElementById('v3LoanList').innerHTML=loans.length?loans.map(l=>{let paid=Math.max(0,Number(l.original_amount)-Number(l.outstanding_amount)),p=Math.min(100,paid/Number(l.original_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.lender||'')} · ${Number(l.interest_rate||0)}% · ${l.tenure_months} months</div><div>Original: ${money(l.original_amount)} · Outstanding: <b>${money(l.outstanding_amount)}</b></div><div>EMI: <b>${money(l.emi_amount)}</b></div><div class="small" style="margin-top:7px">Loan progress ${p.toFixed(1)}%</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v3-actions"><button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No loans added yet.</div>';
+ document.getElementById('v3GoalList').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}%${g.target_date?' · Target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No savings goals added yet.</div>';
+ let html='';for(let i=11;i>=0;i--){let d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount),0),ex=getMonthExpenses(d).reduce((s,x)=>s+Number(x.expense.amount),0),paid=getMonthExpenses(d).filter(x=>x.payment?.paid).reduce((s,x)=>s+Number(x.expense.amount),0);html+=`<div class="v3-item"><b>${monthName(d)}</b><div>Income: <span class="green">${money(inc)}</span> · Planned: ${money(ex)} · Paid: ${money(paid)} · Balance: <b>${money(inc-ex)}</b></div></div>`}document.getElementById('v3YearlyReport').innerHTML=html;
+}
 
 /* ---------------- NOTIFICATIONS ---------------- */
 
@@ -2652,6 +2783,7 @@ function setDefaultMonthFilter(){
 
 function renderAll(){
 
+    renderV3();
     renderDashboard();
 
     renderCalendar();
