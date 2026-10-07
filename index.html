@@ -610,6 +610,35 @@ header{backdrop-filter:saturate(140%);}
 @media(max-width:900px){.v10-shell{grid-template-columns:1fr}.v10-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.v10-command{grid-template-columns:repeat(2,minmax(0,1fr))}.v10-mini-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.v10-search{grid-template-columns:1fr}.v10-kpis,.v10-command,.v10-mini-grid{grid-template-columns:1fr}.v10-panel{padding:13px}}
 
+
+/* ===================== V10.1 SAVE FEEDBACK ===================== */
+.v101-toast{
+    position:fixed;
+    left:50%;
+    bottom:24px;
+    transform:translate(-50%,20px);
+    background:#166534;
+    color:#fff;
+    padding:12px 18px;
+    border-radius:12px;
+    box-shadow:0 8px 30px rgba(0,0,0,.20);
+    font-size:14px;
+    font-weight:600;
+    z-index:9999;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease;
+    max-width:min(90vw,520px);
+    text-align:center;
+}
+.v101-toast.show{opacity:1;transform:translate(-50%,0)}
+.v101-toast.info{background:#1d4ed8}
+.v101-toast.error{background:#991b1b}
+@media(max-width:700px){
+    .v101-toast{left:12px;right:12px;bottom:14px;max-width:none;transform:translateY(20px)}
+    .v101-toast.show{transform:translateY(0)}
+}
+
 </style>
 </head>
 
@@ -2414,6 +2443,7 @@ async function setPaid(expense,date,paid){
     }
 
     renderAll();
+    showV101Toast('Payment status saved ✓');
 
 }
 
@@ -3063,6 +3093,7 @@ async function saveExpense(){
     closeExpenseModal();
 
     renderAll();
+    showV101Toast('Expense saved ✓');
 
 }
 
@@ -3267,6 +3298,7 @@ async function saveIncome(){
     closeIncomeModal();
 
     renderAll();
+    showV101Toast('Income saved ✓');
 
 }
 
@@ -3739,17 +3771,22 @@ function showV3(id,button){
 }
 function closeV3Modal(id){document.getElementById(id).style.display='none'}
 function openRecurringIncomeModal(){document.getElementById('recurringIncomeModal').style.display='flex';document.getElementById('riName').value='';document.getElementById('riAmount').value='';document.getElementById('riFrequency').value='Monthly';document.getElementById('riStart').value=dateKey(new Date());document.getElementById('riEnd').value=''}
-async function saveRecurringIncome(){const row={user_id:currentUser.id,name:document.getElementById('riName').value.trim(),amount:Number(document.getElementById('riAmount').value),frequency:document.getElementById('riFrequency').value,start_date:document.getElementById('riStart').value,end_date:document.getElementById('riEnd').value||null};if(!row.name||!row.amount||!row.start_date)return alert('Please fill required fields.');const {data,error}=await supabaseClient.from('recurring_income').insert(row).select().single();if(error)return alert(error.message);recurringIncome.push(data);closeV3Modal('recurringIncomeModal');renderAll()}
+async function saveRecurringIncome(){const row={user_id:currentUser.id,name:document.getElementById('riName').value.trim(),amount:Number(document.getElementById('riAmount').value),frequency:document.getElementById('riFrequency').value,start_date:document.getElementById('riStart').value,end_date:document.getElementById('riEnd').value||null};if(!row.name||!row.amount||!row.start_date)return alert('Please fill required fields.');const {data,error}=await supabaseClient.from('recurring_income').insert(row).select().single();if(error)return alert(error.message);recurringIncome.push(data);closeV3Modal('recurringIncomeModal');renderAll()
+    showV101Toast('Recurring income saved ✓');}
 async function deleteRecurringIncome(id){if(!confirm('Delete this recurring income?'))return;const {error}=await supabaseClient.from('recurring_income').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);recurringIncome=recurringIncome.filter(x=>x.id!==id);renderAll()}
 function recurringIncomeForMonth(d){let total=0;recurringIncome.forEach(x=>{let st=new Date(x.start_date+'T00:00:00'),end=x.end_date?new Date(x.end_date+'T23:59:59'):null;if(d<new Date(st.getFullYear(),st.getMonth(),1)|| (end&&d>end))return;let diff=(d.getFullYear()-st.getFullYear())*12+d.getMonth()-st.getMonth();let step=x.frequency==='Monthly'?1:x.frequency==='Quarterly'?3:12;if(diff%step===0)total+=Number(x.amount)});return total}
 function openLoanModal(){document.getElementById('loanModal').style.display='flex';['loanName','loanLender','loanOriginal','loanOutstanding','loanRate','loanEmi','loanTenure'].forEach(id=>document.getElementById(id).value='');document.getElementById('loanStart').value=dateKey(new Date())}
-async function saveLoan(){const row={user_id:currentUser.id,name:document.getElementById('loanName').value.trim(),lender:document.getElementById('loanLender').value,original_amount:Number(document.getElementById('loanOriginal').value),outstanding_amount:Number(document.getElementById('loanOutstanding').value),interest_rate:Number(document.getElementById('loanRate').value||0),emi_amount:Number(document.getElementById('loanEmi').value),start_date:document.getElementById('loanStart').value,tenure_months:Number(document.getElementById('loanTenure').value)};if(!row.name||!row.original_amount||!row.emi_amount||!row.start_date||!row.tenure_months)return alert('Please fill required loan fields.');const {data,error}=await supabaseClient.from('loans').insert(row).select().single();if(error)return alert(error.message);loans.push(data);closeV3Modal('loanModal');renderAll()}
+async function saveLoan(){const row={user_id:currentUser.id,name:document.getElementById('loanName').value.trim(),lender:document.getElementById('loanLender').value,original_amount:Number(document.getElementById('loanOriginal').value),outstanding_amount:Number(document.getElementById('loanOutstanding').value),interest_rate:Number(document.getElementById('loanRate').value||0),emi_amount:Number(document.getElementById('loanEmi').value),start_date:document.getElementById('loanStart').value,tenure_months:Number(document.getElementById('loanTenure').value)};if(!row.name||!row.original_amount||!row.emi_amount||!row.start_date||!row.tenure_months)return alert('Please fill required loan fields.');const {data,error}=await supabaseClient.from('loans').insert(row).select().single();if(error)return alert(error.message);loans.push(data);closeV3Modal('loanModal');renderAll()
+    showV101Toast('Loan saved ✓');}
 async function deleteLoan(id){if(!confirm('Delete this loan?'))return;const {error}=await supabaseClient.from('loans').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);loans=loans.filter(x=>x.id!==id);renderAll()}
-async function updateLoanBalance(id){const loan=loans.find(x=>x.id===id);if(!loan)return;const value=prompt('Enter current outstanding balance:',loan.outstanding_amount);if(value===null)return;const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return alert('Enter a valid non-negative amount.');const {data,error}=await supabaseClient.from('loans').update({outstanding_amount:amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(error)return alert(error.message);Object.assign(loan,data);renderAll()}
+async function updateLoanBalance(id){const loan=loans.find(x=>x.id===id);if(!loan)return;const value=prompt('Enter current outstanding balance:',loan.outstanding_amount);if(value===null)return;const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return alert('Enter a valid non-negative amount.');const {data,error}=await supabaseClient.from('loans').update({outstanding_amount:amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(error)return alert(error.message);Object.assign(loan,data);renderAll()
+    showV101Toast('Loan balance saved ✓');}
 function openGoalModal(){document.getElementById('goalModal').style.display='flex';document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalCurrent').value='0';document.getElementById('goalDate').value=''}
-async function saveGoal(){const row={user_id:currentUser.id,name:document.getElementById('goalName').value.trim(),target_amount:Number(document.getElementById('goalTarget').value),current_amount:Number(document.getElementById('goalCurrent').value||0),target_date:document.getElementById('goalDate').value||null};if(!row.name||!row.target_amount)return alert('Please fill goal fields.');const {data,error}=await supabaseClient.from('savings_goals').insert(row).select().single();if(error)return alert(error.message);savingsGoals.push(data);closeV3Modal('goalModal');renderAll()}
+async function saveGoal(){const row={user_id:currentUser.id,name:document.getElementById('goalName').value.trim(),target_amount:Number(document.getElementById('goalTarget').value),current_amount:Number(document.getElementById('goalCurrent').value||0),target_date:document.getElementById('goalDate').value||null};if(!row.name||!row.target_amount)return alert('Please fill goal fields.');const {data,error}=await supabaseClient.from('savings_goals').insert(row).select().single();if(error)return alert(error.message);savingsGoals.push(data);closeV3Modal('goalModal');renderAll()
+    showV101Toast('Savings goal saved ✓');}
 async function deleteGoal(id){if(!confirm('Delete this savings goal?'))return;const {error}=await supabaseClient.from('savings_goals').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);savingsGoals=savingsGoals.filter(x=>x.id!==id);savingsTransactions=savingsTransactions.filter(x=>x.goal_id!==id);renderAll()}
-async function addGoalSaving(id){const amount=Number(prompt('Amount to add to this goal:'));if(!amount||amount<=0)return;const {data,error}=await supabaseClient.from('savings_transactions').insert({user_id:currentUser.id,goal_id:id,amount,transaction_date:dateKey(new Date()),note:'Goal contribution'}).select().single();if(error)return alert(error.message);savingsTransactions.push(data);const g=savingsGoals.find(x=>x.id===id);const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:Number(g.current_amount)+amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(ue)return alert(ue.message);Object.assign(g,updated);renderAll()}
+async function addGoalSaving(id){const amount=Number(prompt('Amount to add to this goal:'));if(!amount||amount<=0)return;const {data,error}=await supabaseClient.from('savings_transactions').insert({user_id:currentUser.id,goal_id:id,amount,transaction_date:dateKey(new Date()),note:'Goal contribution'}).select().single();if(error)return alert(error.message);savingsTransactions.push(data);const g=savingsGoals.find(x=>x.id===id);const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:Number(g.current_amount)+amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(ue)return alert(ue.message);Object.assign(g,updated);renderAll()
+    showV101Toast('Savings contribution saved ✓');}
 
 function monthDifference(fromDate,toDate){
  const a=new Date(fromDate.getFullYear(),fromDate.getMonth(),1);
@@ -3976,6 +4013,7 @@ async function saveBudget(){
     else budgets.push(data);
     closeBudgetModal();
     renderAll();
+    showV101Toast('Budget saved ✓');
 }
 
 async function deleteBudget(id){
@@ -4603,6 +4641,7 @@ async function saveCreditCard(){
     if(!row.name||row.credit_limit<0||row.current_used<0){alert("Please enter valid card details.");return;}
     const q=id?supabaseClient.from("credit_cards").update(row).eq("id",id).eq("user_id",currentUser.id).select().single():supabaseClient.from("credit_cards").insert(row).select().single();
     const {data,error}=await q; if(error){alert(error.message);return;} if(id){const i=creditCards.findIndex(x=>x.id===id);if(i>=0)creditCards[i]=data;}else creditCards.push(data); closeV9Modal("creditCardModal"); saveOfflineSnapshot(); renderAll();
+    showV101Toast('Credit card saved ✓');
 }
 async function deleteCreditCard(id){if(!confirm("Delete this credit card?"))return;const{error}=await supabaseClient.from("credit_cards").delete().eq("id",id).eq("user_id",currentUser.id);if(error){alert(error.message);return;}creditCards=creditCards.filter(x=>x.id!==id);saveOfflineSnapshot();renderAll();}
 
@@ -4615,7 +4654,8 @@ function renderNetWorth(){
     let rows=[]; loans.forEach(l=>rows.push(`<div class="v9-item"><div class="v9-item-title"><span>🏦 ${escapeHtml(l.name)}</span><b class="v9-negative">${money(l.outstanding_amount)}</b></div><div class="v9-muted">Loan / EMI · EMI ${money(l.emi_amount)}</div></div>`)); creditCards.forEach(c=>rows.push(`<div class="v9-item"><div class="v9-item-title"><span>💳 ${escapeHtml(c.name)}</span><b class="v9-negative">${money(c.current_used)}</b></div><div class="v9-muted">Credit card used</div></div>`)); lb.innerHTML=rows.join('')||'<div class="v9-empty">No liabilities recorded.</div>';
 }
 function openAssetModal(id=null){document.getElementById("assetId").value=id||"";if(id){const a=assets.find(x=>x.id===id);if(!a)return;document.getElementById("assetModalTitle").textContent="Edit Asset";document.getElementById("assetName").value=a.name||"";document.getElementById("assetCategory").value=a.category||"Other";document.getElementById("assetValue").value=a.current_value||"";document.getElementById("assetNotes").value=a.notes||"";}else{document.getElementById("assetModalTitle").textContent="Add Asset";document.getElementById("assetName").value="";document.getElementById("assetCategory").value="Property";document.getElementById("assetValue").value="";document.getElementById("assetNotes").value="";}document.getElementById("assetModal").style.display="flex";}
-async function saveAsset(){const id=document.getElementById("assetId").value;const row={user_id:currentUser.id,name:document.getElementById("assetName").value.trim(),category:document.getElementById("assetCategory").value,current_value:num(document.getElementById("assetValue").value),notes:document.getElementById("assetNotes").value.trim()};if(!row.name||row.current_value<0){alert("Please enter valid asset details.");return;}const q=id?supabaseClient.from("assets").update(row).eq("id",id).eq("user_id",currentUser.id).select().single():supabaseClient.from("assets").insert(row).select().single();const{data,error}=await q;if(error){alert(error.message);return;}if(id){const i=assets.findIndex(x=>x.id===id);if(i>=0)assets[i]=data;}else assets.push(data);closeV9Modal("assetModal");saveOfflineSnapshot();renderAll();}
+async function saveAsset(){const id=document.getElementById("assetId").value;const row={user_id:currentUser.id,name:document.getElementById("assetName").value.trim(),category:document.getElementById("assetCategory").value,current_value:num(document.getElementById("assetValue").value),notes:document.getElementById("assetNotes").value.trim()};if(!row.name||row.current_value<0){alert("Please enter valid asset details.");return;}const q=id?supabaseClient.from("assets").update(row).eq("id",id).eq("user_id",currentUser.id).select().single():supabaseClient.from("assets").insert(row).select().single();const{data,error}=await q;if(error){alert(error.message);return;}if(id){const i=assets.findIndex(x=>x.id===id);if(i>=0)assets[i]=data;}else assets.push(data);closeV9Modal("assetModal");saveOfflineSnapshot();renderAll();
+    showV101Toast('Asset saved ✓');}
 async function deleteAsset(id){if(!confirm("Delete this asset?"))return;const{error}=await supabaseClient.from("assets").delete().eq("id",id).eq("user_id",currentUser.id);if(error){alert(error.message);return;}assets=assets.filter(x=>x.id!==id);saveOfflineSnapshot();renderAll();}
 
 function renderInvestments(){
@@ -4624,7 +4664,8 @@ function renderInvestments(){
     const box=document.getElementById("investmentList");box.innerHTML=investments.length?investments.map(i=>{const inv=num(i.invested_amount),v=num(i.current_value),g=v-inv,p=inv?g/inv*100:0;return `<div class="v9-card"><div class="v9-item-title"><span>${escapeHtml(i.name)}</span><b class="${g>=0?'v9-positive':'v9-negative'}">${p.toFixed(1)}%</b></div><div class="v9-muted">${escapeHtml(i.type||'Investment')} · ${i.investment_date||''}</div><div style="margin-top:8px">Invested <b>${money(inv)}</b> · Current <b>${money(v)}</b></div><div style="margin-top:5px" class="${g>=0?'v9-positive':'v9-negative'}">${g>=0?'Gain':'Loss'}: ${money(Math.abs(g))}</div><div class="v3-actions"><button class="btn" onclick="openInvestmentModal('${i.id}')">Edit</button><button class="btn-danger" onclick="deleteInvestment('${i.id}')">Delete</button></div></div>`}).join(''):'<div class="v9-empty">No investments added.</div>';
 }
 function openInvestmentModal(id=null){document.getElementById("investmentId").value=id||"";if(id){const i=investments.find(x=>x.id===id);if(!i)return;document.getElementById("investmentModalTitle").textContent="Edit Investment";document.getElementById("investmentName").value=i.name||"";document.getElementById("investmentType").value=i.type||"Other";document.getElementById("investmentInvested").value=i.invested_amount||"";document.getElementById("investmentCurrent").value=i.current_value||"";document.getElementById("investmentDate").value=i.investment_date||dateKey(new Date());document.getElementById("investmentNotes").value=i.notes||"";}else{document.getElementById("investmentModalTitle").textContent="Add Investment";document.getElementById("investmentName").value="";document.getElementById("investmentType").value="Mutual Fund";document.getElementById("investmentInvested").value="";document.getElementById("investmentCurrent").value="";document.getElementById("investmentDate").value=dateKey(new Date());document.getElementById("investmentNotes").value="";}document.getElementById("investmentModal").style.display="flex";}
-async function saveInvestment(){const id=document.getElementById("investmentId").value;const row={user_id:currentUser.id,name:document.getElementById("investmentName").value.trim(),type:document.getElementById("investmentType").value,invested_amount:num(document.getElementById("investmentInvested").value),current_value:num(document.getElementById("investmentCurrent").value),investment_date:document.getElementById("investmentDate").value,notes:document.getElementById("investmentNotes").value.trim()};if(!row.name||row.invested_amount<0||row.current_value<0||!row.investment_date){alert("Please enter valid investment details.");return;}const q=id?supabaseClient.from("investments").update(row).eq("id",id).eq("user_id",currentUser.id).select().single():supabaseClient.from("investments").insert(row).select().single();const{data,error}=await q;if(error){alert(error.message);return;}if(id){const i=investments.findIndex(x=>x.id===id);if(i>=0)investments[i]=data;}else investments.unshift(data);closeV9Modal("investmentModal");saveOfflineSnapshot();renderAll();}
+async function saveInvestment(){const id=document.getElementById("investmentId").value;const row={user_id:currentUser.id,name:document.getElementById("investmentName").value.trim(),type:document.getElementById("investmentType").value,invested_amount:num(document.getElementById("investmentInvested").value),current_value:num(document.getElementById("investmentCurrent").value),investment_date:document.getElementById("investmentDate").value,notes:document.getElementById("investmentNotes").value.trim()};if(!row.name||row.invested_amount<0||row.current_value<0||!row.investment_date){alert("Please enter valid investment details.");return;}const q=id?supabaseClient.from("investments").update(row).eq("id",id).eq("user_id",currentUser.id).select().single():supabaseClient.from("investments").insert(row).select().single();const{data,error}=await q;if(error){alert(error.message);return;}if(id){const i=investments.findIndex(x=>x.id===id);if(i>=0)investments[i]=data;}else investments.unshift(data);closeV9Modal("investmentModal");saveOfflineSnapshot();renderAll();
+    showV101Toast('Investment saved ✓');}
 async function deleteInvestment(id){if(!confirm("Delete this investment?"))return;const{error}=await supabaseClient.from("investments").delete().eq("id",id).eq("user_id",currentUser.id);if(error){alert(error.message);return;}investments=investments.filter(x=>x.id!==id);saveOfflineSnapshot();renderAll();}
 
 function runWhatIf(){
@@ -4760,6 +4801,7 @@ async function saveQuickAdd(){
         if(ue)return alert(ue.message); Object.assign(goal,updated);
     }
     closeV10Modal('quickAddModal'); saveOfflineSnapshot(); renderAll();
+    showV101Toast('Quick add saved ✓');
 }
 
 function oneTimeExpensesForMonthV10(d){
@@ -4889,7 +4931,8 @@ function renderRules(){
     const box=document.getElementById('v10Rules');box.innerHTML=financeRules.length?financeRules.map(r=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.label||r.rule_type)}</b><div class="v10-muted">${escapeHtml(r.rule_type)} · ${r.threshold||0}</div></div>${statusPillV10(ruleTriggeredV10(r)?'TRIGGERED':'OK',ruleTriggeredV10(r)?'warn':'good')}</div><div class="v10-actions"><button class="btn-danger" onclick="deleteRule('${r.id}')">Delete</button></div></div>`).join(''):'<div class="v10-muted">No smart rules yet.</div>';
 }
 function openRuleModal(id=null){document.getElementById('ruleModal').style.display='flex';document.getElementById('ruleId').value=id||'';if(id){const r=financeRules.find(x=>x.id===id);document.getElementById('ruleModalTitle').textContent='Edit Smart Rule';document.getElementById('ruleType').value=r.rule_type;document.getElementById('ruleCategory').value=r.category||'Food';document.getElementById('ruleThreshold').value=r.threshold||0;document.getElementById('ruleLabel').value=r.label||'';}else{document.getElementById('ruleModalTitle').textContent='Add Smart Rule';document.getElementById('ruleType').value='category_threshold';document.getElementById('ruleCategory').value='Food';document.getElementById('ruleThreshold').value=5000;document.getElementById('ruleLabel').value='';}}
-async function saveRule(){const id=document.getElementById('ruleId').value,row={user_id:currentUser.id,rule_type:document.getElementById('ruleType').value,category:document.getElementById('ruleCategory').value,threshold:numV10(document.getElementById('ruleThreshold').value),label:document.getElementById('ruleLabel').value.trim()||'Smart alert'};const q=id?supabaseClient.from('finance_rules').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('finance_rules').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=financeRules.findIndex(x=>x.id===id);if(i>=0)financeRules[i]=data;}else financeRules.push(data);closeV10Modal('ruleModal');saveOfflineSnapshot();renderAll();}
+async function saveRule(){const id=document.getElementById('ruleId').value,row={user_id:currentUser.id,rule_type:document.getElementById('ruleType').value,category:document.getElementById('ruleCategory').value,threshold:numV10(document.getElementById('ruleThreshold').value),label:document.getElementById('ruleLabel').value.trim()||'Smart alert'};const q=id?supabaseClient.from('finance_rules').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('finance_rules').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=financeRules.findIndex(x=>x.id===id);if(i>=0)financeRules[i]=data;}else financeRules.push(data);closeV10Modal('ruleModal');saveOfflineSnapshot();renderAll();
+    showV101Toast('Smart rule saved ✓');}
 async function deleteRule(id){if(!confirm('Delete this smart rule?'))return;const{error}=await supabaseClient.from('finance_rules').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);financeRules=financeRules.filter(x=>x.id!==id);renderAll();}
 
 function renderEmergencyAndSinking(){
@@ -4930,15 +4973,18 @@ function renderDebtSimulator(){
 }
 
 function openRenewalModal(id=null){document.getElementById('renewalModal').style.display='flex';document.getElementById('renewalId').value=id||'';if(id){const r=renewals.find(x=>x.id===id);document.getElementById('renewalModalTitle').textContent='Edit Renewal / Warranty';document.getElementById('renewalName').value=r.name||'';document.getElementById('renewalType').value=r.type||'Other';document.getElementById('renewalDate').value=r.due_date||'';document.getElementById('renewalAmount').value=r.amount||'';document.getElementById('renewalReminder').value=r.reminder_days??14;document.getElementById('renewalNotes').value=r.notes||'';}else{document.getElementById('renewalModalTitle').textContent='Add Renewal / Warranty';document.getElementById('renewalName').value='';document.getElementById('renewalType').value='Insurance';document.getElementById('renewalDate').value=dateKey(new Date());document.getElementById('renewalAmount').value='';document.getElementById('renewalReminder').value=14;document.getElementById('renewalNotes').value='';}}
-async function saveRenewal(){const id=document.getElementById('renewalId').value,row={user_id:currentUser.id,name:document.getElementById('renewalName').value.trim(),type:document.getElementById('renewalType').value,due_date:document.getElementById('renewalDate').value,amount:numV10(document.getElementById('renewalAmount').value),reminder_days:numV10(document.getElementById('renewalReminder').value),notes:document.getElementById('renewalNotes').value.trim()};if(!row.name||!row.due_date)return alert('Enter name and date.');const q=id?supabaseClient.from('renewals').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('renewals').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=renewals.findIndex(x=>x.id===id);if(i>=0)renewals[i]=data;}else renewals.push(data);closeV10Modal('renewalModal');saveOfflineSnapshot();renderAll();}
+async function saveRenewal(){const id=document.getElementById('renewalId').value,row={user_id:currentUser.id,name:document.getElementById('renewalName').value.trim(),type:document.getElementById('renewalType').value,due_date:document.getElementById('renewalDate').value,amount:numV10(document.getElementById('renewalAmount').value),reminder_days:numV10(document.getElementById('renewalReminder').value),notes:document.getElementById('renewalNotes').value.trim()};if(!row.name||!row.due_date)return alert('Enter name and date.');const q=id?supabaseClient.from('renewals').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('renewals').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=renewals.findIndex(x=>x.id===id);if(i>=0)renewals[i]=data;}else renewals.push(data);closeV10Modal('renewalModal');saveOfflineSnapshot();renderAll();
+    showV101Toast('Renewal saved ✓');}
 async function deleteRenewal(id){if(!confirm('Delete this renewal?'))return;const{error}=await supabaseClient.from('renewals').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);renewals=renewals.filter(x=>x.id!==id);renderAll();}
 function renderRenewals(){document.getElementById('v10Renewals').innerHTML=renewals.length?renewals.slice().sort((a,b)=>dateV10(a.due_date)-dateV10(b.due_date)).map(r=>{const days=daysUntilV10(dateV10(r.due_date));return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${escapeHtml(r.type||'Renewal')} · ${r.due_date}</div></div><div>${statusPillV10(days<0?'Overdue':days===0?'Today':days+' days',days<=0?'bad':days<=numV10(r.reminder_days||14)?'warn':'info')}</div></div>${numV10(r.amount)?'<div style="margin-top:5px">Amount: <b>'+money(r.amount)+'</b></div>':''}<div class="v10-actions"><button class="btn" onclick="openRenewalModal('${r.id}')">Edit</button><button class="btn-danger" onclick="deleteRenewal('${r.id}')">Delete</button></div></div>`}).join(''):'<div class="v10-muted">No renewals/warranties added.</div>';}
 
 function openVehicleModal(id=null){document.getElementById('vehicleModal').style.display='flex';document.getElementById('vehicleId').value=id||'';if(id){const v=vehicles.find(x=>x.id===id);document.getElementById('vehicleModalTitle').textContent='Edit Vehicle';document.getElementById('vehicleName').value=v.name||'';document.getElementById('vehicleType').value=v.type||'Other';document.getElementById('vehiclePurchaseDate').value=v.purchase_date||'';document.getElementById('vehicleValue').value=v.current_value||'';document.getElementById('vehicleInsuranceDate').value=v.insurance_date||'';document.getElementById('vehicleNotes').value=v.notes||'';}else{document.getElementById('vehicleModalTitle').textContent='Add Vehicle';document.getElementById('vehicleName').value='';document.getElementById('vehicleType').value='EV Scooter';document.getElementById('vehiclePurchaseDate').value=dateKey(new Date());document.getElementById('vehicleValue').value='';document.getElementById('vehicleInsuranceDate').value='';document.getElementById('vehicleNotes').value='';}}
-async function saveVehicle(){const id=document.getElementById('vehicleId').value,row={user_id:currentUser.id,name:document.getElementById('vehicleName').value.trim(),type:document.getElementById('vehicleType').value,purchase_date:document.getElementById('vehiclePurchaseDate').value||null,current_value:numV10(document.getElementById('vehicleValue').value),insurance_date:document.getElementById('vehicleInsuranceDate').value||null,notes:document.getElementById('vehicleNotes').value.trim()};if(!row.name)return alert('Enter vehicle name.');const q=id?supabaseClient.from('vehicles').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('vehicles').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=vehicles.findIndex(x=>x.id===id);if(i>=0)vehicles[i]=data;}else vehicles.push(data);closeV10Modal('vehicleModal');saveOfflineSnapshot();renderAll();}
+async function saveVehicle(){const id=document.getElementById('vehicleId').value,row={user_id:currentUser.id,name:document.getElementById('vehicleName').value.trim(),type:document.getElementById('vehicleType').value,purchase_date:document.getElementById('vehiclePurchaseDate').value||null,current_value:numV10(document.getElementById('vehicleValue').value),insurance_date:document.getElementById('vehicleInsuranceDate').value||null,notes:document.getElementById('vehicleNotes').value.trim()};if(!row.name)return alert('Enter vehicle name.');const q=id?supabaseClient.from('vehicles').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('vehicles').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=vehicles.findIndex(x=>x.id===id);if(i>=0)vehicles[i]=data;}else vehicles.push(data);closeV10Modal('vehicleModal');saveOfflineSnapshot();renderAll();
+    showV101Toast('Vehicle saved ✓');}
 async function deleteVehicle(id){if(!confirm('Delete this vehicle and its logs?'))return;const{error}=await supabaseClient.from('vehicles').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);vehicles=vehicles.filter(x=>x.id!==id);vehicleLogs=vehicleLogs.filter(x=>x.vehicle_id!==id);renderAll();}
 function openVehicleLogModal(id){document.getElementById('vehicleLogModal').style.display='flex';document.getElementById('vehicleLogVehicleId').value=id;document.getElementById('vehicleLogAmount').value='';document.getElementById('vehicleLogDate').value=dateKey(new Date());document.getElementById('vehicleLogOdometer').value='';document.getElementById('vehicleLogNotes').value='';}
-async function saveVehicleLog(){const vehicle_id=document.getElementById('vehicleLogVehicleId').value,row={user_id:currentUser.id,vehicle_id,log_type:document.getElementById('vehicleLogType').value,amount:numV10(document.getElementById('vehicleLogAmount').value),log_date:document.getElementById('vehicleLogDate').value,odometer:numV10(document.getElementById('vehicleLogOdometer').value)||null,notes:document.getElementById('vehicleLogNotes').value.trim()};if(!vehicle_id||row.amount<=0||!row.log_date)return alert('Enter amount and date.');const{data,error}=await supabaseClient.from('vehicle_logs').insert(row).select().single();if(error)return alert(error.message);vehicleLogs.unshift(data);closeV10Modal('vehicleLogModal');saveOfflineSnapshot();renderAll();}
+async function saveVehicleLog(){const vehicle_id=document.getElementById('vehicleLogVehicleId').value,row={user_id:currentUser.id,vehicle_id,log_type:document.getElementById('vehicleLogType').value,amount:numV10(document.getElementById('vehicleLogAmount').value),log_date:document.getElementById('vehicleLogDate').value,odometer:numV10(document.getElementById('vehicleLogOdometer').value)||null,notes:document.getElementById('vehicleLogNotes').value.trim()};if(!vehicle_id||row.amount<=0||!row.log_date)return alert('Enter amount and date.');const{data,error}=await supabaseClient.from('vehicle_logs').insert(row).select().single();if(error)return alert(error.message);vehicleLogs.unshift(data);closeV10Modal('vehicleLogModal');saveOfflineSnapshot();renderAll();
+    showV101Toast('Vehicle log saved ✓');}
 async function deleteVehicleLog(id){if(!confirm('Delete this vehicle expense?'))return;const{error}=await supabaseClient.from('vehicle_logs').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);vehicleLogs=vehicleLogs.filter(x=>x.id!==id);renderAll();}
 function renderVehicles(){document.getElementById('v10Vehicles').innerHTML=vehicles.length?vehicles.map(v=>{const logs=vehicleLogs.filter(x=>x.vehicle_id===v.id),spent=logs.reduce((s,x)=>s+numV10(x.amount),0);const insurance=v.insurance_date?daysUntilV10(dateV10(v.insurance_date)):null;return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(v.name)}</b><div class="v10-muted">${escapeHtml(v.type||'Vehicle')} · current value ${money(v.current_value)}</div></div>${insurance!==null?statusPillV10(insurance<0?'Insurance overdue':insurance+'d to renewal',insurance<=30?'warn':'good'):''}</div><div style="margin-top:6px">Total logged cost: <b>${money(spent)}</b></div><div class="v10-actions"><button class="btn" onclick="openVehicleLogModal('${v.id}')">+ Expense</button><button class="btn" onclick="openVehicleModal('${v.id}')">Edit</button><button class="btn-danger" onclick="deleteVehicle('${v.id}')">Delete</button></div>${logs.slice(0,3).map(l=>`<div class="v10-muted" style="margin-top:4px">${l.log_date} · ${escapeHtml(l.log_type)} · ${money(l.amount)} <button style="padding:2px 5px;font-size:10px" class="btn-danger" onclick="deleteVehicleLog('${l.id}')">x</button></div>`).join('')}</div>`}).join(''):'<div class="v10-muted">No vehicles added.</div>';}
 
@@ -4946,18 +4992,21 @@ async function loadDocumentsV10(){
     const q=await supabaseClient.from('finance_documents').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}); if(q.error)throw q.error;documents=q.data||[];
 }
 function openDocumentModal(){document.getElementById('documentModal').style.display='flex';document.getElementById('documentTitle').value='';document.getElementById('documentType').value='Receipt';document.getElementById('documentFile').value='';}
-async function saveDocument(){const title=document.getElementById('documentTitle').value.trim(),type=document.getElementById('documentType').value,file=document.getElementById('documentFile').files[0];if(!title||!file)return alert('Choose a title and file.');if(file.size>10*1024*1024)return alert('Maximum file size is 10 MB.');const ext=(file.name.split('.').pop()||'bin').toLowerCase();const path=currentUser.id+'/'+crypto.randomUUID()+'.'+ext;const up=await supabaseClient.storage.from('finance-documents').upload(path,file,{upsert:false});if(up.error)return alert(up.error.message);const{data,error}=await supabaseClient.from('finance_documents').insert({user_id:currentUser.id,title,type,file_name:file.name,storage_path:path,mime_type:file.type||null,size_bytes:file.size}).select().single();if(error){await supabaseClient.storage.from('finance-documents').remove([path]);return alert(error.message);}documents.unshift(data);closeV10Modal('documentModal');saveOfflineSnapshot();renderAll();}
+async function saveDocument(){const title=document.getElementById('documentTitle').value.trim(),type=document.getElementById('documentType').value,file=document.getElementById('documentFile').files[0];if(!title||!file)return alert('Choose a title and file.');if(file.size>10*1024*1024)return alert('Maximum file size is 10 MB.');const ext=(file.name.split('.').pop()||'bin').toLowerCase();const path=currentUser.id+'/'+crypto.randomUUID()+'.'+ext;const up=await supabaseClient.storage.from('finance-documents').upload(path,file,{upsert:false});if(up.error)return alert(up.error.message);const{data,error}=await supabaseClient.from('finance_documents').insert({user_id:currentUser.id,title,type,file_name:file.name,storage_path:path,mime_type:file.type||null,size_bytes:file.size}).select().single();if(error){await supabaseClient.storage.from('finance-documents').remove([path]);return alert(error.message);}documents.unshift(data);closeV10Modal('documentModal');saveOfflineSnapshot();renderAll();
+    showV101Toast('Document saved ✓');}
 async function openDocument(id){const d=documents.find(x=>x.id===id);if(!d)return;const {data,error}=await supabaseClient.storage.from('finance-documents').createSignedUrl(d.storage_path,120);if(error)return alert(error.message);window.open(data.signedUrl,'_blank','noopener');}
 async function deleteDocument(id){if(!confirm('Delete this document?'))return;const d=documents.find(x=>x.id===id);if(!d)return;await supabaseClient.storage.from('finance-documents').remove([d.storage_path]);const{error}=await supabaseClient.from('finance_documents').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);documents=documents.filter(x=>x.id!==id);renderAll();}
 function renderDocuments(){document.getElementById('v10Documents').innerHTML=documents.length?documents.map(d=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(d.title)}</b><div class="v10-muted">${escapeHtml(d.type||'Document')} · ${escapeHtml(d.file_name||'')}</div></div>${d.size_bytes?'<span class="v10-muted">'+(d.size_bytes/1024/1024).toFixed(2)+' MB</span>':''}</div><div class="v10-actions"><button class="btn" onclick="openDocument('${d.id}')">Open</button><button class="btn-danger" onclick="deleteDocument('${d.id}')">Delete</button></div></div>`).join(''):'<div class="v10-muted">No documents yet.</div>';}
 
 function openHouseholdBillModal(id=null){document.getElementById('householdBillModal').style.display='flex';document.getElementById('householdBillId').value=id||'';if(id){const b=householdBills.find(x=>x.id===id);document.getElementById('householdBillModalTitle').textContent='Edit Household Bill';document.getElementById('householdBillName').value=b.name||'';document.getElementById('householdBillCategory').value=b.category||'Other';document.getElementById('householdBillAmount').value=b.amount||'';document.getElementById('householdBillDay').value=b.due_day||1;document.getElementById('householdBillFrequency').value=b.frequency||'Monthly';document.getElementById('householdBillNotes').value=b.notes||'';}else{document.getElementById('householdBillModalTitle').textContent='Add Household Bill';document.getElementById('householdBillName').value='';document.getElementById('householdBillCategory').value='Electricity';document.getElementById('householdBillAmount').value='';document.getElementById('householdBillDay').value=1;document.getElementById('householdBillFrequency').value='Monthly';document.getElementById('householdBillNotes').value='';}}
-async function saveHouseholdBill(){const id=document.getElementById('householdBillId').value,row={user_id:currentUser.id,name:document.getElementById('householdBillName').value.trim(),category:document.getElementById('householdBillCategory').value,amount:numV10(document.getElementById('householdBillAmount').value),due_day:numV10(document.getElementById('householdBillDay').value),frequency:document.getElementById('householdBillFrequency').value,notes:document.getElementById('householdBillNotes').value.trim(),start_month:monthKey(new Date())};if(!row.name||row.amount<=0||row.due_day<1||row.due_day>31)return alert('Enter valid bill details.');const q=id?supabaseClient.from('household_bills').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('household_bills').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=householdBills.findIndex(x=>x.id===id);if(i>=0)householdBills[i]=data;}else householdBills.push(data);closeV10Modal('householdBillModal');saveOfflineSnapshot();renderAll();}
+async function saveHouseholdBill(){const id=document.getElementById('householdBillId').value,row={user_id:currentUser.id,name:document.getElementById('householdBillName').value.trim(),category:document.getElementById('householdBillCategory').value,amount:numV10(document.getElementById('householdBillAmount').value),due_day:numV10(document.getElementById('householdBillDay').value),frequency:document.getElementById('householdBillFrequency').value,notes:document.getElementById('householdBillNotes').value.trim(),start_month:monthKey(new Date())};if(!row.name||row.amount<=0||row.due_day<1||row.due_day>31)return alert('Enter valid bill details.');const q=id?supabaseClient.from('household_bills').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('household_bills').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=householdBills.findIndex(x=>x.id===id);if(i>=0)householdBills[i]=data;}else householdBills.push(data);closeV10Modal('householdBillModal');saveOfflineSnapshot();renderAll();
+    showV101Toast('Household bill saved ✓');}
 async function deleteHouseholdBill(id){if(!confirm('Delete this household bill?'))return;const{error}=await supabaseClient.from('household_bills').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);householdBills=householdBills.filter(x=>x.id!==id);renderAll();}
 function renderHouseholdBills(){document.getElementById('v10HouseholdBills').innerHTML=householdBills.length?householdBills.map(b=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(b.name)}</b><div class="v10-muted">${escapeHtml(b.category||'Bill')} · ${escapeHtml(b.frequency||'Monthly')} · day ${b.due_day}</div></div><b>${money(b.amount)}</b></div><div class="v10-actions"><button class="btn" onclick="openHouseholdBillModal('${b.id}')">Edit</button><button class="btn-danger" onclick="deleteHouseholdBill('${b.id}')">Delete</button></div></div>`).join(''):'<div class="v10-muted">No household bills added.</div>';}
 
 function openLifeEventModal(id=null){document.getElementById('lifeEventModal').style.display='flex';document.getElementById('lifeEventId').value=id||'';if(id){const e=lifeEvents.find(x=>x.id===id);document.getElementById('lifeEventModalTitle').textContent='Edit Life Event';document.getElementById('lifeEventName').value=e.name||'';document.getElementById('lifeEventAmount').value=e.target_amount||'';document.getElementById('lifeEventDate').value=e.target_date||'';document.getElementById('lifeEventSaved').value=e.current_saved||0;document.getElementById('lifeEventPriority').value=e.priority||'Medium';document.getElementById('lifeEventNotes').value=e.notes||'';}else{document.getElementById('lifeEventModalTitle').textContent='Add Life Event';document.getElementById('lifeEventName').value='';document.getElementById('lifeEventAmount').value='';document.getElementById('lifeEventDate').value='';document.getElementById('lifeEventSaved').value=0;document.getElementById('lifeEventPriority').value='Medium';document.getElementById('lifeEventNotes').value='';}}
-async function saveLifeEvent(){const id=document.getElementById('lifeEventId').value,row={user_id:currentUser.id,name:document.getElementById('lifeEventName').value.trim(),target_amount:numV10(document.getElementById('lifeEventAmount').value),target_date:document.getElementById('lifeEventDate').value||null,current_saved:numV10(document.getElementById('lifeEventSaved').value),priority:document.getElementById('lifeEventPriority').value,notes:document.getElementById('lifeEventNotes').value.trim()};if(!row.name||row.target_amount<=0)return alert('Enter event and target amount.');const q=id?supabaseClient.from('life_events').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('life_events').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=lifeEvents.findIndex(x=>x.id===id);if(i>=0)lifeEvents[i]=data;}else lifeEvents.push(data);closeV10Modal('lifeEventModal');saveOfflineSnapshot();renderAll();}
+async function saveLifeEvent(){const id=document.getElementById('lifeEventId').value,row={user_id:currentUser.id,name:document.getElementById('lifeEventName').value.trim(),target_amount:numV10(document.getElementById('lifeEventAmount').value),target_date:document.getElementById('lifeEventDate').value||null,current_saved:numV10(document.getElementById('lifeEventSaved').value),priority:document.getElementById('lifeEventPriority').value,notes:document.getElementById('lifeEventNotes').value.trim()};if(!row.name||row.target_amount<=0)return alert('Enter event and target amount.');const q=id?supabaseClient.from('life_events').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('life_events').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=lifeEvents.findIndex(x=>x.id===id);if(i>=0)lifeEvents[i]=data;}else lifeEvents.push(data);closeV10Modal('lifeEventModal');saveOfflineSnapshot();renderAll();
+    showV101Toast('Life event saved ✓');}
 async function deleteLifeEvent(id){if(!confirm('Delete this life event?'))return;const{error}=await supabaseClient.from('life_events').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);lifeEvents=lifeEvents.filter(x=>x.id!==id);renderAll();}
 function renderLifeEvents(){document.getElementById('v10LifeEvents').innerHTML=lifeEvents.length?lifeEvents.slice().sort((a,b)=>dateV10(a.target_date)-dateV10(b.target_date)).map(e=>{const rem=Math.max(0,numV10(e.target_amount)-numV10(e.current_saved)),m=e.target_date?Math.max(1,monthDifference(new Date(),dateV10(e.target_date))):24,req=rem/m;return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(e.name)}</b><div class="v10-muted">${escapeHtml(e.priority||'Medium')} · ${e.target_date||'No date'}</div></div><b>${money(req)}/mo</b></div><div class="v5-meter" style="margin-top:8px"><div style="width:${Math.min(100,numV10(e.target_amount)?numV10(e.current_saved)/numV10(e.target_amount)*100:0)}%"></div></div><div class="v10-muted" style="margin-top:5px">Saved ${money(e.current_saved)} of ${money(e.target_amount)} · remaining ${money(rem)}</div><div class="v10-actions"><button class="btn" onclick="openLifeEventModal('${e.id}')">Edit</button><button class="btn-danger" onclick="deleteLifeEvent('${e.id}')">Delete</button></div></div>`}).join(''):'<div class="v10-muted">No life events planned.</div>';}
 
@@ -4966,7 +5015,8 @@ async function createSharedHousehold(){const name=prompt('Household name:','Fami
 function openSharedInviteModal(){if(!sharedHouseholds.length)return alert('Create or access a shared household first.');document.getElementById('sharedInviteModal').style.display='flex';document.getElementById('sharedMemberEmail').value='';}
 async function inviteSharedMember(){const h=sharedOwnerHousehold(),email=document.getElementById('sharedMemberEmail').value.trim();if(!h||!email)return alert('Select a household and enter email.');const{error}=await supabaseClient.rpc('add_shared_member',{p_household_id:h.id,p_email:email});if(error)return alert(error.message);closeV10Modal('sharedInviteModal');await loadSharedDataV10();renderAll();alert('Member added.');}
 function openSharedExpenseModal(){if(!sharedHouseholds.length)return alert('Create or join a shared household first.');document.getElementById('sharedExpenseModal').style.display='flex';document.getElementById('sharedExpenseHousehold').innerHTML=sharedHouseholds.map(h=>`<option value="${h.id}">${escapeHtml(h.name)}</option>`).join('');document.getElementById('sharedExpenseName').value='';document.getElementById('sharedExpenseAmount').value='';document.getElementById('sharedExpenseDate').value=dateKey(new Date());}
-async function saveSharedExpense(){const household_id=document.getElementById('sharedExpenseHousehold').value,name=document.getElementById('sharedExpenseName').value.trim(),amount=numV10(document.getElementById('sharedExpenseAmount').value),expense_date=document.getElementById('sharedExpenseDate').value;if(!household_id||!name||amount<=0)return alert('Enter valid shared expense.');const{data,error}=await supabaseClient.from('shared_expenses').insert({household_id,user_id:currentUser.id,name,amount,expense_date}).select().single();if(error)return alert(error.message);sharedExpenses.unshift(data);closeV10Modal('sharedExpenseModal');saveOfflineSnapshot();renderAll();}
+async function saveSharedExpense(){const household_id=document.getElementById('sharedExpenseHousehold').value,name=document.getElementById('sharedExpenseName').value.trim(),amount=numV10(document.getElementById('sharedExpenseAmount').value),expense_date=document.getElementById('sharedExpenseDate').value;if(!household_id||!name||amount<=0)return alert('Enter valid shared expense.');const{data,error}=await supabaseClient.from('shared_expenses').insert({household_id,user_id:currentUser.id,name,amount,expense_date}).select().single();if(error)return alert(error.message);sharedExpenses.unshift(data);closeV10Modal('sharedExpenseModal');saveOfflineSnapshot();renderAll();
+    showV101Toast('Shared expense saved ✓');}
 async function loadSharedDataV10(){const h=await supabaseClient.from('shared_households').select('*');if(h.error)throw h.error;sharedHouseholds=h.data||[];if(sharedHouseholds.length){const ids=sharedHouseholds.map(x=>x.id);const m=await supabaseClient.from('shared_household_members').select('*').in('household_id',ids);if(m.error)throw m.error;sharedMembers=m.data||[];const e=await supabaseClient.from('shared_expenses').select('*').in('household_id',ids).order('expense_date',{ascending:false});if(e.error)throw e.error;sharedExpenses=e.data||[];}else{sharedMembers=[];sharedExpenses=[];}}
 async function deleteSharedExpense(id){if(!confirm('Delete this shared expense?'))return;const{error}=await supabaseClient.from('shared_expenses').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);sharedExpenses=sharedExpenses.filter(x=>x.id!==id);renderAll();}
 function renderShared(){document.getElementById('v10SharedHouseholds').innerHTML=sharedHouseholds.length?sharedHouseholds.map(h=>{const members=sharedMembers.filter(m=>m.household_id===h.id).length;return `<div class="v10-item"><b>${escapeHtml(h.name)}</b><div class="v10-muted">${members} member(s) · ${h.owner_id===currentUser.id?'Owner':'Member'}</div></div>`}).join(''):'<div class="v10-muted">No shared household yet.</div>';document.getElementById('v10SharedExpenses').innerHTML=sharedExpenses.length?'<div class="v10-list">'+sharedExpenses.slice(0,10).map(x=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.name)}</b><div class="v10-muted">${x.expense_date}</div></div><b>${money(x.amount)}</b></div>${x.user_id===currentUser.id?'<div class="v10-actions"><button class="btn-danger" onclick="deleteSharedExpense(\''+x.id+'\')">Delete</button></div>':''}</div>`).join('')+'</div>':'<div class="v10-muted">No shared expenses.</div>';}
@@ -5177,9 +5227,82 @@ window.addEventListener("online",()=>{ if(currentUser){ loadData().then(()=>rend
 window.addEventListener("offline",()=>{ const pill=document.getElementById("overviewMonthLabel"); if(pill) pill.textContent=monthName(currentDate)+" · Offline snapshot"; });
 
 
+
+/* ===================== V10.1 RENDER ERROR BOUNDARY ===================== */
+function showV101Toast(message, type="success"){
+    let el=document.getElementById("v101Toast");
+    if(!el){
+        el=document.createElement("div");
+        el.id="v101Toast";
+        el.className="v101-toast";
+        document.body.appendChild(el);
+    }
+    el.className="v101-toast "+(type||"success");
+    el.textContent=message;
+    requestAnimationFrame(()=>el.classList.add("show"));
+    clearTimeout(window.__v101ToastTimer);
+    window.__v101ToastTimer=setTimeout(()=>el.classList.remove("show"),2800);
+}
+
+function renderAllV101(){
+    const failures=[];
+    const jobs=[
+        ["Overview",()=>renderV3()],
+        ["Forecast/Budgets",()=>renderV5()],
+        ["Dashboard",()=>renderDashboard()],
+        ["Calendar",()=>renderCalendar()],
+        ["Selected day",()=>renderSelectedDay()],
+        ["Upcoming payments",()=>renderUpcoming()],
+        ["Expenses",()=>renderExpenseList()],
+        ["Income",()=>renderIncome()],
+        ["Reports",()=>renderReports()],
+        ["Assistant",()=>renderAssistant()],
+        ["Credit cards",()=>renderCreditCards()],
+        ["Net worth",()=>renderNetWorth()],
+        ["Investments",()=>renderInvestments()],
+        ["What-if",()=>runWhatIf()],
+        ["V10 dashboard",()=>renderV10Everything()]
+    ];
+
+    for(const [name,fn] of jobs){
+        try{fn();}
+        catch(error){
+            console.error("Expense Calendar render error in "+name,error);
+            failures.push(name);
+        }
+    }
+
+    try{saveOfflineSnapshot();}
+    catch(error){console.warn("Offline snapshot failed",error);}
+
+    try{applyPrivacyMode();}
+    catch(error){console.warn("Privacy mode refresh failed",error);}
+
+    if(failures.length){
+        console.warn("Sections skipped during refresh:",failures);
+    }
+}
+
+renderAll=renderAllV101;
+
+
 /* ---------------- START ---------------- */
 
 init();
+
+window.addEventListener("error",event=>{
+    const message=String(event?.error?.message||event?.message||"");
+    if(/render/i.test(message)){
+        console.error("Unhandled render error",event.error||event.message);
+    }
+});
+
+window.addEventListener("unhandledrejection",event=>{
+    const message=String(event?.reason?.message||event?.reason||"");
+    if(/render|display/i.test(message)){
+        console.error("Unhandled display promise error",event.reason);
+    }
+});
 
 </script>
 
