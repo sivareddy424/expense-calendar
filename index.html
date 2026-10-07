@@ -748,7 +748,7 @@ header{backdrop-filter:saturate(140%);}
 <h2>Financial Overview</h2>
 <div class="overview-subtitle">A quick view of this month’s income, commitments, surplus and savings progress.</div>
 <div class="dashboard overview-kpis">
-<div class="card"><div class="stat-title">Recurring Income</div><div id="v3RecurringIncome" class="stat-value green">₹0</div></div>
+<div class="card"><div class="stat-title">Monthly Income</div><div id="v3RecurringIncome" class="stat-value green">₹0</div></div>
 <div class="card"><div class="stat-title">Total Debt</div><div id="v3Debt" class="stat-value red">₹0</div></div>
 <div class="card"><div class="stat-title">Monthly EMI</div><div id="v3Emi" class="stat-value orange">₹0</div></div>
 <div class="card"><div class="stat-title">Monthly Surplus</div><div id="v3Savings" class="stat-value blue">₹0</div></div>
@@ -5157,9 +5157,40 @@ checkReminders = function(){
 function applyPrivacyMode(){document.body.classList.toggle('v10-privacy',localStorage.getItem('expense-calendar-privacy')==='1');if(localStorage.getItem('expense-calendar-privacy')==='1'){document.querySelectorAll('.stat-value,.v10-kpi .value,.v10-command-card .big').forEach(el=>el.classList.add('v10-private'));}else{document.querySelectorAll('.v10-private').forEach(el=>el.classList.remove('v10-private'));}}
 function togglePrivacyMode(){const now=localStorage.getItem('expense-calendar-privacy')==='1';localStorage.setItem('expense-calendar-privacy',now?'0':'1');applyPrivacyMode();}
 
+/* Keep Financial Overview KPIs synchronized with the live dashboard data. */
+function syncOverviewKpisV103(){
+    const parseMoney = value => Number(String(value || '').replace(/[^0-9.-]/g,'')) || 0;
+    const dashboardValue = id => parseMoney(document.getElementById(id)?.textContent);
+    const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+
+    /* Mirror the same live values shown in the Calendar dashboard. */
+    const monthlyIncome = dashboardValue('dashIncome');
+    const monthlySurplus = dashboardValue('dashBalance');
+
+    const debt = loans.reduce((s,x)=>s+Number(x.outstanding_amount||0),0);
+    const emi = loans.reduce((s,x)=>s+Number(x.emi_amount||0),0);
+    const goalsTarget = savingsGoals.reduce((s,x)=>s+Number(x.target_amount||0),0);
+    const goalsSaved = savingsGoals.reduce((s,x)=>s+Number(x.current_amount||0),0);
+    const goalProgress = goalsTarget ? Math.min(100, goalsSaved/goalsTarget*100) : 0;
+
+    set('v3RecurringIncome', money(monthlyIncome));
+    set('v3Debt', money(debt));
+    set('v3Emi', money(emi));
+    set('v3Savings', money(monthlySurplus));
+    set('v3GoalTotal', money(goalsSaved));
+    set('v3GoalProgress', goalProgress.toFixed(1)+'%');
+}
+
 /* Unified V10 renderer on top of the last V9 renderer. */
 const _v9FinalRenderAll = renderAll;
-renderAll = function(){ _v9FinalRenderAll(); renderV10Everything(); applyPrivacyMode(); const lab=document.getElementById('overviewMonthLabel'); if(lab)lab.textContent=monthName(currentDate); };
+renderAll = function(){
+    _v9FinalRenderAll();
+    renderV10Everything();
+    syncOverviewKpisV103();
+    applyPrivacyMode();
+    const lab=document.getElementById('overviewMonthLabel');
+    if(lab)lab.textContent=monthName(currentDate);
+};
 
 const _v9ShowV3 = showV3;
 showV3 = function(id,button){ _v9ShowV3(id,button); if(id==='more')renderV10Everything(); };
