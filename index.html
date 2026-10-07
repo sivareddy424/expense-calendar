@@ -5125,7 +5125,7 @@ importBackup = async function(event){
 /* Forecast now includes one-time expenses and household bills. */
 const _v9Forecast = getForecastMonthData;
 getForecastMonthData = function(d){
-    const base=_v9Forecast(d), one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0), bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0); const out=base.outflow+one+bills; return {...base,oneTimeExpenses:one,householdBills:bills,outflow:out,surplus:base.income-out};
+    const base=_v9Forecast(d), one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0), bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0); const out=base.outflow+one+bills; return {...base,oneTimeExpenses:one,householdBills:bills,outflow,surplus:base.income-out};
 };
 
 /* Dashboard includes quick one-time expenses and household bills. */
@@ -6421,5 +6421,420 @@ body.calendar-mode #specialReport{grid-template-columns:repeat(3,1fr)}
 })();
 </script>
 
+
+<style id="v108-master-fix-css">
+/* ===================== V10.8 MASTER FIX ===================== */
+.v108-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.v108-actions .btn,.v108-actions .btn-light,.v108-actions .btn-green,.v108-actions .btn-danger,.v108-actions .btn-gray{font-size:12px!important;padding:7px 10px!important}
+.v108-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:9px;box-shadow:0 1px 4px rgba(15,23,42,.05)}
+.v108-meta{font-size:12px;color:#6b7280;margin-top:3px}
+.v108-empty{padding:18px;text-align:center;color:#6b7280;border:1px dashed #d1d5db;border-radius:10px;background:#f8fafc}
+.v108-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:700px){.v108-grid{grid-template-columns:1fr}}
+</style>
+
+<script id="v108-master-fix">
+(function(){
+    'use strict';
+
+    const v108 = {
+        async query(table, orderCol){
+            try{
+                let q=supabaseClient.from(table).select('*').eq('user_id',currentUser.id);
+                if(orderCol) q=q.order(orderCol,{ascending:false});
+                const {data,error}=await q;
+                if(error){
+                    console.warn('V10.8: '+table+' not loaded:',error.message);
+                    return null;
+                }
+                return data || [];
+            }catch(e){
+                console.warn('V10.8: '+table+' load failed:',e);
+                return null;
+            }
+        },
+        set(id,value){
+            const el=document.getElementById(id);
+            if(el) el.textContent=value;
+        },
+        html(id,value){
+            const el=document.getElementById(id);
+            if(el) el.innerHTML=value;
+        },
+        safe(name,fn){
+            try{return fn();}catch(e){console.error('V10.8 '+name+' failed:',e);return null;}
+        }
+    };
+
+    /* ---------------------------------------------------------
+       ROBUST DATA LOAD
+       One missing optional V9/V10 table must NOT erase or hide
+       the core finance data.
+    --------------------------------------------------------- */
+    async function masterLoadAll(){
+        if(!currentUser) return false;
+        if(!navigator.onLine){
+            try{loadOfflineSnapshot();}catch(e){}
+            try{loadV10OfflineSnapshot();}catch(e){}
+            return true;
+        }
+
+        const requests={
+            expenses:['expenses','created_at'],
+            payments:['payment_status','payment_date'],
+            income:['income','income_date'],
+            recurringIncome:['recurring_income','created_at'],
+            loans:['loans','created_at'],
+            savingsGoals:['savings_goals','created_at'],
+            savingsTransactions:['savings_transactions','transaction_date'],
+            budgets:['budgets','category'],
+            creditCards:['credit_cards','name'],
+            assets:['assets','name'],
+            investments:['investments','investment_date'],
+            oneTimeExpenses:['one_time_expenses','expense_date'],
+            financeRules:['finance_rules','created_at'],
+            renewals:['renewals','due_date'],
+            vehicles:['vehicles','name'],
+            vehicleLogs:['vehicle_logs','log_date'],
+            householdBills:['household_bills','created_at'],
+            lifeEvents:['life_events','target_date'],
+            documents:['finance_documents','created_at']
+        };
+
+        const entries=Object.entries(requests);
+        const results=await Promise.all(entries.map(([_,cfg])=>v108.query(cfg[0],cfg[1])));
+        results.forEach((data,i)=>{
+            if(data===null) return; // retain currently loaded value if a table is unavailable
+            const key=entries[i][0];
+            if(key==='expenses') expenses=data;
+            else if(key==='payments') payments=data;
+            else if(key==='income') income=data;
+            else if(key==='recurringIncome') recurringIncome=data;
+            else if(key==='loans') loans=data;
+            else if(key==='savingsGoals') savingsGoals=data;
+            else if(key==='savingsTransactions') savingsTransactions=data;
+            else if(key==='budgets') budgets=data;
+            else if(key==='creditCards') creditCards=data;
+            else if(key==='assets') assets=data;
+            else if(key==='investments') investments=data;
+            else if(key==='oneTimeExpenses') oneTimeExpenses=data;
+            else if(key==='financeRules') financeRules=data;
+            else if(key==='renewals') renewals=data;
+            else if(key==='vehicles') vehicles=data;
+            else if(key==='vehicleLogs') vehicleLogs=data;
+            else if(key==='householdBills') householdBills=data;
+            else if(key==='lifeEvents') lifeEvents=data;
+            else if(key==='documents') documents=data;
+        });
+
+        try{await loadSharedDataV10();}catch(e){console.warn('V10.8 shared data load skipped',e);}
+        try{saveOfflineSnapshot();}catch(e){}
+        try{saveOfflineSnapshotV10();}catch(e){}
+        return true;
+    }
+    window.masterLoadAllV108=masterLoadAll;
+
+    /* ---------------------------------------------------------
+       CORE CALCULATIONS USED BY OVERVIEW
+    --------------------------------------------------------- */
+    function masterMonthlyIncome(d){
+        const recurring=typeof recurringIncomeForMonth==='function'?Number(recurringIncomeForMonth(d)||0):0;
+        const one=Array.isArray(income)?income.filter(x=>String(x.income_date||'').slice(0,7)===monthKey(d)).reduce((s,x)=>s+Number(x.amount||0),0):0;
+        return recurring+one;
+    }
+    function masterMonthlyOutflow(d){
+        let total=0;
+        if(typeof getMonthExpenses==='function') total+=getMonthExpenses(d).reduce((s,x)=>s+Number(x.expense?.amount||0),0);
+        if(typeof oneTimeExpensesForMonthV10==='function') total+=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+Number(x.amount||0),0);
+        if(typeof householdBillsForMonthV10==='function') total+=householdBillsForMonthV10(d).reduce((s,x)=>s+Number(x.bill?.amount||0),0);
+        return total;
+    }
+
+    /* ---------------------------------------------------------
+       OVERVIEW — authoritative renderer
+    --------------------------------------------------------- */
+    function renderOverviewMaster(){
+        const d=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
+        const recurringInc=typeof recurringIncomeForMonth==='function'?Number(recurringIncomeForMonth(d)||0):0;
+        const oneTimeInc=income.filter(x=>String(x.income_date||'').slice(0,7)===monthKey(d)).reduce((s,x)=>s+Number(x.amount||0),0);
+        const monthlyIncome=recurringInc+oneTimeInc;
+        const plannedRecurring=typeof getMonthExpenses==='function'?getMonthExpenses(d).reduce((s,x)=>s+Number(x.expense?.amount||0),0):0;
+        const oneTimeOut=typeof oneTimeExpensesForMonthV10==='function'?oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+Number(x.amount||0),0):0;
+        const householdOut=typeof householdBillsForMonthV10==='function'?householdBillsForMonthV10(d).reduce((s,x)=>s+Number(x.bill?.amount||0),0):0;
+        const planned=plannedRecurring+oneTimeOut+householdOut;
+        const recurringPaid=typeof getMonthExpenses==='function'?getMonthExpenses(d).filter(x=>x.payment?.paid).reduce((s,x)=>s+Number(x.expense?.amount||0),0):0;
+        const paid=recurringPaid+oneTimeOut;
+        const pending=Math.max(0,planned-paid);
+        const balance=monthlyIncome-planned;
+        const debt=loans.reduce((s,x)=>s+Number(x.outstanding_amount||0),0);
+        const emi=loans.reduce((s,x)=>s+Number(x.emi_amount||0),0);
+        const goalTarget=savingsGoals.reduce((s,x)=>s+Number(x.target_amount||0),0);
+        const goalSaved=savingsGoals.reduce((s,x)=>s+Number(x.current_amount||0),0);
+        const goalPct=goalTarget?Math.min(100,goalSaved/goalTarget*100):0;
+
+        v108.set('v3RecurringIncome',money(monthlyIncome));
+        v108.set('v3Debt',money(debt));
+        v108.set('v3Emi',money(emi));
+        v108.set('v3Savings',money(balance));
+        v108.set('v3GoalTotal',money(goalSaved));
+        v108.set('v3GoalProgress',goalPct.toFixed(1)+'%');
+        v108.set('overviewMonthLabel',monthName(d));
+        v108.set('dashIncome',money(monthlyIncome));
+        v108.set('dashPlanned',money(planned));
+        v108.set('dashPaid',money(paid));
+        v108.set('dashPending',money(pending));
+        v108.set('dashBalance',money(balance));
+
+        const next=typeof upcomingV107==='function'?upcomingV107(1)[0]:null;
+        v108.set('dashNext',next?`${next.name} ${dateKey(next.date)}`:'-');
+
+        const riList=recurringIncome.slice().sort((a,b)=>String(b.start_date).localeCompare(String(a.start_date)));
+        v108.html('v3RecurringIncomeList',riList.length?riList.map(x=>`
+            <div class="v108-card">
+                <b>${escapeHtml(x.name)}</b>
+                <div class="green">${money(x.amount)} / ${escapeHtml(x.frequency||'Monthly')}</div>
+                <div class="v108-meta">Starts ${escapeHtml(x.start_date||'-')}${x.end_date?' · Ends '+escapeHtml(x.end_date):''}</div>
+                <div class="v108-actions">
+                    <button class="btn-light" onclick="openRecurringIncomeModal('${x.id}')">Edit</button>
+                    <button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button>
+                </div>
+            </div>`).join(''):`<div class="v108-empty">No recurring income added.</div>`);
+
+        const goalsMini=savingsGoals.slice();
+        v108.html('v3GoalMini',goalsMini.length?goalsMini.map(g=>{
+            const target=Number(g.target_amount||0),saved=Number(g.current_amount||0),p=target?Math.min(100,saved/target*100):0;
+            return `<div class="v108-card"><b>${escapeHtml(g.name)}</b><div>${money(saved)} / ${money(target)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v108-meta">${p.toFixed(1)}% complete${g.target_date?' · Target '+escapeHtml(g.target_date):''}</div></div>`;
+        }).join(''):`<div class="v108-empty">No savings goals added.</div>`);
+
+        const up=typeof upcomingV107==='function'?upcomingV107(5):[];
+        v108.html('overviewUpcoming',up.length?up.map(x=>`<div class="overview-payment" onclick="showV3('calendar',document.querySelectorAll('.v3-tab')[1]);currentDate=new Date('${dateKey(x.date)}T00:00:00');selectedDate=new Date('${dateKey(x.date)}T00:00:00');setTimeout(()=>renderAll(),0)"><div><b>${escapeHtml(x.name)}</b><div class="small">${escapeHtml(x.source||'Payment')} · ${dateKey(x.date)}</div></div><div class="overview-payment-right"><b>${money(x.amount)}</b></div></div>`).join(''):`<div class="v108-empty">No upcoming payments.</div>`);
+
+        const pctPaid=planned?Math.min(100,paid/planned*100):0;
+        v108.html('overviewMonthSnapshot',`
+            <div class="snapshot-grid">
+                <div><span>Income</span><b class="green">${money(monthlyIncome)}</b></div>
+                <div><span>Planned</span><b>${money(planned)}</b></div>
+                <div><span>Paid</span><b class="green">${money(paid)}</b></div>
+                <div><span>Pending</span><b class="red">${money(pending)}</b></div>
+            </div>
+            <div class="snapshot-progress-head"><span>Payment progress</span><b>${pctPaid.toFixed(0)}%</b></div>
+            <div class="v3-progress snapshot-progress"><div class="v3-bar" style="width:${pctPaid}%"></div></div>
+        `);
+    }
+
+    /* ---------------------------------------------------------
+       LOAN EDIT SUPPORT
+    --------------------------------------------------------- */
+    let editingLoanId='';
+    window.openLoanModal=function(id=null){
+        editingLoanId=id||'';
+        const x=id?loans.find(r=>String(r.id)===String(id)):null;
+        const modal=document.getElementById('loanModal'); if(!modal)return;
+        document.getElementById('loanModal').style.display='flex';
+        document.getElementById('loanName').value=x?.name||'';
+        document.getElementById('loanLender').value=x?.lender||'';
+        document.getElementById('loanOriginal').value=x?.original_amount??'';
+        document.getElementById('loanOutstanding').value=x?.outstanding_amount??'';
+        document.getElementById('loanRate').value=x?.interest_rate??'';
+        document.getElementById('loanEmi').value=x?.emi_amount??'';
+        document.getElementById('loanStart').value=x?.start_date||dateKey(new Date());
+        document.getElementById('loanTenure').value=x?.tenure_months??'';
+        const h=modal.querySelector('h2'); if(h)h.textContent=x?'Edit Loan / EMI':'Add Loan / EMI';
+        const save=modal.querySelector('.modal-actions .btn:not(.btn-gray)'); if(save)save.textContent=x?'Update Loan':'Save';
+    };
+    window.saveLoan=async function(){
+        const row={
+            user_id:currentUser.id,
+            name:document.getElementById('loanName').value.trim(),
+            lender:document.getElementById('loanLender').value.trim()||null,
+            original_amount:Number(document.getElementById('loanOriginal').value),
+            outstanding_amount:Number(document.getElementById('loanOutstanding').value||0),
+            interest_rate:Number(document.getElementById('loanRate').value||0),
+            emi_amount:Number(document.getElementById('loanEmi').value),
+            start_date:document.getElementById('loanStart').value,
+            tenure_months:Number(document.getElementById('loanTenure').value)
+        };
+        if(!row.name||row.original_amount<=0||row.emi_amount<=0||!row.start_date||row.tenure_months<=0){alert('Please fill all required loan fields.');return;}
+        const q=editingLoanId
+            ? supabaseClient.from('loans').update(row).eq('id',editingLoanId).eq('user_id',currentUser.id).select().single()
+            : supabaseClient.from('loans').insert(row).select().single();
+        const {data,error}=await q;
+        if(error){alert(error.message);return;}
+        if(editingLoanId){const i=loans.findIndex(x=>String(x.id)===String(editingLoanId));if(i>=0)loans[i]=data;}
+        else loans.push(data);
+        document.getElementById('loanModal').style.display='none';
+        editingLoanId='';
+        await masterRefresh();
+        if(typeof showV101Toast==='function')showV101Toast('Loan saved ✓');
+    };
+
+    /* ---------------------------------------------------------
+       GOAL EDIT SUPPORT
+    --------------------------------------------------------- */
+    let editingGoalId='';
+    window.openGoalModal=function(id=null){
+        editingGoalId=id||'';
+        const x=id?savingsGoals.find(r=>String(r.id)===String(id)):null;
+        const modal=document.getElementById('goalModal'); if(!modal)return;
+        modal.style.display='flex';
+        document.getElementById('goalName').value=x?.name||'';
+        document.getElementById('goalTarget').value=x?.target_amount??'';
+        document.getElementById('goalCurrent').value=x?.current_amount??0;
+        document.getElementById('goalDate').value=x?.target_date||'';
+        const h=modal.querySelector('h2'); if(h)h.textContent=x?'Edit Savings Goal':'Add Savings Goal';
+        const save=modal.querySelector('.modal-actions .btn-green'); if(save)save.textContent=x?'Update Goal':'Save';
+    };
+    window.saveGoal=async function(){
+        const row={
+            user_id:currentUser.id,
+            name:document.getElementById('goalName').value.trim(),
+            target_amount:Number(document.getElementById('goalTarget').value),
+            current_amount:Number(document.getElementById('goalCurrent').value||0),
+            target_date:document.getElementById('goalDate').value||null
+        };
+        if(!row.name||row.target_amount<=0||row.current_amount<0){alert('Please enter valid savings goal details.');return;}
+        const q=editingGoalId
+            ? supabaseClient.from('savings_goals').update(row).eq('id',editingGoalId).eq('user_id',currentUser.id).select().single()
+            : supabaseClient.from('savings_goals').insert(row).select().single();
+        const {data,error}=await q;
+        if(error){alert(error.message);return;}
+        if(editingGoalId){const i=savingsGoals.findIndex(x=>String(x.id)===String(editingGoalId));if(i>=0)savingsGoals[i]=data;}
+        else savingsGoals.push(data);
+        document.getElementById('goalModal').style.display='none';
+        editingGoalId='';
+        await masterRefresh();
+        if(typeof showV101Toast==='function')showV101Toast('Savings goal saved ✓');
+    };
+
+    /* Goal list with Edit + Add Savings + Delete */
+    function renderGoalsMaster(){
+        const box=document.getElementById('v3GoalList');
+        if(!box)return;
+        if(!savingsGoals.length){box.innerHTML='<div class="v108-empty">No savings goals added yet.</div>';return;}
+        box.innerHTML=savingsGoals.map(g=>{
+            const target=Number(g.target_amount||0),saved=Number(g.current_amount||0),p=target?Math.min(100,saved/target*100):0;
+            const remaining=Math.max(0,target-saved);
+            return `<div class="v108-card">
+                <div style="display:flex;justify-content:space-between;gap:10px"><b>${escapeHtml(g.name)}</b><b class="green">${p.toFixed(1)}%</b></div>
+                <div style="margin-top:4px">${money(saved)} / ${money(target)}</div>
+                <div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div>
+                <div class="v108-meta">Remaining: ${money(remaining)}${g.target_date?' · Target '+escapeHtml(g.target_date):''}</div>
+                <div class="v108-actions">
+                    <button class="btn-light" onclick="openGoalModal('${g.id}')">Edit</button>
+                    <button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button>
+                    <button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /* Loan list with full editing controls */
+    function renderLoansMaster(){
+        const box=document.getElementById('v3LoanList');
+        if(!box)return;
+        if(!loans.length){box.innerHTML='<div class="v108-empty">No loans added yet.</div>';return;}
+        box.innerHTML=loans.map(l=>{
+            const original=Number(l.original_amount||0),outstanding=Number(l.outstanding_amount||0),paid=Math.max(0,original-outstanding),p=original?Math.min(100,paid/original*100):0;
+            return `<div class="v108-card">
+                <div style="display:flex;justify-content:space-between;gap:10px"><b>${escapeHtml(l.name)}</b><b class="red">${money(outstanding)}</b></div>
+                <div class="v108-meta">${escapeHtml(l.lender||'')} · ${Number(l.interest_rate||0)}% · ${Number(l.tenure_months||0)} months</div>
+                <div style="margin-top:6px">Original: ${money(original)} · EMI: <b>${money(l.emi_amount)}</b></div>
+                <div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div>
+                <div class="v108-meta">Paid down: ${p.toFixed(1)}% · Start: ${escapeHtml(l.start_date||'-')}</div>
+                <div class="v108-actions">
+                    <button class="btn-light" onclick="openLoanModal('${l.id}')">Edit</button>
+                    <button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button>
+                    <button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /* ---------------------------------------------------------
+       ALL DATA-DEPENDENT RENDERERS
+    --------------------------------------------------------- */
+    function masterRender(){
+        v108.safe('overview',renderOverviewMaster);
+        v108.safe('loans',renderLoansMaster);
+        v108.safe('goals',renderGoalsMaster);
+        v108.safe('forecast',()=>typeof renderForecast==='function'&&renderForecast());
+        v108.safe('budgets',()=>typeof renderBudgets==='function'&&renderBudgets());
+        v108.safe('smart',()=>typeof renderSmartFinance==='function'&&renderSmartFinance());
+        v108.safe('annual',()=>typeof renderAnnualPlanner==='function'&&renderAnnualPlanner());
+        v108.safe('assistant',()=>typeof renderAssistant==='function'&&renderAssistant());
+        v108.safe('cards',()=>typeof renderCreditCards==='function'&&renderCreditCards());
+        v108.safe('networth',()=>typeof renderNetWorth==='function'&&renderNetWorth());
+        v108.safe('investments',()=>typeof renderInvestments==='function'&&renderInvestments());
+        v108.safe('command center',()=>typeof renderV10Everything==='function'&&renderV10Everything());
+        v108.safe('calendar',()=>typeof renderCalendarV107==='function'&&renderCalendarV107());
+        v108.safe('selected day',()=>typeof renderSelectedDayV107==='function'&&renderSelectedDayV107());
+        v108.safe('reports',()=>typeof renderReportsV107==='function'&&renderReportsV107());
+        v108.safe('income',()=>typeof renderIncomeV107==='function'&&renderIncomeV107());
+        v108.safe('upcoming',()=>typeof renderUpcomingV107==='function'&&renderUpcomingV107());
+        try{saveOfflineSnapshot();}catch(e){}
+    }
+
+    async function masterRefresh(){
+        try{await masterLoadAll();}catch(e){console.error('V10.8 reload failed',e);}
+        masterRender();
+    }
+    window.masterRefreshV108=masterRefresh;
+
+    /* ---------------------------------------------------------
+       AUTHORITATIVE TAB NAVIGATION
+    --------------------------------------------------------- */
+    const tabHandler=function(id,button){
+        const target=document.getElementById('v3-'+id);
+        if(!target)return;
+        document.querySelectorAll('.v3-view').forEach(x=>x.classList.remove('active'));
+        target.classList.add('active');
+        document.querySelectorAll('.v3-tab').forEach(x=>x.classList.remove('active'));
+        if(button)button.classList.add('active');
+        document.body.classList.toggle('calendar-mode',id==='calendar');
+        if(id!=='calendar')document.body.classList.remove('calendar-mode');
+        window.scrollTo({top:0,behavior:'smooth'});
+        masterRender();
+    };
+    window.showV3=tabHandler;
+
+    /* ---------------------------------------------------------
+       AUTHORITATIVE REFRESH
+    --------------------------------------------------------- */
+    window.renderAll=function(){ masterRender(); };
+
+    /* ---------------------------------------------------------
+       SAVE WRAPPERS: after ANY successful change, reload the
+       authoritative data and repaint every feature.
+    --------------------------------------------------------- */
+    function wrapSave(name){
+        const original=window[name];
+        if(typeof original!=='function')return;
+        if(original.__v108Wrapped)return;
+        const wrapped=async function(...args){
+            const result=await original.apply(this,args);
+            setTimeout(()=>masterRender(),0);
+            return result;
+        };
+        wrapped.__v108Wrapped=true;
+        wrapped.__v108Original=original;
+        window[name]=wrapped;
+    }
+    ['saveExpense','saveIncome','saveRecurringIncome','saveBudget','saveCreditCard','saveAsset','saveInvestment','saveHouseholdBill','saveRenewal','saveVehicle','saveVehicleLog','saveLifeEvent','saveRule','saveQuickAdd'].forEach(wrapSave);
+
+    /* ---------------------------------------------------------
+       Initial reload after current session is established.
+       This repairs pages where V10.7 rendered before the data
+       finished loading.
+    --------------------------------------------------------- */
+    setTimeout(async()=>{
+        if(currentUser){
+            await masterLoadAll();
+            masterRender();
+        }
+    },700);
+    setTimeout(()=>{if(currentUser)masterRender();},1800);
+
+})();
+</script>
 </body>
 </html>
