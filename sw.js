@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v10-7";
+const CACHE_NAME = "expense-calendar-v10-10";
 
 const APP_SHELL = [
     "./",
@@ -11,11 +11,13 @@ const APP_SHELL = [
 ========================= */
 
 self.addEventListener("install", event => {
+
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => cache.addAll(APP_SHELL))
             .then(() => self.skipWaiting())
     );
+
 });
 
 
@@ -24,17 +26,25 @@ self.addEventListener("install", event => {
 ========================= */
 
 self.addEventListener("activate", event => {
+
     event.waitUntil(
+
         caches.keys()
             .then(keys => {
+
                 return Promise.all(
+
                     keys
                         .filter(key => key !== CACHE_NAME)
                         .map(key => caches.delete(key))
+
                 );
+
             })
             .then(() => self.clients.claim())
+
     );
+
 });
 
 
@@ -52,12 +62,9 @@ self.addEventListener("fetch", event => {
     const url = new URL(event.request.url);
 
     /*
-     * External resources such as:
-     * Supabase
-     * jsDelivr
-     * other CDNs
-     *
-     * remain network-only.
+     * External resources such as Supabase,
+     * jsDelivr and other CDNs remain
+     * network-only.
      */
     if (url.origin !== self.location.origin) {
         return;
@@ -68,32 +75,45 @@ self.addEventListener("fetch", event => {
        PAGE NAVIGATION
        =========================
 
-       Network first:
-       always try to load the newest
-       GitHub Pages version.
+       Network first so the newest
+       GitHub Pages version is loaded.
 
-       If offline, use cached index.html.
+       Cache is used only when offline.
     */
 
     if (event.request.mode === "navigate") {
 
         event.respondWith(
+
             fetch(event.request)
+
                 .then(response => {
 
                     const copy = response.clone();
 
                     caches.open(CACHE_NAME)
                         .then(cache => {
-                            cache.put("./index.html", copy);
+
+                            cache.put(
+                                "./index.html",
+                                copy
+                            );
+
                         })
                         .catch(() => {});
 
                     return response;
+
                 })
+
                 .catch(() => {
-                    return caches.match("./index.html");
+
+                    return caches.match(
+                        "./index.html"
+                    );
+
                 })
+
         );
 
         return;
@@ -102,18 +122,12 @@ self.addEventListener("fetch", event => {
 
     /* =========================
        OTHER LOCAL FILES
-       =========================
-
-       Cache first:
-       return cached resource when
-       available.
-
-       Otherwise fetch from network
-       and save it to cache.
-    */
+       ========================= */
 
     event.respondWith(
+
         caches.match(event.request)
+
             .then(cachedResponse => {
 
                 if (cachedResponse) {
@@ -121,22 +135,29 @@ self.addEventListener("fetch", event => {
                 }
 
                 return fetch(event.request)
+
                     .then(response => {
 
-                        const copy = response.clone();
+                        const copy =
+                            response.clone();
 
                         caches.open(CACHE_NAME)
                             .then(cache => {
+
                                 cache.put(
                                     event.request,
                                     copy
                                 );
+
                             })
                             .catch(() => {});
 
                         return response;
+
                     });
+
             })
+
     );
 
 });
