@@ -3934,8 +3934,8 @@ function renderV3(){
  const planned=getMonthExpenses(currentDate).reduce((s,x)=>s+Number(x.expense.amount),0);document.getElementById('v3RecurringIncome').textContent=money(totalIncome);document.getElementById('v3Debt').textContent=money(debt);document.getElementById('v3Emi').textContent=money(emi);document.getElementById('v3Savings').textContent=money(totalIncome-planned);document.getElementById('v3GoalTotal').textContent=money(goalsaved);document.getElementById('v3GoalProgress').textContent=goalpct.toFixed(1)+'%';
  document.getElementById('v3RecurringIncomeList').innerHTML=recurringIncome.length?recurringIncome.map(x=>`<div class="v3-item"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">From ${x.start_date}${x.end_date?' to '+x.end_date:''}</div><div class="v3-actions"><button class="btn-light" onclick="openRecurringIncomeModal('${x.id}')">Edit</button><button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring income yet.</div>';
  document.getElementById('v3GoalMini').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div></div>`}).join(''):'<div class="empty">No savings goals yet.</div>';
- document.getElementById('v3LoanList').innerHTML=loans.length?loans.map(l=>{let paid=Math.max(0,Number(l.original_amount)-Number(l.outstanding_amount)),p=Math.min(100,paid/Number(l.original_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.lender||'')} · ${Number(l.interest_rate||0)}% · ${l.tenure_months} months</div><div>Original: ${money(l.original_amount)} · Outstanding: <b>${money(l.outstanding_amount)}</b></div><div>EMI: <b>${money(l.emi_amount)}</b></div><div class="small" style="margin-top:7px">Loan progress ${p.toFixed(1)}%</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v3-actions"><button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No loans added yet.</div>';
- document.getElementById('v3GoalList').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}%${g.target_date?' · Target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No savings goals added yet.</div>';
+ document.getElementById('v3LoanList').innerHTML=loans.length?loans.map(l=>{let paid=Math.max(0,Number(l.original_amount)-Number(l.outstanding_amount)),p=Math.min(100,paid/Number(l.original_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.lender||'')} · ${Number(l.interest_rate||0)}% · ${l.tenure_months} months</div><div>Original: ${money(l.original_amount)} · Outstanding: <b>${money(l.outstanding_amount)}</b></div><div>EMI: <b>${money(l.emi_amount)}</b></div><div class="small" style="margin-top:7px">Loan progress ${p.toFixed(1)}%</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v3-actions"><button class="btn-light" onclick="openLoanModal('${l.id}')">Edit</button><button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No loans added yet.</div>';
+ document.getElementById('v3GoalList').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}%${g.target_date?' · Target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-light" onclick="openGoalModal('${g.id}')">Edit</button><button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No savings goals added yet.</div>';
  let html='';for(let i=11;i>=0;i--){let d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount),0),ex=getMonthExpenses(d).reduce((s,x)=>s+Number(x.expense.amount),0),paid=getMonthExpenses(d).filter(x=>x.payment?.paid).reduce((s,x)=>s+Number(x.expense.amount),0);html+=`<div class="v3-item"><b>${monthName(d)}</b><div>Income: <span class="green">${money(inc)}</span> · Planned: ${money(ex)} · Paid: ${money(paid)} · Balance: <b>${money(inc-ex)}</b></div></div>`} document.getElementById('v3YearlyReport').innerHTML=html;
 
  const overviewUpcoming=document.getElementById('overviewUpcoming');
@@ -5125,7 +5125,7 @@ importBackup = async function(event){
 /* Forecast now includes one-time expenses and household bills. */
 const _v9Forecast = getForecastMonthData;
 getForecastMonthData = function(d){
-    const base=_v9Forecast(d), one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0), bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0); const out=base.outflow+one+bills; return {...base,oneTimeExpenses:one,householdBills:bills,outflow,surplus:base.income-out};
+    const base=_v9Forecast(d), one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0), bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0); const out=base.outflow+one+bills; return {...base,oneTimeExpenses:one,householdBills:bills,outflow:out,surplus:base.income-out};
 };
 
 /* Dashboard includes quick one-time expenses and household bills. */
@@ -6423,7 +6423,7 @@ body.calendar-mode #specialReport{grid-template-columns:repeat(3,1fr)}
 
 
 <style id="v108-master-fix-css">
-/* ===================== V10.8 MASTER FIX ===================== */
+/* ===================== V10.9 MASTER FIX ===================== */
 .v108-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
 .v108-actions .btn,.v108-actions .btn-light,.v108-actions .btn-green,.v108-actions .btn-danger,.v108-actions .btn-gray{font-size:12px!important;padding:7px 10px!important}
 .v108-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:9px;box-shadow:0 1px 4px rgba(15,23,42,.05)}
@@ -6433,7 +6433,7 @@ body.calendar-mode #specialReport{grid-template-columns:repeat(3,1fr)}
 @media(max-width:700px){.v108-grid{grid-template-columns:1fr}}
 </style>
 
-<script id="v108-master-fix">
+<script id="v109-master-fix">
 (function(){
     'use strict';
 
@@ -6750,6 +6750,41 @@ body.calendar-mode #specialReport{grid-template-columns:repeat(3,1fr)}
         }).join('');
     }
 
+
+    /* ---------------------------------------------------------
+       YEARLY TAB — authoritative 12-month summary
+       Keeps the dedicated Yearly tab populated even though the
+       authoritative renderer does not use the legacy renderV3().
+    --------------------------------------------------------- */
+    function renderYearlySummaryMaster(){
+        const box=document.getElementById('v3YearlyReport');
+        if(!box) return;
+        const rows=[];
+        for(let i=0;i<12;i++){
+            const d=new Date(currentDate.getFullYear(),currentDate.getMonth()+i,1);
+            const r=getForecastMonthData(d);
+            rows.push(r);
+        }
+        const totalIncome=rows.reduce((s,r)=>s+r.income,0);
+        const totalOutflow=rows.reduce((s,r)=>s+r.outflow,0);
+        const totalSurplus=totalIncome-totalOutflow;
+        box.innerHTML=`
+            <div class="v108-grid" style="margin-bottom:12px">
+                <div class="v108-card"><div class="v108-meta">12-Month Income</div><b class="green" style="font-size:20px">${money(totalIncome)}</b></div>
+                <div class="v108-card"><div class="v108-meta">12-Month Outflow</div><b style="font-size:20px">${money(totalOutflow)}</b></div>
+                <div class="v108-card"><div class="v108-meta">12-Month Surplus</div><b class="${totalSurplus>=0?'green':'red'}" style="font-size:20px">${money(totalSurplus)}</b></div>
+            </div>
+            <div class="v108-grid">
+                ${rows.map(r=>`
+                    <div class="v108-card">
+                        <div class="v108-item-head"><b>${escapeHtml(monthName(r.date))}</b><b class="${r.surplus>=0?'green':'red'}">${money(r.surplus)}</b></div>
+                        <div class="v108-meta">Income ${money(r.income)} · Outflow ${money(r.outflow)}</div>
+                        <div class="v3-progress" style="margin-top:7px"><div class="v3-bar" style="width:${r.income>0?Math.min(100,Math.max(0,r.outflow/r.income*100)):0}%"></div></div>
+                        <div class="v108-meta" style="margin-top:5px">Recurring/one-time expenses ${money(r.expenses)} · Extra EMI ${money(r.extraEmi)}</div>
+                    </div>`).join('')}
+            </div>`;
+    }
+
     /* ---------------------------------------------------------
        ALL DATA-DEPENDENT RENDERERS
     --------------------------------------------------------- */
@@ -6757,6 +6792,7 @@ body.calendar-mode #specialReport{grid-template-columns:repeat(3,1fr)}
         v108.safe('overview',renderOverviewMaster);
         v108.safe('loans',renderLoansMaster);
         v108.safe('goals',renderGoalsMaster);
+        v108.safe('yearly summary',renderYearlySummaryMaster);
         v108.safe('forecast',()=>typeof renderForecast==='function'&&renderForecast());
         v108.safe('budgets',()=>typeof renderBudgets==='function'&&renderBudgets());
         v108.safe('smart',()=>typeof renderSmartFinance==='function'&&renderSmartFinance());
