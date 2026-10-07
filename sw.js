@@ -1,14 +1,10 @@
-const CACHE_NAME = "expense-calendar-v10-4";
+const CACHE_NAME = "expense-calendar-v10-5";
 
 const APP_SHELL = [
     "./",
     "./index.html",
     "./manifest.json"
 ];
-
-/* =========================
-   INSTALL
-========================= */
 
 self.addEventListener("install", event => {
     event.waitUntil(
@@ -18,29 +14,17 @@ self.addEventListener("install", event => {
     );
 });
 
-
-/* =========================
-   ACTIVATE
-========================= */
-
 self.addEventListener("activate", event => {
     event.waitUntil(
         caches.keys()
-            .then(keys =>
-                Promise.all(
-                    keys
-                        .filter(key => key !== CACHE_NAME)
-                        .map(key => caches.delete(key))
-                )
-            )
+            .then(keys => Promise.all(
+                keys
+                    .filter(key => key !== CACHE_NAME)
+                    .map(key => caches.delete(key))
+            ))
             .then(() => self.clients.claim())
     );
 });
-
-
-/* =========================
-   FETCH
-========================= */
 
 self.addEventListener("fetch", event => {
 
@@ -50,22 +34,13 @@ self.addEventListener("fetch", event => {
 
     const url = new URL(event.request.url);
 
-    /*
-     * External resources such as Supabase
-     * and CDN files remain network-only.
-     */
+    // External resources such as Supabase and CDN files
+    // remain network-only.
     if (url.origin !== self.location.origin) {
         return;
     }
 
-
-    /*
-     * Main page:
-     * Always try the network first so the
-     * latest GitHub Pages version is loaded.
-     *
-     * If offline, use cached index.html.
-     */
+    // Main page: network first, cache fallback.
     if (event.request.mode === "navigate") {
 
         event.respondWith(
@@ -90,18 +65,13 @@ self.addEventListener("fetch", event => {
         return;
     }
 
-
-    /*
-     * Other local resources:
-     * Cache first, then network.
-     */
+    // Other local resources: cache first, network fallback.
     event.respondWith(
-
         caches.match(event.request)
-            .then(cachedResponse => {
+            .then(cached => {
 
-                if (cachedResponse) {
-                    return cachedResponse;
+                if (cached) {
+                    return cached;
                 }
 
                 return fetch(event.request)
@@ -117,9 +87,6 @@ self.addEventListener("fetch", event => {
 
                         return response;
                     });
-
             })
-
     );
-
 });
