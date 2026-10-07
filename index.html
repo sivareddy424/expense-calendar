@@ -5125,7 +5125,7 @@ importBackup = async function(event){
 /* Forecast now includes one-time expenses and household bills. */
 const _v9Forecast = getForecastMonthData;
 getForecastMonthData = function(d){
-    const base=_v9Forecast(d), one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0), bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0); const out=base.outflow+one+bills; return {...base,oneTimeExpenses:one,householdBills:bills,outflow,surplus:base.income-out};
+    const base=_v9Forecast(d), one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0), bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0); const out=base.outflow+one+bills; return {...base,oneTimeExpenses:one,householdBills:bills,outflow:out,surplus:base.income-out};
 };
 
 /* Dashboard includes quick one-time expenses and household bills. */
