@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v6";
+const CACHE_NAME = "expense-calendar-v7";
 
 const APP_SHELL = [
     "./",
@@ -47,15 +47,15 @@ self.addEventListener("fetch", event => {
     const url = new URL(event.request.url);
 
     // Let external resources such as Supabase and CDN
-    // continue through the normal network.
+    // continue normally through the network.
     if (url.origin !== self.location.origin) {
         return;
     }
 
     /*
-     * Navigation requests:
-     * Network first so GitHub Pages updates are picked up.
-     * Cache is used when offline.
+     * Navigation:
+     * Network first so the latest GitHub Pages version
+     * is normally loaded.
      */
     if (event.request.mode === "navigate") {
 
@@ -82,7 +82,7 @@ self.addEventListener("fetch", event => {
     }
 
     /*
-     * Other local resources:
+     * Other local files:
      * Cache first, then network.
      */
     event.respondWith(
