@@ -5588,5 +5588,327 @@ window.addEventListener("unhandledrejection",event=>{
 })();
 </script>
 
+
+<style id="v105-calendar-fix">
+/* ===================== V10.5 CALENDAR FIX & POLISH ===================== */
+body.calendar-mode .dashboard{
+    display:grid !important;
+    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    gap:10px !important;
+    margin-bottom:14px !important;
+}
+body.calendar-mode .dashboard .card{
+    min-height:84px !important;
+    padding:13px !important;
+}
+body.calendar-mode .dashboard .stat-title{font-size:11px!important;margin-bottom:6px!important}
+body.calendar-mode .dashboard .stat-value{font-size:20px!important}
+body.calendar-mode .legacy-grid{grid-template-columns:1fr 1fr;gap:14px}
+body.calendar-mode .legacy-section{margin-bottom:14px}
+body.calendar-mode #monthlyReport{grid-template-columns:repeat(3,1fr)}
+body.calendar-mode #specialReport{grid-template-columns:repeat(3,1fr)}
+.v105-event{display:flex;align-items:center;gap:5px;font-size:10px!important;padding:3px 5px!important;border-radius:6px!important;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v105-event.income{background:#dcfce7!important;color:#166534!important}
+.v105-event.expense{background:#fee2e2!important;color:#991b1b!important}
+.v105-event.saving{background:#ede9fe!important;color:#5b21b6!important}
+.v105-event.loan{background:#ffedd5!important;color:#9a3412!important}
+.v105-event.bill{background:#e0e7ff!important;color:#3730a3!important}
+.v105-event.renewal{background:#fef3c7!important;color:#92400e!important}
+.v105-event.goal{background:#cffafe!important;color:#155e75!important}
+.v105-day-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.v105-day-summary .mini{border:1px solid var(--line);background:#fbfdff;border-radius:10px;padding:10px 11px}
+.v105-day-summary .label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.v105-day-summary .value{font-weight:700;font-size:16px}
+.v105-event-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px}
+.v105-event-meta{font-size:11px;color:var(--muted);margin-top:4px}
+.v105-event-amount{font-weight:800;white-space:nowrap}
+.v105-pill{display:inline-block;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:700;margin-left:5px}
+.v105-pill.income{background:#dcfce7;color:#166534}.v105-pill.expense{background:#fee2e2;color:#991b1b}.v105-pill.saving{background:#ede9fe;color:#5b21b6}.v105-pill.loan{background:#ffedd5;color:#9a3412}.v105-pill.bill{background:#e0e7ff;color:#3730a3}.v105-pill.renewal{background:#fef3c7;color:#92400e}.v105-pill.goal{background:#cffafe;color:#155e75}
+.v105-empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px;background:#fbfdff}
+@media(max-width:1000px){body.calendar-mode .dashboard{grid-template-columns:repeat(3,minmax(0,1fr))!important}.v105-day-summary{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){body.calendar-mode .dashboard{grid-template-columns:repeat(2,minmax(0,1fr))!important}.v105-day-summary{grid-template-columns:repeat(2,1fr)}body.calendar-mode .legacy-grid{grid-template-columns:1fr!important}body.calendar-mode #monthlyReport{grid-template-columns:1fr}body.calendar-mode #specialReport{grid-template-columns:1fr}}
+</style>
+
+
+<script id="v105-calendar-fix-script">
+(function(){
+    const arr = value => Array.isArray(value) ? value : [];
+    const n = value => { const x=Number(value); return Number.isFinite(x)?x:0; };
+    const key = d => dateKey(d);
+    const isSame = (a,b) => key(a)===key(b);
+
+    function recurringExpenseEvents(date){
+        const out=[];
+        arr(expenses).forEach(e=>{
+            const due=occurrenceForExpense(e,date);
+            if(due && isSame(due,date)){
+                const p=getPayment(e.id,due);
+                out.push({type:'expense',name:e.name,amount:n(e.amount),category:e.category||'Other',date:due,paid:!!(p&&p.paid),source:'Recurring expense',expense:e});
+            }
+        });
+        return out;
+    }
+
+    function oneTimeExpenseEvents(date){
+        return arr(oneTimeExpenses).filter(x=>String(x.expense_date||'')===key(date)).map(x=>({
+            type:'expense',name:x.name,amount:n(x.amount),category:x.category||'Other',date:dateV10(x.expense_date),paid:true,source:'One-time expense',raw:x
+        }));
+    }
+
+    function incomeEvents(date){
+        const out=[];
+        arr(income).filter(x=>String(x.income_date||'')===key(date)).forEach(x=>out.push({type:'income',name:x.name,amount:n(x.amount),category:'Income',date:dateV10(x.income_date),source:'Income'}));
+        arr(recurringIncome).forEach(x=>{
+            if(typeof isRecurringIncomeDueOnDate==='function' && isRecurringIncomeDueOnDate(x,date)){
+                out.push({type:'income',name:x.name,amount:n(x.amount),category:'Income',date,source:'Recurring income'});
+            }
+        });
+        return out;
+    }
+
+    function loanEvents(date){
+        const out=[];
+        arr(loans).forEach(l=>{
+            if(!l.start_date || n(l.emi_amount)<=0 || n(l.outstanding_amount)<=0) return;
+            const start=dateV10(l.start_date);
+            const diff=monthDifference(new Date(start.getFullYear(),start.getMonth(),1),new Date(date.getFullYear(),date.getMonth(),1));
+            if(diff<0 || diff>=Math.max(0,n(l.tenure_months||0))) return;
+            if(start.getDate()!==date.getDate()) return;
+            out.push({type:'loan',name:l.name,amount:n(l.emi_amount),category:'Loan / EMI',date,source:'Loan EMI',raw:l});
+        });
+        return out;
+    }
+
+    function savingsEvents(date){
+        return arr(savingsTransactions).filter(x=>String(x.transaction_date||'')===key(date)).map(x=>({
+            type:'saving',name:'Savings contribution',amount:n(x.amount),category:'Savings',date:dateV10(x.transaction_date),source:'Goal saving',raw:x
+        }));
+    }
+
+    function householdEvents(date){
+        if(typeof householdBillsForMonthV10!=='function') return [];
+        return householdBillsForMonthV10(date).filter(x=>isSame(x.date,date)).map(x=>({
+            type:'bill',name:x.bill.name,amount:n(x.bill.amount),category:x.bill.category||'Household',date:x.date,source:'Household bill',raw:x.bill
+        }));
+    }
+
+    function renewalEvents(date){
+        return arr(renewals).filter(x=>String(x.due_date||'')===key(date)).map(x=>({
+            type:'renewal',name:x.name,amount:n(x.amount||0),category:x.type||'Renewal',date:dateV10(x.due_date),source:'Renewal',raw:x
+        }));
+    }
+
+    function lifeEventEvents(date){
+        return arr(lifeEvents).filter(x=>x.target_date && String(x.target_date)===key(date)).map(x=>({
+            type:'goal',name:x.name,amount:n(x.target_amount),category:'Life event',date:dateV10(x.target_date),source:'Life event',raw:x
+        }));
+    }
+
+    function allDayEvents(date){
+        return [
+            ...incomeEvents(date),
+            ...recurringExpenseEvents(date),
+            ...oneTimeExpenseEvents(date),
+            ...loanEvents(date),
+            ...savingsEvents(date),
+            ...householdEvents(date),
+            ...renewalEvents(date),
+            ...lifeEventEvents(date)
+        ];
+    }
+
+    function eventClass(type){return 'v105-event '+type;}
+
+    function renderCalendarV105(){
+        const title=document.getElementById('calendarTitle');
+        if(title) title.textContent=monthName(currentDate);
+        const calendar=document.getElementById('calendar');
+        if(!calendar) return;
+        calendar.innerHTML='';
+        const first=firstDay(currentDate), last=lastDay(currentDate);
+        for(let i=0;i<first.getDay();i++) calendar.appendChild(document.createElement('div'));
+        for(let day=1;day<=last.getDate();day++){
+            const date=new Date(currentDate.getFullYear(),currentDate.getMonth(),day);
+            const div=document.createElement('div');
+            div.className='day';
+            if(isSame(date,new Date())) div.classList.add('today');
+            const events=allDayEvents(date);
+            if(events.length) div.classList.add('has-expense');
+            const incomeTotal=events.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+            const expenseTotal=events.filter(e=>e.type==='expense'||e.type==='bill'||e.type==='loan').reduce((s,e)=>s+e.amount,0);
+            const saveTotal=events.filter(e=>e.type==='saving').reduce((s,e)=>s+e.amount,0);
+            div.innerHTML=`<div class="day-number">${day}</div>`;
+            events.slice(0,5).forEach(e=>{
+                const sign=e.type==='income'?'+':e.type==='saving'?'−':'−';
+                const text=`${e.name} ${sign}${money(e.amount)}`;
+                const el=document.createElement('div');
+                el.className=eventClass(e.type);
+                el.title=`${e.source} · ${e.name} · ${money(e.amount)}`;
+                el.textContent=text;
+                div.appendChild(el);
+            });
+            if(events.length>5){
+                const more=document.createElement('div');
+                more.className='small';more.style.marginTop='3px';more.textContent=`+${events.length-5} more`;
+                div.appendChild(more);
+            }
+            div.dataset.income=String(incomeTotal);
+            div.dataset.outflow=String(expenseTotal);
+            div.dataset.savings=String(saveTotal);
+            div.onclick=()=>{selectedDate=new Date(date);renderSelectedDay();};
+            calendar.appendChild(div);
+        }
+    }
+
+    function renderSelectedDayV105(){
+        const title=document.getElementById('selectedDateTitle');
+        const box=document.getElementById('selectedDayDetails');
+        if(!title || !box) return;
+        title.textContent=selectedDate.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        const events=allDayEvents(selectedDate);
+        const incomeTotal=events.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+        const expenseTotal=events.filter(e=>['expense','bill','loan'].includes(e.type)).reduce((s,e)=>s+e.amount,0);
+        const savingTotal=events.filter(e=>e.type==='saving').reduce((s,e)=>s+e.amount,0);
+        const net=incomeTotal-expenseTotal-savingTotal;
+        const summary=`<div class="v105-day-summary">
+            <div class="mini"><span class="label">Income</span><span class="value green">${money(incomeTotal)}</span></div>
+            <div class="mini"><span class="label">Outflow</span><span class="value red">${money(expenseTotal)}</span></div>
+            <div class="mini"><span class="label">Savings</span><span class="value" style="color:#7c3aed">${money(savingTotal)}</span></div>
+            <div class="mini"><span class="label">Net</span><span class="value ${net>=0?'green':'red'}">${money(net)}</span></div>
+        </div>`;
+        if(!events.length){
+            box.innerHTML=summary+`<div class="v105-empty">No income, expenses, EMIs, savings, bills or renewals on this date.</div>`;
+            return;
+        }
+        const icon={income:'💵',expense:'💸',saving:'🎯',loan:'🏦',bill:'🏠',renewal:'🔔',goal:'📌'};
+        const rows=events.sort((a,b)=>a.type.localeCompare(b.type)).map(e=>{
+            const amountClass=e.type==='income'?'green':e.type==='saving'?'v105-purple':'red';
+            const sign=e.type==='income'?'+':'−';
+            const action=e.type==='expense' && e.expense ? `<button class="btn-sm btn-${e.paid?'gray':'green'}" style="margin-top:8px" onclick="setPaid(${JSON.stringify(e.expense).replaceAll('"','&quot;')},new Date('${key(e.date)}'),${e.paid?'false':'true'})">${e.paid?'Mark Pending':'Mark Paid'}</button>` : '';
+            return `<div class="v105-event-row"><div><div><b>${icon[e.type]||'•'} ${escapeHtml(e.name)}</b><span class="v105-pill ${e.type}">${escapeHtml(e.source)}</span></div><div class="v105-event-meta">${escapeHtml(e.category||'')}</div>${action}</div><div class="v105-event-amount ${amountClass}">${sign}${money(e.amount)}</div></div>`;
+        }).join('');
+        box.innerHTML=summary+rows;
+    }
+
+    function combinedMonthExpenseRows(d){
+        const rows=[];
+        recurringExpenseEvents(d).forEach(e=>rows.push({category:e.category,amount:e.amount,type:e.source}));
+        oneTimeExpensesForMonthV10(d).forEach(x=>rows.push({category:x.category||'Other',amount:n(x.amount),type:'One-time expense'}));
+        householdBillsForMonthV10(d).forEach(x=>rows.push({category:x.bill.category||'Household',amount:n(x.bill.amount),type:'Household bill'}));
+        return rows;
+    }
+
+    function renderReportsV105(){
+        const rows=combinedMonthExpenseRows(currentDate);
+        const categories={};
+        rows.forEach(x=>categories[x.category]=(categories[x.category]||0)+x.amount);
+        const sorted=Object.entries(categories).sort((a,b)=>b[1]-a[1]);
+        const total=sorted.reduce((s,x)=>s+x[1],0);
+        const catBox=document.getElementById('categoryReport');
+        if(catBox){
+            catBox.innerHTML=sorted.length?sorted.map(([cat,value])=>{
+                const pct=total?value/total*100:0;
+                return `<div class="report-row"><div class="report-head"><span>${escapeHtml(cat)}</span><b>${money(value)}</b></div><div class="progress"><div class="progress-bar" style="width:${pct}%"></div></div></div>`;
+            }).join(''):`<div class="v105-empty">No expenses this month.</div>`;
+        }
+        const special={
+            'Investment':rows.filter(x=>x.category==='Investment').reduce((s,x)=>s+x.amount,0),
+            'Loan / EMI':rows.filter(x=>x.category==='Loan / EMI').reduce((s,x)=>s+x.amount,0),
+            'Insurance':rows.filter(x=>x.category==='Insurance').reduce((s,x)=>s+x.amount,0)
+        };
+        const sp=document.getElementById('specialReport');
+        if(sp) sp.innerHTML=Object.entries(special).map(([name,value])=>`<div class="card" style="margin-bottom:8px"><div class="small">${escapeHtml(name)}</div><b>${money(value)}</b></div>`).join('');
+        const mb=document.getElementById('monthlyReport');
+        if(mb){
+            mb.innerHTML='';
+            for(let i=5;i>=0;i--){
+                const d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1);
+                const r=combinedMonthExpenseRows(d);
+                const planned=r.reduce((s,x)=>s+x.amount,0);
+                const recurringPaid=recurringExpenseEvents(d).filter(e=>e.paid).reduce((s,x)=>s+x.amount,0);
+                const oneTimePaid=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+n(x.amount),0);
+                const paid=recurringPaid+oneTimePaid;
+                mb.innerHTML+=`<div class="card" style="margin-bottom:8px"><b>${monthName(d)}</b><div>Planned: ${money(planned)}</div><div class="green">Paid/Actual: ${money(paid)}</div><div class="red">Pending: ${money(Math.max(0,planned-paid))}</div></div>`;
+            }
+        }
+    }
+
+    function renderIncomeV105(){
+        const box=document.getElementById('incomeList');
+        if(!box) return;
+        const monthStart=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
+        const rows=[];
+        arr(recurringIncome).forEach(x=>{
+            if(recurringIncomeForMonth(monthStart) || false){
+                if((function(){
+                    const st=dateV10(x.start_date);const end=x.end_date?dateV10(x.end_date):null;return monthStart>=new Date(st.getFullYear(),st.getMonth(),1)&&(!end||monthStart<=end);
+                })()) rows.push(`<div class="card" style="margin-bottom:8px"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">Recurring income · starts ${escapeHtml(x.start_date)}</div></div>`);
+            }
+        });
+        arr(income).filter(x=>String(x.income_date||'').slice(0,7)===monthKey(currentDate)).forEach(x=>rows.push(`<div class="card" style="margin-bottom:8px"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)}</div><div class="small">${escapeHtml(x.income_date)} · One-time income</div></div>`));
+        box.innerHTML=rows.join('')||`<div class="v105-empty">No income entries for ${escapeHtml(monthName(currentDate))}.</div>`;
+    }
+
+    function renderUpcomingV105(){
+        const box=document.getElementById('upcomingPayments');
+        if(!box) return;
+        const today=new Date();today.setHours(0,0,0,0);
+        const items=[];
+        for(let offset=0;offset<=365;offset++){
+            const d=new Date(today);d.setDate(d.getDate()+offset);
+            recurringExpenseEvents(d).filter(e=>!e.paid).forEach(e=>items.push({date:e.date,name:e.name,amount:e.amount,category:e.category,source:e.source}));
+            householdEvents(d).forEach(e=>items.push({date:e.date,name:e.name,amount:e.amount,category:e.category,source:e.source}));
+            renewalEvents(d).forEach(e=>items.push({date:e.date,name:e.name,amount:e.amount,category:e.category,source:e.source}));
+            oneTimeExpenseEvents(d).forEach(e=>items.push({date:e.date,name:e.name,amount:e.amount,category:e.category,source:e.source}));
+        }
+        items.sort((a,b)=>a.date-b.date || a.name.localeCompare(b.name));
+        const unique=[];const seen=new Set();
+        items.forEach(x=>{const k=`${key(x.date)}|${x.source}|${x.name}|${x.amount}`;if(!seen.has(k)){seen.add(k);unique.push(x);}});
+        const final=unique.slice(0,10);
+        box.innerHTML=final.length?final.map(x=>`<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="currentDate=new Date('${key(x.date)}T00:00:00');selectedDate=new Date('${key(x.date)}T00:00:00');renderAll()"><b>${escapeHtml(x.name)}</b><div>${money(x.amount)}</div><div class="small">${escapeHtml(x.source)} · ${escapeHtml(x.category||'Other')} · ${x.date.toLocaleDateString('en-IN')}</div></div>`).join(''):`<div class="v105-empty">No upcoming payments or renewals.</div>`;
+    }
+
+    /* Install authoritative renderers. */
+    const previousCalendar=window.renderCalendar;
+    const previousSelected=window.renderSelectedDay;
+    const previousReports=window.renderReports;
+    const previousIncome=window.renderIncome;
+    const previousUpcoming=window.renderUpcoming;
+
+    window.renderCalendar=renderCalendarV105;
+    window.renderSelectedDay=renderSelectedDayV105;
+    window.renderReports=renderReportsV105;
+    window.renderIncome=renderIncomeV105;
+    window.renderUpcoming=renderUpcomingV105;
+
+    /* Keep all other sections from the previous renderer, but ensure the calendar page is refreshed with the new authoritative renderers. */
+    const previousRenderAll=window.renderAll;
+    window.renderAll=function(){
+        try{
+            if(typeof previousRenderAll==='function') previousRenderAll();
+        }catch(error){
+            console.error('V10.5 render refresh error',error);
+        }
+        try{ renderCalendarV105(); }catch(error){console.error('V10.5 calendar error',error);}
+        try{ renderSelectedDayV105(); }catch(error){console.error('V10.5 selected-day error',error);}
+        try{ renderReportsV105(); }catch(error){console.error('V10.5 reports error',error);}
+        try{ renderIncomeV105(); }catch(error){console.error('V10.5 income error',error);}
+        try{ renderUpcomingV105(); }catch(error){console.error('V10.5 upcoming error',error);}
+    };
+
+    /* When switching to Calendar, force a full redraw. */
+    const originalShowV3=window.showV3;
+    window.showV3=function(id,button){
+        if(typeof originalShowV3==='function') originalShowV3(id,button);
+        if(id==='calendar'){
+            document.body.classList.add('calendar-mode');
+            setTimeout(()=>{
+                try{ renderCalendarV105(); renderSelectedDayV105(); renderReportsV105(); renderIncomeV105(); renderUpcomingV105(); renderDashboard(); }catch(error){console.error('V10.5 calendar tab refresh error',error);}
+            },0);
+        }
+    };
+})();
+</script>
+
 </body>
 </html>
