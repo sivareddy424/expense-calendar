@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v8";
+const CACHE_NAME = "expense-calendar-v9";
 
 const APP_SHELL = [
     "./",
@@ -29,7 +29,6 @@ self.addEventListener("activate", event => {
     event.waitUntil(
 
         caches.keys().then(keys =>
-
             Promise.all(
 
                 keys
@@ -37,8 +36,9 @@ self.addEventListener("activate", event => {
                     .map(key => caches.delete(key))
 
             )
+        )
 
-        ).then(() => self.clients.claim())
+        .then(() => self.clients.claim())
 
     );
 
@@ -57,12 +57,8 @@ self.addEventListener("fetch", event => {
     const url = new URL(event.request.url);
 
     /*
-     * External resources such as:
-     * Supabase
-     * jsDelivr
-     * other CDNs
-     *
-     * remain network-only.
+     * External resources such as Supabase,
+     * jsDelivr and other CDNs remain network-only.
      */
     if (url.origin !== self.location.origin) {
         return;
@@ -70,10 +66,10 @@ self.addEventListener("fetch", event => {
 
     /*
      * Main page:
-     * Network first.
+     * Network first so the newest GitHub Pages
+     * version is loaded.
      *
-     * This makes sure GitHub Pages updates
-     * are loaded instead of an old cached version.
+     * If offline, use the cached index.html.
      */
     if (event.request.mode === "navigate") {
 
@@ -121,10 +117,10 @@ self.addEventListener("fetch", event => {
 
         caches.match(event.request)
 
-            .then(cached => {
+            .then(cachedResponse => {
 
-                if (cached) {
-                    return cached;
+                if (cachedResponse) {
+                    return cachedResponse;
                 }
 
                 return fetch(event.request)
