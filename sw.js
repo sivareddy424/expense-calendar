@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v10-1";
+const CACHE_NAME = "expense-calendar-v10-2";
 
 const APP_SHELL = [
     "./",
@@ -6,68 +6,170 @@ const APP_SHELL = [
     "./manifest.json"
 ];
 
+/* =========================
+   INSTALL
+========================= */
+
 self.addEventListener("install", event => {
+
     event.waitUntil(
+
         caches.open(CACHE_NAME)
+
             .then(cache => cache.addAll(APP_SHELL))
+
             .then(() => self.skipWaiting())
+
     );
+
 });
+
+
+/* =========================
+   ACTIVATE
+========================= */
 
 self.addEventListener("activate", event => {
+
     event.waitUntil(
+
         caches.keys()
-            .then(keys => Promise.all(
-                keys
-                    .filter(key => key !== CACHE_NAME)
-                    .map(key => caches.delete(key))
-            ))
+
+            .then(keys => {
+
+                return Promise.all(
+
+                    keys
+                        .filter(key => key !== CACHE_NAME)
+                        .map(key => caches.delete(key))
+
+                );
+
+            })
+
             .then(() => self.clients.claim())
+
     );
+
 });
 
+
+/* =========================
+   FETCH
+========================= */
+
 self.addEventListener("fetch", event => {
-    if (event.request.method !== "GET") return;
+
+    if (event.request.method !== "GET") {
+        return;
+    }
 
     const url = new URL(event.request.url);
 
-    // Keep Supabase/CDN/external resources network-only.
-    if (url.origin !== self.location.origin) return;
+    /*
+     * External resources such as Supabase,
+     * jsDelivr and other CDNs stay network-only.
+     */
+    if (url.origin !== self.location.origin) {
+        return;
+    }
 
-    // Always prefer the newest GitHub Pages document.
+
+    /* =========================
+       PAGE NAVIGATION
+       =========================
+
+       Always try the network first so
+       the latest GitHub Pages version
+       is loaded.
+
+       If offline, use cached index.html.
+    */
+
     if (event.request.mode === "navigate") {
+
         event.respondWith(
+
             fetch(event.request)
+
                 .then(response => {
+
                     const copy = response.clone();
 
                     caches.open(CACHE_NAME)
-                        .then(cache => cache.put("./index.html", copy))
+
+                        .then(cache => {
+
+                            cache.put(
+                                "./index.html",
+                                copy
+                            );
+
+                        })
+
                         .catch(() => {});
 
                     return response;
+
                 })
-                .catch(() => caches.match("./index.html"))
+
+                .catch(() => {
+
+                    return caches.match(
+                        "./index.html"
+                    );
+
+                })
+
         );
 
         return;
     }
 
-    // Other local files: cache first, then network.
+
+    /* =========================
+       OTHER LOCAL FILES
+       =========================
+
+       Cache first, then network.
+    */
+
     event.respondWith(
+
         caches.match(event.request)
-            .then(cached => {
-                if (cached) return cached;
 
-                return fetch(event.request).then(response => {
-                    const copy = response.clone();
+            .then(cachedResponse => {
 
-                    caches.open(CACHE_NAME)
-                        .then(cache => cache.put(event.request, copy))
-                        .catch(() => {});
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
 
-                    return response;
-                });
+                return fetch(event.request)
+
+                    .then(response => {
+
+                        const copy =
+                            response.clone();
+
+                        caches.open(CACHE_NAME)
+
+                            .then(cache => {
+
+                                cache.put(
+                                    event.request,
+                                    copy
+                                );
+
+                            })
+
+                            .catch(() => {});
+
+                        return response;
+
+                    });
+
             })
+
     );
+
 });
