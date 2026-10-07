@@ -455,7 +455,21 @@ th{
 }
 
 /* VERSION 3 */
-.v3-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}.v3-tab{background:#e5e7eb;color:#1f2937}.v3-tab.active{background:#2563eb;color:#fff}.v3-view{display:none}.v3-view.active{display:block}.v3-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.v3-progress{height:9px;background:#e5e7eb;border-radius:10px;overflow:hidden}.v3-bar{height:100%;background:#2563eb}.v3-item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;padding:12px;margin-bottom:8px}.v3-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}@media(max-width:700px){.v3-grid{grid-template-columns:1fr}}
+.v3-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}.v3-tab{background:#e5e7eb;color:#1f2937}.v3-tab.active{background:#2563eb;color:#fff}.v3-view{display:none}.v3-view.active{display:block}.v3-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.v3-progress{height:9px;background:#e5e7eb;border-radius:10px;overflow:hidden}.v3-bar{height:100%;background:#2563eb}.v3-item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;padding:12px;margin-bottom:8px}.v3-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}@media(max-width:700px){.v3-grid{grid-template-columns:1fr}}.forecast-table{width:100%;border-collapse:collapse}.forecast-table th,.forecast-table td{padding:9px;border-bottom:1px solid #e5e7eb;font-size:13px}.forecast-table th{background:#f8fafc;position:sticky;top:0}.forecast-surplus{font-weight:bold}.forecast-positive{color:#16a34a;font-weight:bold}.forecast-warning{color:#ea580c;font-weight:bold}.forecast-negative{color:#dc2626;font-weight:bold}.forecast-note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:11px;font-size:13px;margin-bottom:12px}.forecast-status{display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:bold}.forecast-status.ok{background:#dcfce7;color:#166534}.forecast-status.warn{background:#ffedd5;color:#9a3412}.forecast-status.bad{background:#fee2e2;color:#991b1b}.forecast-table-wrap{overflow:auto;max-height:560px}.forecast-goal{background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;padding:12px;margin-bottom:8px}
+
+/* VERSION 5 */
+.v5-alert{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:11px;margin-bottom:8px}
+.v5-alert.bad{background:#fee2e2;border-color:#fecaca}.v5-alert.warn{background:#ffedd5;border-color:#fed7aa}.v5-alert.good{background:#dcfce7;border-color:#bbf7d0}
+.v5-metric{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:11px;margin-bottom:8px}
+.v5-meter{height:10px;background:#e5e7eb;border-radius:10px;overflow:hidden;margin-top:6px}
+.v5-meter > div{height:100%;background:#2563eb}
+.v5-bar-row{display:grid;grid-template-columns:120px 1fr 100px;gap:8px;align-items:center;margin:8px 0}
+.v5-bar{height:16px;background:#e5e7eb;border-radius:6px;overflow:hidden}.v5-bar > div{height:100%;background:#2563eb}
+.v5-bar.negative > div{background:#dc2626}.v5-bar.warning > div{background:#ea580c}.v5-right{text-align:right}
+.v5-score-circle{font-size:34px;font-weight:bold;text-align:center;padding:12px}
+.budget-over{color:#dc2626;font-weight:bold}.budget-good{color:#16a34a;font-weight:bold}.budget-warn{color:#ea580c;font-weight:bold}
+@media(max-width:700px){.v5-bar-row{grid-template-columns:90px 1fr 78px;font-size:12px}}
+
 </style>
 </head>
 
@@ -531,6 +545,10 @@ th{
 <button class="v3-tab" onclick="showV3('loans',this)">🏦 Loans & EMI</button>
 <button class="v3-tab" onclick="showV3('goals',this)">🎯 Savings Goals</button>
 <button class="v3-tab" onclick="showV3('yearly',this)">📊 Yearly Finance</button>
+<button class="v3-tab" onclick="showV3('forecast',this)">🔮 Forecast</button>
+<button class="v3-tab" onclick="showV3('budgets',this)">💸 Budgets</button>
+<button class="v3-tab" onclick="showV3('smart',this)">🧠 Smart Finance</button>
+<button class="v3-tab" onclick="showV3('annual',this)">📅 Annual Planner</button>
 </div>
 
 <div id="v3-overview" class="v3-view active">
@@ -548,6 +566,149 @@ th{
 <div id="v3-loans" class="v3-view"><div class="section"><h2>🏦 Loans & EMI</h2><div id="v3LoanList"></div></div></div>
 <div id="v3-goals" class="v3-view"><div class="section"><h2>🎯 Savings Goals</h2><div id="v3GoalList"></div></div></div>
 <div id="v3-yearly" class="v3-view"><div class="section"><h2>📊 12-Month Financial Summary</h2><div id="v3YearlyReport"></div></div></div>
+
+<div id="v3-forecast" class="v3-view">
+    <div class="section">
+        <h2>🔮 12-Month Financial Forecast</h2>
+        <div class="forecast-note">
+            This forecast is automatic. It uses your recurring income, one-time income already entered,
+            recurring expenses and active loan EMIs. Loan EMI is added only when it is not already represented
+            by a <b>Loan / EMI</b> recurring expense, helping avoid double-counting.
+            Savings-goal contributions are shown as recommendations and are <b>not</b> deducted from the cash-flow forecast.
+        </div>
+        <div class="dashboard" style="margin-bottom:12px">
+            <div class="card"><div class="stat-title">Average Monthly Income</div><div id="forecastAvgIncome" class="stat-value green">₹0</div></div>
+            <div class="card"><div class="stat-title">Average Monthly Outflow</div><div id="forecastAvgOutflow" class="stat-value red">₹0</div></div>
+            <div class="card"><div class="stat-title">Average Monthly Surplus</div><div id="forecastAvgSurplus" class="stat-value blue">₹0</div></div>
+            <div class="card"><div class="stat-title">12-Month Net Change</div><div id="forecastNetChange" class="stat-value">₹0</div></div>
+            <div class="card"><div class="stat-title">Best Month</div><div id="forecastBestMonth" class="stat-value green">-</div></div>
+            <div class="card"><div class="stat-title">Tightest Month</div><div id="forecastWorstMonth" class="stat-value orange">-</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📅 Projected Monthly Cash Flow</h2>
+        <div class="forecast-table-wrap">
+            <table class="forecast-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Income</th>
+                        <th>Expenses</th>
+                        <th>Extra EMI</th>
+                        <th>Outflow</th>
+                        <th>Surplus / Deficit</th>
+                        <th>Status</th>
+                        <th>Cumulative Change</th>
+                    </tr>
+                </thead>
+                <tbody id="forecastTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="v3-grid">
+        <div class="section">
+            <h2>⚠️ Tight Months</h2>
+            <div id="forecastWarnings"></div>
+        </div>
+        <div class="section">
+            <h2>🎯 Savings Goal Plan</h2>
+            <div id="forecastGoals"></div>
+        </div>
+    </div>
+</div>
+
+
+<div id="v3-budgets" class="v3-view">
+    <div class="section">
+        <div class="calendar-header">
+            <div>
+                <h2>💸 Monthly Budgets</h2>
+                <div class="small">Set category limits once. The app compares them automatically with your planned recurring spending.</div>
+            </div>
+            <button class="btn" onclick="openBudgetModal()">+ Budget</button>
+        </div>
+        <div class="dashboard" style="margin-bottom:12px">
+            <div class="card"><div class="stat-title">Total Budget</div><div id="budgetTotal" class="stat-value blue">₹0</div></div>
+            <div class="card"><div class="stat-title">Planned</div><div id="budgetPlanned" class="stat-value">₹0</div></div>
+            <div class="card"><div class="stat-title">Remaining</div><div id="budgetRemaining" class="stat-value green">₹0</div></div>
+            <div class="card"><div class="stat-title">Categories Over Limit</div><div id="budgetOverCount" class="stat-value red">0</div></div>
+        </div>
+        <div id="budgetList"></div>
+    </div>
+</div>
+
+<div id="v3-smart" class="v3-view">
+    <div class="section">
+        <h2>🧠 Financial Health</h2>
+        <div class="dashboard" style="margin-bottom:12px">
+            <div class="card"><div class="stat-title">App Health Score</div><div id="healthScore" class="stat-value blue">0 / 100</div></div>
+            <div class="card"><div class="stat-title">Savings Rate</div><div id="healthSavingsRate" class="stat-value green">0%</div></div>
+            <div class="card"><div class="stat-title">Debt / Income</div><div id="healthDebtRatio" class="stat-value orange">0%</div></div>
+            <div class="card"><div class="stat-title">Pending Ratio</div><div id="healthPendingRatio" class="stat-value red">0%</div></div>
+        </div>
+        <div id="healthBreakdown"></div>
+    </div>
+
+    <div class="v3-grid">
+        <div class="section">
+            <h2>🔔 Smart Alerts</h2>
+            <div id="smartAlerts"></div>
+        </div>
+        <div class="section">
+            <h2>💡 Insights</h2>
+            <div id="smartInsights"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🏦 Loan Payoff Intelligence</h2>
+        <div id="loanIntelligence"></div>
+    </div>
+
+    <div class="section">
+        <h2>🎯 Savings Goal Intelligence</h2>
+        <div id="goalIntelligence"></div>
+    </div>
+</div>
+
+<div id="v3-annual" class="v3-view">
+    <div class="section">
+        <div class="calendar-header">
+            <div>
+                <h2>📅 Annual Financial Planner</h2>
+                <div class="small">Full calendar-year view with totals and monthly cash-flow bars.</div>
+            </div>
+            <select id="annualYear" onchange="renderAnnualPlanner()" style="width:auto;min-width:120px"></select>
+        </div>
+        <div class="dashboard" style="margin-bottom:12px">
+            <div class="card"><div class="stat-title">Annual Income</div><div id="annualIncomeTotal" class="stat-value green">₹0</div></div>
+            <div class="card"><div class="stat-title">Annual Planned</div><div id="annualExpenseTotal" class="stat-value">₹0</div></div>
+            <div class="card"><div class="stat-title">Annual Paid</div><div id="annualPaidTotal" class="stat-value">₹0</div></div>
+            <div class="card"><div class="stat-title">Annual Surplus</div><div id="annualSurplusTotal" class="stat-value blue">₹0</div></div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Income</th>
+                        <th>Planned</th>
+                        <th>Paid</th>
+                        <th>Pending</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="annualPlannerTable"></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="section">
+        <h2>📊 Monthly Surplus Chart</h2>
+        <div id="annualChart"></div>
+    </div>
+</div>
 
 <!-- DASHBOARD -->
 
@@ -882,6 +1043,39 @@ th{
 <div class="form-group"><label>Current Amount</label><input id="goalCurrent" type="number" value="0"></div><div class="form-group"><label>Target Date</label><input id="goalDate" type="date"></div>
 </div><div class="modal-actions"><button class="btn-gray" onclick="closeV3Modal('goalModal')">Cancel</button><button class="btn-green" onclick="saveGoal()">Save</button></div></div></div>
 
+
+<!-- VERSION 5 BUDGET MODAL -->
+<div id="budgetModal" class="modal">
+    <div class="modal-box">
+        <h2>Add / Update Monthly Budget</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Category</label>
+                <select id="budgetCategory">
+                    <option>Housing</option>
+                    <option>Utilities</option>
+                    <option>Insurance</option>
+                    <option>Loan / EMI</option>
+                    <option>Investment</option>
+                    <option>Education</option>
+                    <option>Shopping</option>
+                    <option>Food</option>
+                    <option>Transport</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Monthly Limit</label>
+                <input id="budgetAmount" type="number" step="0.01" min="0">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-gray" onclick="closeBudgetModal()">Cancel</button>
+            <button class="btn" onclick="saveBudget()">Save Budget</button>
+        </div>
+    </div>
+</div>
+
 <script>
 
 const SUPABASE_URL =
@@ -904,6 +1098,7 @@ let recurringIncome = [];
 let loans = [];
 let savingsGoals = [];
 let savingsTransactions = [];
+let budgets = [];
 
 let currentDate = new Date();
 let selectedDate = new Date();
@@ -1106,6 +1301,19 @@ async function loadData(){
     const st = await supabaseClient.from("savings_transactions").select("*").eq("user_id",currentUser.id);
     if(st.error){ alert(st.error.message); return; }
     savingsTransactions = st.data || [];
+
+    const bd = await supabaseClient
+        .from("budgets")
+        .select("*")
+        .eq("user_id",currentUser.id)
+        .order("category",{ascending:true});
+
+    if(bd.error){
+        alert(bd.error.message);
+        return;
+    }
+
+    budgets = bd.data || [];
 
 }
 
@@ -2421,7 +2629,7 @@ async function exportBackup(){
 
     const backup={
 
-        version:3,
+        version:5,
 
         recurring_income:recurringIncome,
 
@@ -2430,6 +2638,8 @@ async function exportBackup(){
         savings_goals:savingsGoals,
 
         savings_transactions:savingsTransactions,
+
+        budgets,
 
         exportedAt:new Date().toISOString(),
 
@@ -2591,6 +2801,18 @@ async function importBackup(event){
                 });
                 if(error) throw error;
             }
+
+        if(Array.isArray(backup.budgets)){
+            for(const x of backup.budgets){
+                const {error} = await supabaseClient.from("budgets").upsert({
+                    user_id: currentUser.id,
+                    category: x.category,
+                    monthly_limit: x.monthly_limit
+                }, {onConflict:"user_id,category"});
+                if(error) throw error;
+            }
+        }
+
         }
 
         await loadData();
@@ -2624,7 +2846,129 @@ function openGoalModal(){document.getElementById('goalModal').style.display='fle
 async function saveGoal(){const row={user_id:currentUser.id,name:document.getElementById('goalName').value.trim(),target_amount:Number(document.getElementById('goalTarget').value),current_amount:Number(document.getElementById('goalCurrent').value||0),target_date:document.getElementById('goalDate').value||null};if(!row.name||!row.target_amount)return alert('Please fill goal fields.');const {data,error}=await supabaseClient.from('savings_goals').insert(row).select().single();if(error)return alert(error.message);savingsGoals.push(data);closeV3Modal('goalModal');renderAll()}
 async function deleteGoal(id){if(!confirm('Delete this savings goal?'))return;const {error}=await supabaseClient.from('savings_goals').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);savingsGoals=savingsGoals.filter(x=>x.id!==id);savingsTransactions=savingsTransactions.filter(x=>x.goal_id!==id);renderAll()}
 async function addGoalSaving(id){const amount=Number(prompt('Amount to add to this goal:'));if(!amount||amount<=0)return;const {data,error}=await supabaseClient.from('savings_transactions').insert({user_id:currentUser.id,goal_id:id,amount,transaction_date:dateKey(new Date()),note:'Goal contribution'}).select().single();if(error)return alert(error.message);savingsTransactions.push(data);const g=savingsGoals.find(x=>x.id===id);const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:Number(g.current_amount)+amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(ue)return alert(ue.message);Object.assign(g,updated);renderAll()}
+
+function monthDifference(fromDate,toDate){
+ const a=new Date(fromDate.getFullYear(),fromDate.getMonth(),1);
+ const b=new Date(toDate.getFullYear(),toDate.getMonth(),1);
+ return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());
+}
+
+function activeLoanEmiForMonth(d){
+ let total=0;
+ const monthStart=new Date(d.getFullYear(),d.getMonth(),1);
+ loans.forEach(l=>{
+   if(!l.start_date) return;
+   const start=new Date(l.start_date+'T00:00:00');
+   const startMonth=new Date(start.getFullYear(),start.getMonth(),1);
+   const tenure=Math.max(0,Number(l.tenure_months||0));
+   if(monthStart<startMonth) return;
+   const diff=monthDifference(startMonth,monthStart);
+   if(tenure>0 && diff>=tenure) return;
+   if(Number(l.outstanding_amount||0)<=0) return;
+   total+=Number(l.emi_amount||0);
+ });
+ return total;
+}
+
+function getForecastMonthData(d){
+ const monthItems=getMonthExpenses(d);
+ const incomeTotal=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount||0),0);
+ const plannedExpenses=monthItems.reduce((s,x)=>s+Number(x.expense.amount||0),0);
+ const loanEmi=activeLoanEmiForMonth(d);
+ const alreadyIncludedEmi=monthItems
+   .filter(x=>x.expense.category==='Loan / EMI')
+   .reduce((s,x)=>s+Number(x.expense.amount||0),0);
+ const extraEmi=Math.max(0,loanEmi-alreadyIncludedEmi);
+ const outflow=plannedExpenses+extraEmi;
+ return {date:d,income:incomeTotal,expenses:plannedExpenses,extraEmi,outflow,surplus:incomeTotal-outflow};
+}
+
+function renderForecast(){
+ const rows=[];
+ let cumulative=0;
+ for(let i=0;i<12;i++){
+   const d=new Date(currentDate.getFullYear(),currentDate.getMonth()+i,1);
+   const row=getForecastMonthData(d);
+   cumulative+=row.surplus;
+   rows.push({...row,cumulative});
+ }
+
+ const avgIncome=rows.reduce((s,r)=>s+r.income,0)/rows.length;
+ const avgOutflow=rows.reduce((s,r)=>s+r.outflow,0)/rows.length;
+ const avgSurplus=rows.reduce((s,r)=>s+r.surplus,0)/rows.length;
+ const netChange=cumulative;
+ const best=rows.reduce((a,b)=>b.surplus>a.surplus?b:a,rows[0]);
+ const worst=rows.reduce((a,b)=>b.surplus<a.surplus?b:a,rows[0]);
+
+ document.getElementById('forecastAvgIncome').textContent=money(avgIncome);
+ document.getElementById('forecastAvgOutflow').textContent=money(avgOutflow);
+ document.getElementById('forecastAvgSurplus').textContent=money(avgSurplus);
+ const netEl=document.getElementById('forecastNetChange');
+ netEl.textContent=money(netChange);
+ netEl.className='stat-value '+(netChange>=0?'green':'red');
+ document.getElementById('forecastBestMonth').textContent=`${monthName(best.date)} · ${money(best.surplus)}`;
+ document.getElementById('forecastWorstMonth').textContent=`${monthName(worst.date)} · ${money(worst.surplus)}`;
+
+ document.getElementById('forecastTable').innerHTML=rows.map(r=>{
+   const status=r.surplus<0?'bad':(r.surplus<Math.max(500,avgIncome*0.1)?'warn':'ok');
+   const statusText=r.surplus<0?'DEFICIT':(r.surplus<Math.max(500,avgIncome*0.1)?'TIGHT':'OK');
+   const surplusClass=r.surplus<0?'forecast-negative':(r.surplus<Math.max(500,avgIncome*0.1)?'forecast-warning':'forecast-positive');
+   const cumClass=r.cumulative<0?'forecast-negative':'';
+   return `<tr>
+      <td><b>${escapeHtml(monthName(r.date))}</b></td>
+      <td class="green">${money(r.income)}</td>
+      <td>${money(r.expenses)}</td>
+      <td>${money(r.extraEmi)}</td>
+      <td>${money(r.outflow)}</td>
+      <td class="${surplusClass}">${money(r.surplus)}</td>
+      <td><span class="forecast-status ${status}">${statusText}</span></td>
+      <td class="${cumClass}">${money(r.cumulative)}</td>
+   </tr>`;
+ }).join('');
+
+ const warnings=rows.filter(r=>r.surplus<0 || r.surplus<Math.max(500,avgIncome*0.1));
+ const warningBox=document.getElementById('forecastWarnings');
+ if(!warnings.length){
+   warningBox.innerHTML='<div class="empty">No tight months are currently projected.</div>';
+ }else{
+   warningBox.innerHTML=warnings.map(r=>{
+     const deficit=r.surplus<0;
+     return `<div class="v3-item"><b>${escapeHtml(monthName(r.date))}</b><div class="${deficit?'forecast-negative':'forecast-warning'}">${deficit?'Projected deficit':'Projected tight surplus'}: ${money(r.surplus)}</div><div class="small">Income ${money(r.income)} · Outflow ${money(r.outflow)}</div></div>`;
+   }).join('');
+ }
+
+ const goalBox=document.getElementById('forecastGoals');
+ if(!savingsGoals.length){
+   goalBox.innerHTML='<div class="empty">Add a savings goal to calculate the monthly amount needed.</div>';
+ }else{
+   goalBox.innerHTML=savingsGoals.map(g=>{
+     const target=Number(g.target_amount||0);
+     const current=Number(g.current_amount||0);
+     const remaining=Math.max(0,target-current);
+     if(remaining<=0){
+       return `<div class="forecast-goal"><b>${escapeHtml(g.name)}</b><div class="green">Goal already reached ✅</div></div>`;
+     }
+     let months='No target date';
+     let required=0;
+     let feasible=true;
+     if(g.target_date){
+       const targetDate=new Date(g.target_date+'T00:00:00');
+       const m=Math.max(1,monthDifference(new Date(currentDate.getFullYear(),currentDate.getMonth(),1),new Date(targetDate.getFullYear(),targetDate.getMonth(),1))+1);
+       required=remaining/m;
+       months=`${m} month${m===1?'':'s'} remaining`;
+       feasible=avgSurplus>=required;
+     }
+     return `<div class="forecast-goal"><b>${escapeHtml(g.name)}</b>
+       <div>Remaining: <b>${money(remaining)}</b></div>
+       <div class="small">${months}${g.target_date?' · Target '+escapeHtml(g.target_date):''}</div>
+       ${required?`<div style="margin-top:6px">Required monthly saving: <b>${money(required)}</b></div><div class="small ${feasible?'forecast-positive':'forecast-warning'}">${feasible?'Current forecast appears sufficient.':'Current forecast may not be sufficient.'}</div>`:''}
+     </div>`;
+   }).join('');
+ }
+}
+
 function renderV3(){
+ renderForecast();
  const ri=recurringIncomeForMonth(currentDate),oneTime=getMonthIncome(currentDate).reduce((s,x)=>s+Number(x.amount),0),totalIncome=ri+oneTime,debt=loans.reduce((s,x)=>s+Number(x.outstanding_amount),0),emi=loans.reduce((s,x)=>s+Number(x.emi_amount),0),goaltarget=savingsGoals.reduce((s,x)=>s+Number(x.target_amount),0),goalsaved=savingsGoals.reduce((s,x)=>s+Number(x.current_amount),0),goalpct=goaltarget?goalsaved/goaltarget*100:0;
  const planned=getMonthExpenses(currentDate).reduce((s,x)=>s+Number(x.expense.amount),0);document.getElementById('v3RecurringIncome').textContent=money(totalIncome);document.getElementById('v3Debt').textContent=money(debt);document.getElementById('v3Emi').textContent=money(emi);document.getElementById('v3Savings').textContent=money(totalIncome-planned);document.getElementById('v3GoalTotal').textContent=money(goalsaved);document.getElementById('v3GoalProgress').textContent=goalpct.toFixed(1)+'%';
  document.getElementById('v3RecurringIncomeList').innerHTML=recurringIncome.length?recurringIncome.map(x=>`<div class="v3-item"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">From ${x.start_date}${x.end_date?' to '+x.end_date:''}</div><div class="v3-actions"><button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring income yet.</div>';
@@ -2632,6 +2976,416 @@ function renderV3(){
  document.getElementById('v3LoanList').innerHTML=loans.length?loans.map(l=>{let paid=Math.max(0,Number(l.original_amount)-Number(l.outstanding_amount)),p=Math.min(100,paid/Number(l.original_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.lender||'')} · ${Number(l.interest_rate||0)}% · ${l.tenure_months} months</div><div>Original: ${money(l.original_amount)} · Outstanding: <b>${money(l.outstanding_amount)}</b></div><div>EMI: <b>${money(l.emi_amount)}</b></div><div class="small" style="margin-top:7px">Loan progress ${p.toFixed(1)}%</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v3-actions"><button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No loans added yet.</div>';
  document.getElementById('v3GoalList').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}%${g.target_date?' · Target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No savings goals added yet.</div>';
  let html='';for(let i=11;i>=0;i--){let d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount),0),ex=getMonthExpenses(d).reduce((s,x)=>s+Number(x.expense.amount),0),paid=getMonthExpenses(d).filter(x=>x.payment?.paid).reduce((s,x)=>s+Number(x.expense.amount),0);html+=`<div class="v3-item"><b>${monthName(d)}</b><div>Income: <span class="green">${money(inc)}</span> · Planned: ${money(ex)} · Paid: ${money(paid)} · Balance: <b>${money(inc-ex)}</b></div></div>`}document.getElementById('v3YearlyReport').innerHTML=html;
+}
+
+
+/* ---------------- VERSION 5 ---------------- */
+
+function monthLabelShort(d){
+    return d.toLocaleString("en-IN",{month:"short"});
+}
+
+function formatDateNice(value){
+    if(!value) return "-";
+    const d=new Date(value+"T00:00:00");
+    return d.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+}
+
+function getPlannedCategoryTotal(date, category){
+    return getMonthExpenses(date)
+        .filter(x=>x.expense.category===category)
+        .reduce((s,x)=>s+Number(x.expense.amount||0),0);
+}
+
+function openBudgetModal(category=""){
+    document.getElementById("budgetModal").style.display="flex";
+    document.getElementById("budgetCategory").value=category || "Food";
+    const existing=budgets.find(x=>x.category===document.getElementById("budgetCategory").value);
+    document.getElementById("budgetAmount").value=existing ? existing.monthly_limit : "";
+}
+
+function closeBudgetModal(){
+    document.getElementById("budgetModal").style.display="none";
+}
+
+document.addEventListener("change",event=>{
+    if(event.target && event.target.id==="budgetCategory"){
+        const existing=budgets.find(x=>x.category===event.target.value);
+        document.getElementById("budgetAmount").value=existing ? existing.monthly_limit : "";
+    }
+});
+
+async function saveBudget(){
+    const category=document.getElementById("budgetCategory").value;
+    const amount=Number(document.getElementById("budgetAmount").value);
+    if(!category || !Number.isFinite(amount) || amount<0){
+        alert("Enter a valid budget.");
+        return;
+    }
+    const {data,error}=await supabaseClient.from("budgets").upsert({
+        user_id:currentUser.id,
+        category,
+        monthly_limit:amount
+    },{onConflict:"user_id,category"}).select().single();
+    if(error){
+        alert(error.message);
+        return;
+    }
+    const idx=budgets.findIndex(x=>x.category===category);
+    if(idx>=0) budgets[idx]=data;
+    else budgets.push(data);
+    closeBudgetModal();
+    renderAll();
+}
+
+async function deleteBudget(id){
+    if(!confirm("Delete this monthly budget?")) return;
+    const {error}=await supabaseClient.from("budgets")
+        .delete().eq("id",id).eq("user_id",currentUser.id);
+    if(error){
+        alert(error.message);
+        return;
+    }
+    budgets=budgets.filter(x=>x.id!==id);
+    renderAll();
+}
+
+function getBudgetStats(date){
+    const result=budgets.map(b=>{
+        const limit=Number(b.monthly_limit||0);
+        const planned=getPlannedCategoryTotal(date,b.category);
+        const remaining=limit-planned;
+        const percent=limit>0 ? planned/limit*100 : 0;
+        return {...b,limit,planned,remaining,percent};
+    });
+    return result;
+}
+
+function renderBudgets(){
+    const date=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
+    const stats=getBudgetStats(date);
+    const total=stats.reduce((s,x)=>s+x.limit,0);
+    const planned=stats.reduce((s,x)=>s+x.planned,0);
+    const remaining=total-planned;
+    const over=stats.filter(x=>x.planned>x.limit).length;
+
+    document.getElementById("budgetTotal").textContent=money(total);
+    document.getElementById("budgetPlanned").textContent=money(planned);
+    const remEl=document.getElementById("budgetRemaining");
+    remEl.textContent=money(remaining);
+    remEl.className="stat-value "+(remaining>=0?"green":"red");
+    document.getElementById("budgetOverCount").textContent=String(over);
+
+    const box=document.getElementById("budgetList");
+    if(!stats.length){
+        box.innerHTML='<div class="empty">No budgets yet. Add your first category budget.</div>';
+        return;
+    }
+
+    box.innerHTML=stats.map(x=>{
+        const pct=Math.max(0,x.percent);
+        const cls=x.percent>=100?"budget-over":(x.percent>=80?"budget-warn":"budget-good");
+        const status=x.percent>=100?"OVER LIMIT":(x.percent>=80?"NEAR LIMIT":"WITHIN LIMIT");
+        return `<div class="v5-metric">
+            <div style="display:flex;justify-content:space-between;gap:10px">
+                <b>${escapeHtml(x.category)}</b>
+                <span class="${cls}">${money(x.planned)} / ${money(x.limit)}</span>
+            </div>
+            <div class="v5-meter"><div style="width:${Math.min(100,pct)}%"></div></div>
+            <div class="small" style="margin-top:6px">${pct.toFixed(1)}% used · ${status} · ${x.remaining>=0?money(x.remaining)+" remaining":money(Math.abs(x.remaining))+" over"}</div>
+            <div class="v3-actions">
+                <button class="btn" onclick="openBudgetModal('${escapeJs(x.category)}')">Edit</button>
+                <button class="btn-danger" onclick="deleteBudget('${escapeJs(x.id)}')">Delete</button>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+function getOverduePayments(daysBack=365){
+    const today=new Date();
+    today.setHours(0,0,0,0);
+    const start=new Date(today);
+    start.setDate(start.getDate()-daysBack);
+    const result=[];
+    for(let offset=0;offset<daysBack;offset++){
+        const date=new Date(start);
+        date.setDate(start.getDate()+offset);
+        if(date>=today) continue;
+        for(const expense of expenses){
+            const due=occurrenceForExpense(expense,date);
+            if(!due || dateKey(due)!==dateKey(date)) continue;
+            const p=getPayment(expense.id,due);
+            if(!p || !p.paid){
+                result.push({expense,date:due});
+            }
+        }
+    }
+    result.sort((a,b)=>a.date-b.date);
+    return result;
+}
+
+function getSmartAlerts(){
+    const today=new Date();
+    today.setHours(0,0,0,0);
+    const overdue=getOverduePayments(365);
+    const alerts=[];
+
+    overdue.slice(0,8).forEach(x=>{
+        const days=Math.max(1,Math.floor((today-x.date)/86400000));
+        alerts.push({
+            kind:"bad",
+            title:`${x.expense.name} is overdue`,
+            body:`${money(x.expense.amount)} · ${days} day${days===1?"":"s"} overdue`,
+            date:x.date
+        });
+    });
+
+    const upcoming=getUpcoming(20);
+    upcoming.forEach(x=>{
+        const days=Math.ceil((x.date-today)/86400000);
+        if(days<0 || days>7) return;
+        const kind=days===0?"bad":(days<=3?"warn":"good");
+        const title=days===0?`${x.expense.name} is due today`:`${x.expense.name} due in ${days} day${days===1?"":"s"}`;
+        alerts.push({kind,title,body:`${money(x.expense.amount)} · ${formatDateNice(dateKey(x.date))}`,date:x.date});
+    });
+
+    const forecastRows=[];
+    for(let i=0;i<12;i++){
+        forecastRows.push(getForecastMonthData(new Date(currentDate.getFullYear(),currentDate.getMonth()+i,1)));
+    }
+    forecastRows.filter(x=>x.surplus<0).slice(0,4).forEach(x=>{
+        alerts.push({kind:"bad",title:`Forecast deficit in ${monthName(x.date)}`,body:`Projected ${money(Math.abs(x.surplus))} shortfall.`,date:x.date});
+    });
+
+    const budgetStats=getBudgetStats(currentDate);
+    budgetStats.filter(x=>x.percent>=100).forEach(x=>{
+        alerts.push({kind:"bad",title:`${x.category} budget exceeded`,body:`${money(x.planned)} planned against ${money(x.limit)}.`,date:new Date(currentDate)});
+    });
+    budgetStats.filter(x=>x.percent>=80 && x.percent<100).forEach(x=>{
+        alerts.push({kind:"warn",title:`${x.category} budget is near its limit`,body:`${x.percent.toFixed(0)}% of ${money(x.limit)} used.`,date:new Date(currentDate)});
+    });
+
+    savingsGoals.forEach(g=>{
+        const target=Number(g.target_amount||0);
+        const current=Number(g.current_amount||0);
+        if(!g.target_date || current>=target) return;
+        const targetMonth=new Date(g.target_date+"T00:00:00");
+        const m=Math.max(1,monthDifference(new Date(currentDate.getFullYear(),currentDate.getMonth(),1),new Date(targetMonth.getFullYear(),targetMonth.getMonth(),1))+1);
+        const required=(target-current)/m;
+        const pace=getGoalRecordedMonthlyPace(g.id);
+        if(pace>0 && pace+0.01<required){
+            alerts.push({kind:"warn",title:`${g.name} goal is behind pace`,body:`Recorded pace ${money(pace)}/month vs ${money(required)}/month needed.`,date:targetMonth});
+        }
+    });
+
+    return alerts.slice(0,20);
+}
+
+function getGoalRecordedMonthlyPace(goalId){
+    const cutoff=new Date();
+    cutoff.setMonth(cutoff.getMonth()-3);
+    cutoff.setDate(1);
+    const recent=savingsTransactions.filter(x=>x.goal_id===goalId && new Date(x.transaction_date+"T00:00:00")>=cutoff);
+    const total=recent.reduce((s,x)=>s+Number(x.amount||0),0);
+    return total/3;
+}
+
+function estimateLoanPayoff(loan){
+    const outstanding=Math.max(0,Number(loan.outstanding_amount||0));
+    const emi=Math.max(0,Number(loan.emi_amount||0));
+    const annualRate=Math.max(0,Number(loan.interest_rate||0));
+    if(outstanding<=0 || emi<=0) return {months:0,total:0,interest:0};
+    const r=annualRate/100/12;
+    let months;
+    if(r===0){
+        months=Math.ceil(outstanding/emi);
+    }else if(emi<=outstanding*r){
+        months=Infinity;
+    }else{
+        months=Math.ceil(-Math.log(1-(r*outstanding/emi))/Math.log(1+r));
+    }
+    if(Number.isFinite(months)){
+        months=Math.min(months,600);
+    }
+    const total=Number.isFinite(months)?months*emi:Infinity;
+    const interest=Number.isFinite(total)?Math.max(0,total-outstanding):Infinity;
+    return {months,total,interest};
+}
+
+function renderSmartFinance(){
+    const now=new Date();
+    const currentMonth=new Date(now.getFullYear(),now.getMonth(),1);
+    const mi=getMonthIncome(currentMonth);
+    const oneTimeIncome=mi.reduce((s,x)=>s+Number(x.amount||0),0);
+    const recurring=recurringIncomeForMonth(currentMonth);
+    const totalIncome=oneTimeIncome+recurring;
+    const items=getMonthExpenses(currentMonth);
+    const planned=items.reduce((s,x)=>s+Number(x.expense.amount||0),0);
+    const paid=items.filter(x=>x.payment && x.payment.paid).reduce((s,x)=>s+Number(x.expense.amount||0),0);
+    const pending=Math.max(0,planned-paid);
+    const savings=Math.max(0,totalIncome-planned);
+    const savingsRate=totalIncome>0 ? savings/totalIncome*100 : 0;
+    const emi=loans.reduce((s,x)=>s+Number(x.emi_amount||0),0);
+    const debtRatio=totalIncome>0 ? emi/totalIncome*100 : 0;
+    const pendingRatio=planned>0 ? pending/planned*100 : 0;
+    const forecastRows=[];
+    for(let i=0;i<12;i++) forecastRows.push(getForecastMonthData(new Date(currentMonth.getFullYear(),currentMonth.getMonth()+i,1)));
+    const deficitCount=forecastRows.filter(x=>x.surplus<0).length;
+    const tightCount=forecastRows.filter(x=>x.surplus>=0 && x.surplus<Math.max(500,totalIncome*0.1)).length;
+    const goalPct=savingsGoals.length ? Math.min(100,savingsGoals.reduce((s,g)=>s+(Number(g.current_amount||0)/Number(g.target_amount||0)||0)*100,0)/savingsGoals.length) : 0;
+
+    let score=0;
+    score += savingsRate>=20?30:savingsRate>=10?22:savingsRate>0?14:savingsRate===0?6:0;
+    score += debtRatio<10?25:debtRatio<20?20:debtRatio<30?12:debtRatio<40?6:0;
+    score += deficitCount===0 ? (tightCount===0?20:12) : 0;
+    score += pendingRatio<=10?15:pendingRatio<=25?9:pendingRatio<=50?4:0;
+    score += savingsGoals.length===0 ? 5 : (goalPct>=50?10:goalPct>0?6:2);
+    score=Math.max(0,Math.min(100,Math.round(score)));
+
+    const scoreEl=document.getElementById("healthScore");
+    scoreEl.textContent=`${score} / 100`;
+    scoreEl.className="stat-value "+(score>=70?"green":score>=50?"orange":"red");
+    document.getElementById("healthSavingsRate").textContent=savingsRate.toFixed(1)+"%";
+    document.getElementById("healthDebtRatio").textContent=debtRatio.toFixed(1)+"%";
+    document.getElementById("healthPendingRatio").textContent=pendingRatio.toFixed(1)+"%";
+
+    document.getElementById("healthBreakdown").innerHTML=`
+        <div class="v5-metric"><b>Savings</b><div>${savingsRate.toFixed(1)}% of current-month income remains after planned recurring expenses.</div></div>
+        <div class="v5-metric"><b>Debt load</b><div>${money(emi)} monthly EMI compared with ${money(totalIncome)} income.</div></div>
+        <div class="v5-metric"><b>Forecast</b><div>${deficitCount} deficit month(s) and ${tightCount} tight month(s) are currently projected.</div></div>
+        <div class="v5-metric"><b>Goal progress</b><div>${savingsGoals.length?goalPct.toFixed(1)+"% average goal completion":"No savings goals added yet."}</div></div>
+    `;
+
+    const alertBox=document.getElementById("smartAlerts");
+    const alerts=getSmartAlerts();
+    alertBox.innerHTML=alerts.length?alerts.map(a=>`<div class="v5-alert ${a.kind}"><b>${escapeHtml(a.title)}</b><div>${escapeHtml(a.body)}</div></div>`).join(''):'<div class="v5-alert good"><b>All clear</b><div>No critical alerts detected from your current data.</div></div>';
+
+    const prevMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1,1);
+    const prevIncome=recurringIncomeForMonth(prevMonth)+getMonthIncome(prevMonth).reduce((s,x)=>s+Number(x.amount||0),0);
+    const prevExpense=getMonthExpenses(prevMonth).reduce((s,x)=>s+Number(x.expense.amount||0),0);
+    const categories={};
+    items.forEach(x=>{categories[x.expense.category]=(categories[x.expense.category]||0)+Number(x.expense.amount||0)});
+    const largest=Object.entries(categories).sort((a,b)=>b[1]-a[1])[0];
+    const incomeDelta=prevIncome===0?null:(totalIncome-prevIncome)/prevIncome*100;
+    const expenseDelta=prevExpense===0?null:(planned-prevExpense)/prevExpense*100;
+    const forecastNet=forecastRows.reduce((s,x)=>s+x.surplus,0);
+
+    const insights=[];
+    if(incomeDelta!==null) insights.push(`Income is ${Math.abs(incomeDelta).toFixed(1)}% ${incomeDelta>=0?"higher":"lower"} than last month.`);
+    if(expenseDelta!==null) insights.push(`Planned recurring expenses are ${Math.abs(expenseDelta).toFixed(1)}% ${expenseDelta>=0?"higher":"lower"} than last month.`);
+    if(largest) insights.push(`${largest[0]} is your largest planned category this month at ${money(largest[1])}.`);
+    insights.push(`Projected 12-month net change is ${money(forecastNet)}.`);
+    if(loans.length){
+        const debt=loans.reduce((s,x)=>s+Number(x.outstanding_amount||0),0);
+        insights.push(`Total outstanding loan balance is ${money(debt)} across ${loans.length} loan(s).`);
+    }
+    if(savingsGoals.length){
+        const needs=savingsGoals.filter(g=>Number(g.target_amount||0)>Number(g.current_amount||0)).length;
+        insights.push(`${needs} savings goal(s) still need contributions.`);
+    }
+    document.getElementById("smartInsights").innerHTML=insights.map(x=>`<div class="v5-metric">${escapeHtml(x)}</div>`).join('');
+
+    const li=document.getElementById("loanIntelligence");
+    li.innerHTML=loans.length?loans.map(l=>{
+        const e=estimateLoanPayoff(l);
+        const outstanding=Number(l.outstanding_amount||0);
+        const progress=Math.min(100,Number(l.original_amount||0)>0?Math.max(0,(Number(l.original_amount)-outstanding)/Number(l.original_amount)*100):0);
+        const payoff=Number.isFinite(e.months)?`${e.months} month${e.months===1?"":"s"} estimated`:"EMI is too low to amortize this balance";
+        return `<div class="v5-metric">
+            <div><b>${escapeHtml(l.name)}</b> <span class="small">${escapeHtml(l.lender||"")}</span></div>
+            <div>Outstanding: <b>${money(outstanding)}</b> · EMI: ${money(l.emi_amount)}</div>
+            <div>Estimated payoff: <b>${payoff}</b></div>
+            <div>Estimated remaining interest: <b>${Number.isFinite(e.interest)?money(e.interest):"Not calculable"}</b></div>
+            <div class="small">Paid-down progress: ${progress.toFixed(1)}%</div>
+            <div class="v3-progress"><div class="v3-bar" style="width:${progress}%"></div></div>
+        </div>`;
+    }).join(''):'<div class="empty">Add loans to see payoff intelligence.</div>';
+
+    const gi=document.getElementById("goalIntelligence");
+    gi.innerHTML=savingsGoals.length?savingsGoals.map(g=>{
+        const target=Number(g.target_amount||0), current=Number(g.current_amount||0), remaining=Math.max(0,target-current);
+        const pct=target?Math.min(100,current/target*100):0;
+        const pace=getGoalRecordedMonthlyPace(g.id);
+        let required=0, months="No target date";
+        if(g.target_date && remaining>0){
+            const td=new Date(g.target_date+"T00:00:00");
+            const m=Math.max(1,monthDifference(new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1),new Date(td.getFullYear(),td.getMonth(),1))+1);
+            months=`${m} month${m===1?"":"s"} remaining`;
+            required=remaining/m;
+        }
+        const onTrack=required===0 || pace>=required;
+        return `<div class="v5-metric">
+            <b>${escapeHtml(g.name)}</b>
+            <div>${money(current)} / ${money(target)} · ${pct.toFixed(1)}%</div>
+            <div class="v3-progress"><div class="v3-bar" style="width:${pct}%"></div></div>
+            <div class="small">${months}${g.target_date?" · Target "+formatDateNice(g.target_date):""}</div>
+            <div>Recorded contribution pace: <b>${money(pace)}/month</b>${required?` · Required: <b>${money(required)}/month</b>`:""}</div>
+            <div class="${onTrack?'budget-good':'budget-warn'}">${required?(onTrack?"ON TRACK":"BEHIND PACE"):"Set a target date for a required monthly amount."}</div>
+        </div>`;
+    }).join(''):'<div class="empty">Add savings goals to see goal intelligence.</div>';
+}
+
+function renderAnnualPlanner(){
+    const select=document.getElementById("annualYear");
+    const currentYear=new Date().getFullYear();
+    if(select.options.length===0){
+        for(let y=currentYear-3;y<=currentYear+5;y++){
+            const opt=document.createElement("option");
+            opt.value=String(y);
+            opt.textContent=String(y);
+            select.appendChild(opt);
+        }
+        select.value=String(currentYear);
+    }
+    const year=Number(select.value);
+    const rows=[];
+    let totalIncome=0,totalExpense=0,totalPaid=0;
+
+    for(let m=0;m<12;m++){
+        const d=new Date(year,m,1);
+        const inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount||0),0);
+        const items=getMonthExpenses(d);
+        const planned=items.reduce((s,x)=>s+Number(x.expense.amount||0),0);
+        const paid=items.filter(x=>x.payment && x.payment.paid).reduce((s,x)=>s+Number(x.expense.amount||0),0);
+        const pending=Math.max(0,planned-paid);
+        const balance=inc-planned;
+        totalIncome+=inc; totalExpense+=planned; totalPaid+=paid;
+        rows.push({d,inc,planned,paid,pending,balance});
+    }
+
+    document.getElementById("annualIncomeTotal").textContent=money(totalIncome);
+    document.getElementById("annualExpenseTotal").textContent=money(totalExpense);
+    document.getElementById("annualPaidTotal").textContent=money(totalPaid);
+    const surplusEl=document.getElementById("annualSurplusTotal");
+    surplusEl.textContent=money(totalIncome-totalExpense);
+    surplusEl.className="stat-value "+(totalIncome-totalExpense>=0?"green":"red");
+
+    document.getElementById("annualPlannerTable").innerHTML=rows.map(r=>`
+        <tr>
+            <td><b>${monthName(r.d)}</b></td>
+            <td class="green">${money(r.inc)}</td>
+            <td>${money(r.planned)}</td>
+            <td class="green">${money(r.paid)}</td>
+            <td class="red">${money(r.pending)}</td>
+            <td class="${r.balance>=0?'green':'red'}">${money(r.balance)}</td>
+        </tr>`).join('')+
+        `<tr><th>TOTAL</th><th>${money(totalIncome)}</th><th>${money(totalExpense)}</th><th>${money(totalPaid)}</th><th>${money(totalExpense-totalPaid)}</th><th>${money(totalIncome-totalExpense)}</th></tr>`;
+
+    const maxAbs=Math.max(1,...rows.map(r=>Math.abs(r.balance)));
+    document.getElementById("annualChart").innerHTML=rows.map(r=>{
+        const cls=r.balance<0?"negative":(r.balance<Math.max(500,totalIncome/12*0.1)?"warning":"");
+        return `<div class="v5-bar-row">
+            <div>${monthLabelShort(r.d)}</div>
+            <div class="v5-bar ${cls}"><div style="width:${Math.min(100,Math.abs(r.balance)/maxAbs*100)}%"></div></div>
+            <div class="v5-right ${r.balance>=0?'green':'red'}">${money(r.balance)}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderV5(){
+    renderBudgets();
+    renderSmartFinance();
+    renderAnnualPlanner();
 }
 
 /* ---------------- NOTIFICATIONS ---------------- */
@@ -2784,6 +3538,7 @@ function setDefaultMonthFilter(){
 function renderAll(){
 
     renderV3();
+    renderV5();
     renderDashboard();
 
     renderCalendar();
@@ -2802,6 +3557,14 @@ function renderAll(){
 
 
 /* ---------------- SAFETY ---------------- */
+
+function escapeJs(value){
+    return String(value ?? "")
+        .replaceAll("\\","\\\\")
+        .replaceAll("'","\\'")
+        .replaceAll("\n","\\n")
+        .replaceAll("\r","\\r");
+}
 
 function escapeHtml(value){
 
