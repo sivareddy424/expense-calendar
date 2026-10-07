@@ -639,6 +639,12 @@ header{backdrop-filter:saturate(140%);}
     .v101-toast.show{transform:translateY(0)}
 }
 
+
+/* ===================== V10.6 CALENDAR ACTIONS ===================== */
+.calendar-action-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;padding-top:9px;border-top:1px solid #e5e7eb;}
+.calendar-action-row .btn,.calendar-action-row .btn-danger,.calendar-action-row .btn-gray{padding:7px 11px;font-size:12px;}
+.calendar-event-card{position:relative;}
+.one-time-edit-note{font-size:12px;color:#6b7280;margin-top:6px;}
 </style>
 </head>
 
@@ -1183,6 +1189,26 @@ header{backdrop-filter:saturate(140%);}
 
 </div>
 
+
+
+<!-- ========================= V10.6 ONE-TIME EXPENSE EDIT ========================= -->
+<div id="oneTimeExpenseModal" class="modal">
+  <div class="modal-box">
+    <h2 id="oneTimeExpenseModalTitle">Edit One-time Expense</h2>
+    <input type="hidden" id="oneTimeExpenseId">
+    <div class="form-grid">
+      <div class="form-group"><label>Name</label><input id="oneTimeExpenseName" placeholder="Expense name"></div>
+      <div class="form-group"><label>Amount</label><input id="oneTimeExpenseAmount" type="number" min="0" step="0.01"></div>
+      <div class="form-group"><label>Date</label><input id="oneTimeExpenseDate" type="date"></div>
+      <div class="form-group"><label>Category</label><select id="oneTimeExpenseCategory"><option>Housing</option><option>Utilities</option><option>Insurance</option><option>Loan / EMI</option><option>Investment</option><option>Education</option><option>Shopping</option><option>Food</option><option>Transport</option><option>Other</option></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Note</label><input id="oneTimeExpenseNote" placeholder="Optional"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-gray" onclick="closeV10Modal('oneTimeExpenseModal')">Cancel</button>
+      <button class="btn" onclick="saveOneTimeExpenseEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
 
 <!-- ========================= V8 AUTH MODALS ========================= -->
 <div id="signupModal" class="modal">
@@ -5133,6 +5159,59 @@ renderCalendar = function(){
     renewalsUpcomingV10().forEach(r=>{const d=dateV10(r.due_date);if(d.getFullYear()===currentDate.getFullYear()&&d.getMonth()===currentDate.getMonth()){const cell=cellMap[d.getDate()];if(cell)cell.innerHTML+=`<div class="day-expense v9-event-saving">${escapeHtml(r.name)} 🔔</div>`;}});
 };
 
+function openOneTimeExpenseEdit(id){
+    const x=oneTimeExpenses.find(e=>e.id===id);
+    if(!x)return;
+    document.getElementById('oneTimeExpenseId').value=x.id;
+    document.getElementById('oneTimeExpenseName').value=x.name||'';
+    document.getElementById('oneTimeExpenseAmount').value=x.amount||'';
+    document.getElementById('oneTimeExpenseDate').value=x.expense_date||'';
+    document.getElementById('oneTimeExpenseCategory').value=x.category||'Other';
+    document.getElementById('oneTimeExpenseNote').value=x.note||'';
+    document.getElementById('oneTimeExpenseModal').style.display='flex';
+}
+
+async function saveOneTimeExpenseEdit(){
+    const id=document.getElementById('oneTimeExpenseId').value;
+    const row={
+        name:document.getElementById('oneTimeExpenseName').value.trim(),
+        amount:Number(document.getElementById('oneTimeExpenseAmount').value),
+        expense_date:document.getElementById('oneTimeExpenseDate').value,
+        category:document.getElementById('oneTimeExpenseCategory').value,
+        note:document.getElementById('oneTimeExpenseNote').value.trim()
+    };
+    if(!id||!row.name||!row.amount||!row.expense_date){
+        alert('Please fill all required fields.');
+        return;
+    }
+    const {data,error}=await supabaseClient
+        .from('one_time_expenses')
+        .update(row)
+        .eq('id',id)
+        .eq('user_id',currentUser.id)
+        .select()
+        .single();
+    if(error){alert(error.message);return;}
+    const i=oneTimeExpenses.findIndex(e=>e.id===id);
+    if(i>=0)oneTimeExpenses[i]=data;
+    closeV10Modal('oneTimeExpenseModal');
+    renderAll();
+    showV101Toast('Expense updated ✓');
+}
+
+async function deleteOneTimeExpense(id){
+    if(!confirm('Delete this one-time expense?'))return;
+    const {error}=await supabaseClient
+        .from('one_time_expenses')
+        .delete()
+        .eq('id',id)
+        .eq('user_id',currentUser.id);
+    if(error){alert(error.message);return;}
+    oneTimeExpenses=oneTimeExpenses.filter(e=>e.id!==id);
+    renderAll();
+    showV101Toast('Expense deleted ✓');
+}
+
 const _v9RenderSelectedDay = renderSelectedDay;
 renderSelectedDay = function(){
     _v9RenderSelectedDay();
@@ -5141,6 +5220,69 @@ renderSelectedDay = function(){
     householdBillsForMonthV10(selectedDate).filter(x=>dateKey(x.date)===key).forEach(x=>extras.push(`<div class="card" style="margin-top:8px"><b>${escapeHtml(x.bill.name)}</b><div>${money(x.bill.amount)}</div><div class="small">Household bill · pending until paid elsewhere</div></div>`));
     renewals.filter(x=>String(x.due_date)===key).forEach(x=>extras.push(`<div class="card" style="margin-top:8px"><b>${escapeHtml(x.name)}</b><div class="small">${escapeHtml(x.type||'Renewal')} · reminder ${x.reminder_days||14} days before</div></div>`));
     if(extras.length)box.insertAdjacentHTML('beforeend',extras.join(''));
+};
+
+/* V10.6: add edit/delete controls directly to Calendar -> Selected Day items. */
+const _v106SelectedDay=renderSelectedDay;
+renderSelectedDay=function(){
+    _v106SelectedDay();
+    const box=document.getElementById('selectedDayDetails');
+    if(!box)return;
+    const cards=[...box.querySelectorAll('.card')];
+
+    cards.forEach(card=>{
+        if(card.querySelector('.calendar-action-row'))return;
+        const nameEl=card.querySelector('b');
+        if(!nameEl)return;
+        const name=nameEl.textContent.trim();
+        const small=card.querySelector('.small')?.textContent||'';
+        const row=document.createElement('div');
+        row.className='calendar-action-row';
+
+        /* One-time expense */
+        if(small.includes('One-time expense')){
+            const item=oneTimeExpenses.find(x=>String(x.name||'').trim()===name && String(x.expense_date||'')===dateKey(selectedDate));
+            if(item){
+                const edit=document.createElement('button');
+                edit.className='btn'; edit.textContent='Edit';
+                edit.onclick=()=>openOneTimeExpenseEdit(item.id);
+                const del=document.createElement('button');
+                del.className='btn-danger'; del.textContent='Delete';
+                del.onclick=()=>deleteOneTimeExpense(item.id);
+                row.append(edit,del); card.appendChild(row);
+            }
+            return;
+        }
+
+        /* Recurring expense */
+        const recurring=expenses.find(e=>String(e.name||'').trim()===name && occurrenceForExpense(e,selectedDate) && dateKey(occurrenceForExpense(e,selectedDate))===dateKey(selectedDate));
+        if(recurring){
+            const edit=document.createElement('button');
+            edit.className='btn'; edit.textContent='Edit';
+            edit.onclick=()=>openExpenseModal(recurring.id);
+            const del=document.createElement('button');
+            del.className='btn-danger'; del.textContent='Delete';
+            del.onclick=()=>deleteExpense(recurring.id);
+            row.append(edit,del); card.appendChild(row);
+            return;
+        }
+
+        /* Household bill */
+        const hb=householdBillsForMonthV10(selectedDate).find(x=>String(x.bill?.name||'').trim()===name && dateKey(x.date)===dateKey(selectedDate));
+        if(hb){
+            const edit=document.createElement('button'); edit.className='btn'; edit.textContent='Edit'; edit.onclick=()=>openHouseholdBillModal(hb.bill.id);
+            const del=document.createElement('button'); del.className='btn-danger'; del.textContent='Delete'; del.onclick=()=>deleteHouseholdBill(hb.bill.id);
+            row.append(edit,del); card.appendChild(row); return;
+        }
+
+        /* Renewal / warranty */
+        const rn=renewals.find(x=>String(x.name||'').trim()===name && String(x.due_date||'')===dateKey(selectedDate));
+        if(rn){
+            const edit=document.createElement('button'); edit.className='btn'; edit.textContent='Edit'; edit.onclick=()=>openRenewalModal(rn.id);
+            const del=document.createElement('button'); del.className='btn-danger'; del.textContent='Delete'; del.onclick=()=>deleteRenewal(rn.id);
+            row.append(edit,del); card.appendChild(row);
+        }
+    });
 };
 
 /* Adaptive notification wrapper. */
