@@ -5449,5 +5449,144 @@ window.addEventListener("unhandledrejection",event=>{
 
 </script>
 
+
+<script>
+/* =========================
+   V10.4 OVERVIEW SYNC FIX
+   Keep Financial Overview and Calendar dashboard
+   on the exact same live calculations.
+========================= */
+(function(){
+    function v104Num(v){
+        const n=Number(v);
+        return Number.isFinite(n)?n:0;
+    }
+
+    function v104Month(){
+        return new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
+    }
+
+    function v104OverviewSync(){
+        try{
+            const d=v104Month();
+
+            const oneTimeIncome=
+                getMonthIncome(d).reduce((s,x)=>s+v104Num(x.amount),0);
+
+            const recurringIncomeValue=
+                typeof recurringIncomeForMonth === "function"
+                    ? v104Num(recurringIncomeForMonth(d))
+                    : 0;
+
+            const monthlyIncome=
+                oneTimeIncome + recurringIncomeValue;
+
+            const recurringPlanned=
+                getMonthExpenses(d).reduce(
+                    (s,x)=>s+v104Num(x.expense?.amount),0
+                );
+
+            let oneTimePlanned=0;
+            if(typeof oneTimeExpensesForMonthV10 === "function"){
+                oneTimePlanned=oneTimeExpensesForMonthV10(d)
+                    .reduce((s,x)=>s+v104Num(x.amount),0);
+            }
+
+            let householdPlanned=0;
+            if(typeof householdBillsForMonthV10 === "function"){
+                householdPlanned=householdBillsForMonthV10(d)
+                    .reduce((s,x)=>s+v104Num(x.bill?.amount),0);
+            }
+
+            const planned=
+                recurringPlanned + oneTimePlanned + householdPlanned;
+
+            const debt=safeArray(loans).reduce(
+                (s,x)=>s+v104Num(x.outstanding_amount),0
+            );
+
+            const emi=safeArray(loans).reduce(
+                (s,x)=>s+v104Num(x.emi_amount),0
+            );
+
+            const goalTarget=safeArray(savingsGoals).reduce(
+                (s,x)=>s+v104Num(x.target_amount),0
+            );
+
+            const goalSaved=safeArray(savingsGoals).reduce(
+                (s,x)=>s+v104Num(x.current_amount),0
+            );
+
+            const goalProgress=goalTarget
+                ? Math.min(100,(goalSaved/goalTarget)*100)
+                : 0;
+
+            const values={
+                v3RecurringIncome:money(monthlyIncome),
+                v3Debt:money(debt),
+                v3Emi:money(emi),
+                v3Savings:money(monthlyIncome-planned),
+                v3GoalTotal:money(goalSaved),
+                v3GoalProgress:goalProgress.toFixed(1)+"%"
+            };
+
+            Object.entries(values).forEach(([id,value])=>{
+                const el=document.getElementById(id);
+                if(el) el.textContent=value;
+            });
+
+            const label=document.getElementById("overviewMonthLabel");
+            if(label) label.textContent=monthName(d);
+
+        }catch(error){
+            console.error("V10.4 overview sync failed",error);
+        }
+    }
+
+    function safeArray(value){
+        return Array.isArray(value) ? value : [];
+    }
+
+    /* Make the Overview refresh whenever a tab is opened. */
+    if(typeof window.showV3 === "function"){
+        const previousShowV3=window.showV3;
+        window.showV3=function(id,button){
+            previousShowV3(id,button);
+            if(id==="overview"){
+                try{
+                    renderDashboard();
+                }catch(e){
+                    console.error("Dashboard refresh failed",e);
+                }
+                v104OverviewSync();
+            }
+        };
+    }
+
+    /* Make every normal refresh update Overview last. */
+    const previousRenderAll=window.renderAll;
+    window.renderAll=function(){
+        try{
+            if(typeof previousRenderAll === "function"){
+                previousRenderAll();
+            }
+        }catch(error){
+            console.error("Render refresh error",error);
+        }finally{
+            try{
+                renderDashboard();
+            }catch(error){
+                console.error("Dashboard refresh error",error);
+            }
+            v104OverviewSync();
+        }
+    };
+
+    /* Initial sync after the app has loaded. */
+    setTimeout(v104OverviewSync,200);
+    setTimeout(v104OverviewSync,1000);
+})();
+</script>
+
 </body>
 </html>
