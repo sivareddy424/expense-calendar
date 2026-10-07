@@ -1408,7 +1408,7 @@ header{backdrop-filter:saturate(140%);}
 
 <div class="modal-box">
 
-<h2>Add Income</h2>
+<h2 id="incomeModalTitle">Add Income</h2>
 
 <input type="hidden" id="incomeId">
 
@@ -1445,7 +1445,7 @@ header{backdrop-filter:saturate(140%);}
 
 
 <!-- VERSION 3 MODALS -->
-<div id="recurringIncomeModal" class="modal"><div class="modal-box"><h2>Add Recurring Income</h2><div class="form-grid">
+<div id="recurringIncomeModal" class="modal"><div class="modal-box"><h2 id="riModalTitle">Add Recurring Income</h2><input type="hidden" id="riId"><div class="form-grid">
 <div class="form-group"><label>Source</label><input id="riName" placeholder="Salary"></div>
 <div class="form-group"><label>Amount</label><input id="riAmount" type="number"></div>
 <div class="form-group"><label>Frequency</label><select id="riFrequency"><option>Monthly</option><option>Quarterly</option><option>Yearly</option></select></div>
@@ -3253,21 +3253,15 @@ function renderExpenseList(){
 
 /* ---------------- INCOME ---------------- */
 
-function openIncomeModal(){
-
+function openIncomeModal(id=null){
+    const existing = id ? income.find(x=>x.id===id) : null;
     document.getElementById("incomeModal").style.display="flex";
-
-    document.getElementById("incomeId").value="";
-
-    document.getElementById("incomeName").value="";
-
-    document.getElementById("incomeAmount").value="";
-
-    document.getElementById("incomeDate").value=
-        dateKey(new Date());
-
+    document.getElementById("incomeId").value=existing?.id || "";
+    document.getElementById("incomeName").value=existing?.name || "";
+    document.getElementById("incomeAmount").value=existing?.amount ?? "";
+    document.getElementById("incomeDate").value=existing?.income_date || dateKey(new Date());
+    document.getElementById("incomeModalTitle").textContent=existing ? "Edit Income" : "Add Income";
 }
-
 
 function closeIncomeModal(){
 
@@ -3277,57 +3271,28 @@ function closeIncomeModal(){
 
 
 async function saveIncome(){
+    const id = document.getElementById("incomeId").value;
+    const name = document.getElementById("incomeName").value.trim();
+    const amount = Number(document.getElementById("incomeAmount").value);
+    const date = document.getElementById("incomeDate").value;
+    if(!name || !amount || !date){ alert("Please fill all fields."); return; }
 
-    const name =
-        document.getElementById("incomeName").value.trim();
-
-    const amount =
-        Number(document.getElementById("incomeAmount").value);
-
-    const date =
-        document.getElementById("incomeDate").value;
-
-
-    if(!name || !amount || !date){
-
-        alert("Please fill all fields.");
-
-        return;
-
+    const payload={name,amount,income_date:date};
+    let result;
+    if(id){
+        result=await supabaseClient.from("income").update(payload).eq("id",id).eq("user_id",currentUser.id).select().single();
+    }else{
+        result=await supabaseClient.from("income").insert({user_id:currentUser.id,...payload}).select().single();
     }
-
-
-    const {data,error} =
-        await supabaseClient
-        .from("income")
-        .insert({
-            user_id:currentUser.id,
-            name,
-            amount,
-            income_date:date
-        })
-        .select()
-        .single();
-
-
-    if(error){
-
-        alert(error.message);
-
-        return;
-
-    }
-
-
-    income.unshift(data);
-
+    if(result.error){ alert(result.error.message); return; }
+    if(id){
+        const i=income.findIndex(x=>x.id===id);
+        if(i>=0) income[i]=result.data;
+    }else{ income.unshift(result.data); }
     closeIncomeModal();
-
     renderAll();
-    showV101Toast('Income saved ✓');
-
+    showV101Toast(id ? 'Income updated ✓' : 'Income saved ✓');
 }
-
 
 async function deleteIncome(id){
 
@@ -3406,16 +3371,24 @@ function renderIncome(){
         `;
 
 
-        const button =
-            document.createElement("button");
+        const actions=document.createElement("div");
+        actions.style.display="flex";
+        actions.style.gap="8px";
+        actions.style.marginTop="7px";
 
+        const edit=document.createElement("button");
+        edit.className="btn-light";
+        edit.textContent="Edit";
+        edit.onclick=()=>openIncomeModal(x.id);
+
+        const button=document.createElement("button");
         button.className="btn-danger";
-        button.style.marginTop="7px";
         button.textContent="Delete";
-
         button.onclick=()=>deleteIncome(x.id);
 
-        div.appendChild(button);
+        actions.appendChild(edit);
+        actions.appendChild(button);
+        div.appendChild(actions);
 
         box.appendChild(div);
 
@@ -3796,9 +3769,28 @@ function showV3(id,button){
  renderV3();
 }
 function closeV3Modal(id){document.getElementById(id).style.display='none'}
-function openRecurringIncomeModal(){document.getElementById('recurringIncomeModal').style.display='flex';document.getElementById('riName').value='';document.getElementById('riAmount').value='';document.getElementById('riFrequency').value='Monthly';document.getElementById('riStart').value=dateKey(new Date());document.getElementById('riEnd').value=''}
-async function saveRecurringIncome(){const row={user_id:currentUser.id,name:document.getElementById('riName').value.trim(),amount:Number(document.getElementById('riAmount').value),frequency:document.getElementById('riFrequency').value,start_date:document.getElementById('riStart').value,end_date:document.getElementById('riEnd').value||null};if(!row.name||!row.amount||!row.start_date)return alert('Please fill required fields.');const {data,error}=await supabaseClient.from('recurring_income').insert(row).select().single();if(error)return alert(error.message);recurringIncome.push(data);closeV3Modal('recurringIncomeModal');renderAll()
-    showV101Toast('Recurring income saved ✓');}
+function openRecurringIncomeModal(id=null){
+ const x=id?recurringIncome.find(r=>r.id===id):null;
+ document.getElementById('recurringIncomeModal').style.display='flex';
+ document.getElementById('riId').value=x?.id||'';
+ document.getElementById('riName').value=x?.name||'';
+ document.getElementById('riAmount').value=x?.amount??'';
+ document.getElementById('riFrequency').value=x?.frequency||'Monthly';
+ document.getElementById('riStart').value=x?.start_date||dateKey(new Date());
+ document.getElementById('riEnd').value=x?.end_date||'';
+ document.getElementById('riModalTitle').textContent=x?'Edit Recurring Income':'Add Recurring Income';
+}
+async function saveRecurringIncome(){
+ const id=document.getElementById('riId').value;
+ const row={name:document.getElementById('riName').value.trim(),amount:Number(document.getElementById('riAmount').value),frequency:document.getElementById('riFrequency').value,start_date:document.getElementById('riStart').value,end_date:document.getElementById('riEnd').value||null};
+ if(!row.name||!row.amount||!row.start_date)return alert('Please fill required fields.');
+ let result;
+ if(id) result=await supabaseClient.from('recurring_income').update(row).eq('id',id).eq('user_id',currentUser.id).select().single();
+ else result=await supabaseClient.from('recurring_income').insert({user_id:currentUser.id,...row}).select().single();
+ if(result.error)return alert(result.error.message);
+ if(id){const i=recurringIncome.findIndex(x=>x.id===id);if(i>=0)recurringIncome[i]=result.data;}else recurringIncome.push(result.data);
+ closeV3Modal('recurringIncomeModal');renderAll();showV101Toast(id?'Recurring income updated ✓':'Recurring income saved ✓');
+}
 async function deleteRecurringIncome(id){if(!confirm('Delete this recurring income?'))return;const {error}=await supabaseClient.from('recurring_income').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);recurringIncome=recurringIncome.filter(x=>x.id!==id);renderAll()}
 function recurringIncomeForMonth(d){let total=0;recurringIncome.forEach(x=>{let st=new Date(x.start_date+'T00:00:00'),end=x.end_date?new Date(x.end_date+'T23:59:59'):null;if(d<new Date(st.getFullYear(),st.getMonth(),1)|| (end&&d>end))return;let diff=(d.getFullYear()-st.getFullYear())*12+d.getMonth()-st.getMonth();let step=x.frequency==='Monthly'?1:x.frequency==='Quarterly'?3:12;if(diff%step===0)total+=Number(x.amount)});return total}
 function openLoanModal(){document.getElementById('loanModal').style.display='flex';['loanName','loanLender','loanOriginal','loanOutstanding','loanRate','loanEmi','loanTenure'].forEach(id=>document.getElementById(id).value='');document.getElementById('loanStart').value=dateKey(new Date())}
@@ -3940,7 +3932,7 @@ function renderV3(){
  renderForecast();
  const ri=recurringIncomeForMonth(currentDate),oneTime=getMonthIncome(currentDate).reduce((s,x)=>s+Number(x.amount),0),totalIncome=ri+oneTime,debt=loans.reduce((s,x)=>s+Number(x.outstanding_amount),0),emi=loans.reduce((s,x)=>s+Number(x.emi_amount),0),goaltarget=savingsGoals.reduce((s,x)=>s+Number(x.target_amount),0),goalsaved=savingsGoals.reduce((s,x)=>s+Number(x.current_amount),0),goalpct=goaltarget?goalsaved/goaltarget*100:0;
  const planned=getMonthExpenses(currentDate).reduce((s,x)=>s+Number(x.expense.amount),0);document.getElementById('v3RecurringIncome').textContent=money(totalIncome);document.getElementById('v3Debt').textContent=money(debt);document.getElementById('v3Emi').textContent=money(emi);document.getElementById('v3Savings').textContent=money(totalIncome-planned);document.getElementById('v3GoalTotal').textContent=money(goalsaved);document.getElementById('v3GoalProgress').textContent=goalpct.toFixed(1)+'%';
- document.getElementById('v3RecurringIncomeList').innerHTML=recurringIncome.length?recurringIncome.map(x=>`<div class="v3-item"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">From ${x.start_date}${x.end_date?' to '+x.end_date:''}</div><div class="v3-actions"><button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring income yet.</div>';
+ document.getElementById('v3RecurringIncomeList').innerHTML=recurringIncome.length?recurringIncome.map(x=>`<div class="v3-item"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">From ${x.start_date}${x.end_date?' to '+x.end_date:''}</div><div class="v3-actions"><button class="btn-light" onclick="openRecurringIncomeModal('${x.id}')">Edit</button><button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring income yet.</div>';
  document.getElementById('v3GoalMini').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div></div>`}).join(''):'<div class="empty">No savings goals yet.</div>';
  document.getElementById('v3LoanList').innerHTML=loans.length?loans.map(l=>{let paid=Math.max(0,Number(l.original_amount)-Number(l.outstanding_amount)),p=Math.min(100,paid/Number(l.original_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.lender||'')} · ${Number(l.interest_rate||0)}% · ${l.tenure_months} months</div><div>Original: ${money(l.original_amount)} · Outstanding: <b>${money(l.outstanding_amount)}</b></div><div>EMI: <b>${money(l.emi_amount)}</b></div><div class="small" style="margin-top:7px">Loan progress ${p.toFixed(1)}%</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v3-actions"><button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No loans added yet.</div>';
  document.getElementById('v3GoalList').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}%${g.target_date?' · Target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No savings goals added yet.</div>';
