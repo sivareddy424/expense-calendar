@@ -6872,5 +6872,138 @@ body.calendar-mode #specialReport{grid-template-columns:repeat(3,1fr)}
 
 })();
 </script>
+<!-- ========================= V10.10 CALENDAR MASTER FIX ========================= -->
+<style id="v110-calendar-css">
+.calendar-toolbar-v110{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.calendar-toolbar-v110 .title{font-size:22px;font-weight:800}
+.calendar-toolbar-v110 .actions{display:flex;gap:8px;align-items:center}
+.calendar-summary-v110{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.calendar-summary-v110 .mini-card{background:#fff;border:1px solid #e5e7eb;border-radius:11px;padding:11px 12px}
+.calendar-summary-v110 .label{font-size:12px;color:#6b7280;display:block;margin-bottom:4px}
+.calendar-summary-v110 .value{font-size:18px;font-weight:800}
+.calendar-legend-v110{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;font-size:12px;color:#6b7280}
+.calendar-legend-v110 span{display:inline-flex;align-items:center;gap:5px}
+.calendar-legend-v110 i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.v110-event{font-size:11px;line-height:1.25;padding:3px 5px;border-radius:5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid transparent}
+.v110-event.income{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.v110-event.expense{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.v110-event.loan{background:#ffedd5;color:#9a3412;border-color:#fed7aa}
+.v110-event.saving{background:#f3e8ff;color:#6b21a8;border-color:#e9d5ff}
+.v110-event.bill{background:#e0f2fe;color:#075985;border-color:#bae6fd}
+.v110-event.renewal{background:#fef3c7;color:#92400e;border-color:#fde68a}
+.v110-event.life{background:#e0e7ff;color:#3730a3;border-color:#c7d2fe}
+.v110-more{font-size:10px;color:#2563eb;margin-top:3px;font-weight:700}
+@media(max-width:900px){.calendar-summary-v110{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.calendar-summary-v110{grid-template-columns:1fr 1fr}.calendar-toolbar-v110 .title{font-size:19px}.day{min-height:74px}}
+</style>
+<script id="v110-calendar-master">
+(function(){
+    function v110Num(v){var n=Number(v);return Number.isFinite(n)?n:0;}
+    function v110Arr(v){return Array.isArray(v)?v:[];}
+    function v110Same(a,b){return dateKey(a)===dateKey(b);}
+    function v110Money(v){return money(v110Num(v));}
+
+    function recurringIncomeEventV110(date){
+        var out=[];
+        v110Arr(window.recurringIncome || recurringIncome).forEach(function(x){
+            try{ if(typeof isRecurringIncomeDueOnDate==='function' && isRecurringIncomeDueOnDate(x,date)) out.push({type:'income',name:x.name,amount:v110Num(x.amount),category:'Income',date:new Date(date),source:'Recurring income',raw:x}); }catch(e){}
+        });
+        return out;
+    }
+    function recurringExpenseEventV110(date){
+        var out=[];
+        v110Arr(window.expenses || expenses).forEach(function(e){
+            try{ var due=occurrenceForExpense(e,date); if(due && v110Same(due,date)){var p=getPayment(e.id,due);out.push({type:'expense',name:e.name,amount:v110Num(e.amount),category:e.category||'Other',date:new Date(due),source:'Recurring expense',raw:e,paid:!!(p&&p.paid)});} }catch(err){}
+        });
+        return out;
+    }
+    function oneTimeExpenseEventV110(date){
+        return v110Arr(window.oneTimeExpenses || oneTimeExpenses).filter(function(x){return String(x.expense_date||'').slice(0,10)===dateKey(date);}).map(function(x){return {type:'expense',name:x.name,amount:v110Num(x.amount),category:x.category||'Other',date:new Date(date),source:'One-time expense',raw:x,actual:true,paid:true};});
+    }
+    function oneTimeIncomeEventV110(date){
+        return v110Arr(window.income || income).filter(function(x){return String(x.income_date||'').slice(0,10)===dateKey(date);}).map(function(x){return {type:'income',name:x.name,amount:v110Num(x.amount),category:'Income',date:new Date(date),source:'Income',raw:x};});
+    }
+    function loanEventV110(date){
+        var out=[];
+        v110Arr(window.loans || loans).forEach(function(l){
+            var amount=v110Num(l.emi_amount), outstanding=v110Num(l.outstanding_amount); if(!l.start_date||amount<=0||outstanding<=0)return;
+            var start=new Date(String(l.start_date).slice(0,10)+'T00:00:00'),sm=new Date(start.getFullYear(),start.getMonth(),1),cm=new Date(date.getFullYear(),date.getMonth(),1);
+            var diff=(cm.getFullYear()-sm.getFullYear())*12+(cm.getMonth()-sm.getMonth()),tenure=Math.max(0,Math.floor(v110Num(l.tenure_months)||0));
+            if(diff<0||(tenure&&diff>=tenure))return;
+            var dueDay=Math.min(start.getDate(),lastDay(date).getDate()); if(date.getDate()!==dueDay)return;
+            out.push({type:'loan',name:l.name,amount:amount,category:'Loan / EMI',date:new Date(date),source:'Loan EMI',raw:l});
+        });
+        return out;
+    }
+    function savingEventV110(date){
+        return v110Arr(window.savingsTransactions || savingsTransactions).filter(function(x){return String(x.transaction_date||'').slice(0,10)===dateKey(date);}).map(function(x){return {type:'saving',name:'Savings contribution',amount:v110Num(x.amount),category:'Savings',date:new Date(date),source:'Goal saving',raw:x};});
+    }
+    function householdEventV110(date){
+        if(typeof householdBillsForMonthV10!=='function')return[]; try{return v110Arr(householdBillsForMonthV10(date)).filter(function(x){return x&&x.date&&v110Same(new Date(x.date),date);}).map(function(x){return {type:'bill',name:x.bill?.name||'Household bill',amount:v110Num(x.bill?.amount),category:x.bill?.category||'Household',date:new Date(date),source:'Household bill',raw:x.bill};});}catch(e){return[]}
+    }
+    function renewalEventV110(date){
+        return v110Arr(window.renewals || renewals).filter(function(x){return String(x.due_date||'').slice(0,10)===dateKey(date);}).map(function(x){return {type:'renewal',name:x.name,amount:v110Num(x.amount),category:x.type||'Renewal',date:new Date(date),source:'Renewal / Warranty',raw:x};});
+    }
+    function lifeEventV110(date){
+        return v110Arr(window.lifeEvents || lifeEvents).filter(function(x){return String(x.target_date||'').slice(0,10)===dateKey(date);}).map(function(x){return {type:'life',name:x.name,amount:v110Num(x.target_amount),category:'Life event',date:new Date(date),source:'Life event',raw:x};});
+    }
+    function eventsForDayV110(date){
+        return [].concat(oneTimeIncomeEventV110(date),recurringIncomeEventV110(date),recurringExpenseEventV110(date),oneTimeExpenseEventV110(date),loanEventV110(date),savingEventV110(date),householdEventV110(date),renewalEventV110(date),lifeEventV110(date));
+    }
+    function calendarMonthStatsV110(){
+        var incomeTotal=0,outflow=0,paid=0,savings=0;
+        for(var day=1;day<=lastDay(currentDate).getDate();day++){
+            var d=new Date(currentDate.getFullYear(),currentDate.getMonth(),day);
+            eventsForDayV110(d).forEach(function(e){if(e.type==='income')incomeTotal+=e.amount;else if(e.type==='saving')savings+=e.amount;else{outflow+=e.amount;if(e.type==='expense'&&e.paid)paid+=e.amount;}});
+        }
+        return {income:incomeTotal,outflow:outflow,paid:paid,pending:Math.max(0,outflow-paid),savings:savings,net:incomeTotal-outflow-savings};
+    }
+    function renderCalendarV110(){
+        var title=document.getElementById('calendarTitle'),calendar=document.getElementById('calendar'); if(!calendar)return;
+        if(title)title.textContent=monthName(currentDate); calendar.innerHTML='';
+        var first=firstDay(currentDate),last=lastDay(currentDate);
+        for(var i=0;i<first.getDay();i++)calendar.appendChild(document.createElement('div'));
+        for(var day=1;day<=last.getDate();day++){
+            var date=new Date(currentDate.getFullYear(),currentDate.getMonth(),day),events=eventsForDayV110(date),div=document.createElement('div');
+            div.className='day'+(v110Same(date,new Date())?' today':'')+(events.length?' has-expense':'');
+            div.innerHTML='<div class="day-number">'+day+'</div>';
+            events.slice(0,5).forEach(function(e){var el=document.createElement('div');el.className='v110-event '+e.type;var sign=e.type==='income'?'+':'−';el.textContent=e.name+' '+sign+v110Money(e.amount);el.title=e.source+' · '+e.name+' · '+v110Money(e.amount);div.appendChild(el);});
+            if(events.length>5){var more=document.createElement('div');more.className='v110-more';more.textContent='+'+(events.length-5)+' more';div.appendChild(more);}
+            div.onclick=(function(d){return function(){selectedDate=new Date(d);renderSelectedDayV110();};})(date); calendar.appendChild(div);
+        }
+        renderCalendarHeaderV110();
+    }
+    function renderCalendarHeaderV110(){
+        var calendar=document.getElementById('calendar');if(!calendar)return;var section=calendar.closest('.section');if(!section)return;
+        var h=document.getElementById('calendarV110Header');if(h)h.remove();
+        h=document.createElement('div');h.id='calendarV110Header';h.className='calendar-toolbar-v110';
+        h.innerHTML='<div class="title">'+monthName(currentDate)+'</div><div class="actions"><button class="btn-gray" id="calPrevV110">◀</button><button class="btn" id="calTodayV110">Today</button><button class="btn-gray" id="calNextV110">▶</button></div>';
+        section.insertBefore(h,section.querySelector('.weekdays'));
+        section.querySelectorAll('.calendar-header').forEach(function(x){x.style.display='none';});
+        var oldS=document.getElementById('calendarV110Stats');if(oldS)oldS.remove();var st=calendarMonthStatsV110(),stats=document.createElement('div');stats.id='calendarV110Stats';stats.className='calendar-summary-v110';
+        stats.innerHTML='<div class="mini-card"><span class="label">Income</span><span class="value green">'+v110Money(st.income)+'</span></div><div class="mini-card"><span class="label">Outflow</span><span class="value red">'+v110Money(st.outflow)+'</span></div><div class="mini-card"><span class="label">Paid</span><span class="value green">'+v110Money(st.paid)+'</span></div><div class="mini-card"><span class="label">Net</span><span class="value '+(st.net>=0?'green':'red')+'">'+v110Money(st.net)+'</span></div>';
+        section.insertBefore(stats,section.querySelector('.weekdays'));
+        var oldL=document.getElementById('calendarV110Legend');if(oldL)oldL.remove();var lg=document.createElement('div');lg.id='calendarV110Legend';lg.className='calendar-legend-v110';lg.innerHTML='<span><i style="background:#22c55e"></i>Income</span><span><i style="background:#ef4444"></i>Expense</span><span><i style="background:#f97316"></i>EMI</span><span><i style="background:#8b5cf6"></i>Savings</span><span><i style="background:#0284c7"></i>Bill</span><span><i style="background:#eab308"></i>Renewal</span>';section.insertBefore(lg,section.querySelector('.weekdays'));
+        document.getElementById('calPrevV110').onclick=function(){currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()-1,1);selectedDate=new Date(currentDate);window.renderAll();};
+        document.getElementById('calNextV110').onclick=function(){currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()+1,1);selectedDate=new Date(currentDate);window.renderAll();};
+        document.getElementById('calTodayV110').onclick=function(){currentDate=new Date();selectedDate=new Date();window.renderAll();};
+    }
+    function renderSelectedDayV110(){
+        var title=document.getElementById('selectedDateTitle'),box=document.getElementById('selectedDayDetails');if(!title||!box)return;title.textContent=selectedDate.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        var events=eventsForDayV110(selectedDate),inc=0,out=0,save=0;events.forEach(function(e){if(e.type==='income')inc+=e.amount;else if(e.type==='saving')save+=e.amount;else out+=e.amount;});
+        var html='<div class="v105-day-summary"><div class="mini"><span class="label">Income</span><span class="value green">'+v110Money(inc)+'</span></div><div class="mini"><span class="label">Outflow</span><span class="value red">'+v110Money(out)+'</span></div><div class="mini"><span class="label">Savings</span><span class="value" style="color:#7c3aed">'+v110Money(save)+'</span></div><div class="mini"><span class="label">Net</span><span class="value '+(inc-out-save>=0?'green':'red')+'">'+v110Money(inc-out-save)+'</span></div></div>';
+        if(!events.length){box.innerHTML=html+'<div class="v108-empty">No events on this date.</div>';return;}
+        var icon={income:'💵',expense:'💸',saving:'🎯',loan:'🏦',bill:'🏠',renewal:'🔔',life:'📌'};
+        html+=events.map(function(e){var sign=e.type==='income'?'+':'−';return '<div class="v105-event-row"><div style="min-width:0"><div><b>'+icon[e.type]+' '+escapeHtml(e.name)+'</b></div><div class="v105-event-meta">'+escapeHtml((e.source||'')+' · '+(e.category||''))+'</div></div><div class="v105-event-amount '+(e.type==='income'?'green':e.type==='saving'?'v105-purple':'red')+'">'+sign+v110Money(e.amount)+'</div></div>';}).join('');
+        box.innerHTML=html;
+    }
+    window.renderCalendarV110=renderCalendarV110;window.renderSelectedDayV110=renderSelectedDayV110;
+    window.renderCalendar=renderCalendarV110;window.renderSelectedDay=renderSelectedDayV110;
+    window.changeMonth=function(amount){currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()+amount,1);selectedDate=new Date(currentDate);window.renderAll();};
+    window.goToday=function(){currentDate=new Date();selectedDate=new Date();window.renderAll();};
+    var baseShow=window.showV3;window.showV3=function(id,button){if(typeof baseShow==='function'){try{baseShow(id,button);}catch(e){console.warn('tab switch',e);}}if(id==='calendar')setTimeout(function(){renderCalendarV110();renderSelectedDayV110();},0);};
+    var baseAll=window.renderAll;window.renderAll=function(){try{if(typeof baseAll==='function')baseAll();}catch(e){console.warn('base render',e);}try{renderCalendarV110();renderSelectedDayV110();}catch(e){console.error('calendar render',e);}};
+})();
+</script>
 </body>
 </html>
