@@ -602,6 +602,14 @@ header{backdrop-filter:saturate(140%);}
 @media(max-width:900px){.v9-grid,.v9-grid-3{grid-template-columns:1fr}.v9-scenario-grid{grid-template-columns:1fr 1fr}.v9-chart-row{grid-template-columns:72px 1fr 90px}}
 @media(max-width:700px){.v9-scenario-grid{grid-template-columns:1fr}.v9-big{font-size:24px}.v9-chart-row{grid-template-columns:68px 1fr 82px}.v9-table th,.v9-table td{font-size:12px}}
 
+
+/* VERSION 10 - AUTOMATION & COMMAND CENTER */
+.v10-shell{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.v10-panel{background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #e2e8f0;border-radius:16px;padding:16px;box-shadow:0 6px 20px rgba(15,23,42,.06)}
+.v10-panel h2,.v10-panel h3{margin:0 0 10px}.v10-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.v10-kpi{padding:13px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px}.v10-kpi .label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#64748b;margin-bottom:5px}.v10-kpi .value{font-size:21px;font-weight:800;letter-spacing:-.3px}.v10-good{color:#15803d}.v10-warn{color:#c2410c}.v10-bad{color:#b91c1c}.v10-muted{color:#64748b;font-size:12px}.v10-list{display:grid;gap:8px}.v10-item{padding:11px;border:1px solid #e2e8f0;background:#fff;border-radius:12px}.v10-item-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.v10-item-title{font-weight:700}.v10-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.v10-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}.v10-pill.good{background:#dcfce7;color:#166534}.v10-pill.warn{background:#ffedd5;color:#9a3412}.v10-pill.bad{background:#fee2e2;color:#991b1b}.v10-pill.info{background:#dbeafe;color:#1d4ed8}.v10-search{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px}.v10-table-wrap{overflow:auto;border:1px solid #e2e8f0;border-radius:12px}.v10-table{width:100%;border-collapse:collapse}.v10-table th,.v10-table td{padding:9px;border-bottom:1px solid #e2e8f0;font-size:12px;text-align:left}.v10-table th{background:#f8fafc;white-space:nowrap}.v10-command{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.v10-command-card{padding:14px;border-radius:14px;border:1px solid #e2e8f0;background:#fff}.v10-command-card .big{font-size:23px;font-weight:800;margin-top:5px}.v10-drop{border:1.5px dashed #cbd5e1;border-radius:12px;padding:16px;text-align:center;background:#f8fafc}.v10-private{filter:blur(10px);user-select:none;transition:.15s}.v10-private.revealed{filter:none}.v10-flex{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.v10-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.v10-mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.v10-banner{padding:12px;border-radius:12px;margin-bottom:10px;border:1px solid #dbeafe;background:#eff6ff}.v10-banner.warn{border-color:#fed7aa;background:#fff7ed}.v10-banner.bad{border-color:#fecaca;background:#fef2f2}.v10-banner.good{border-color:#bbf7d0;background:#f0fdf4}
+@media(max-width:900px){.v10-shell{grid-template-columns:1fr}.v10-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.v10-command{grid-template-columns:repeat(2,minmax(0,1fr))}.v10-mini-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.v10-search{grid-template-columns:1fr}.v10-kpis,.v10-command,.v10-mini-grid{grid-template-columns:1fr}.v10-panel{padding:13px}}
+
 </style>
 </head>
 
@@ -652,6 +660,8 @@ header{backdrop-filter:saturate(140%);}
             <button class="btn-light" onclick="openRecurringIncomeModal()">+ Salary</button>
             <button class="btn-light" onclick="openLoanModal()">+ Loan</button>
             <button class="btn-light" onclick="openGoalModal()">+ Goal</button>
+            <button class="btn-light" onclick="openQuickAddModal()">⚡ Quick Add</button>
+            <button class="btn-light" onclick="togglePrivacyMode()">👁 Privacy</button>
             <button class="btn-light" onclick="requestNotifications()">🔔 Alerts</button>
             <button class="btn-light" onclick="exportBackup()">Backup</button>
             <button class="btn-light" onclick="document.getElementById('importFile').click()">Restore</button>
@@ -701,6 +711,7 @@ header{backdrop-filter:saturate(140%);}
 <button class="v3-tab" onclick="showV3('cards',this)" role="tab">💳 Cards</button>
 <button class="v3-tab" onclick="showV3('networth',this)" role="tab">🏠 Net Worth</button>
 <button class="v3-tab" onclick="showV3('investments',this)" role="tab">📈 Investments</button>
+<button class="v3-tab" onclick="showV3('more',this)" role="tab">✨ More</button>
 </div>
 
 <div id="v3-overview" class="v3-view active">
@@ -1434,12 +1445,192 @@ header{backdrop-filter:saturate(140%);}
 
 
 
+
+<div id="v3-more" class="v3-view">
+    <div class="v10-banner" id="v10CommandBanner"><b>✨ Financial Command Center</b><div class="v10-muted">Automatic planning, alerts, reserves, milestones and practical next steps.</div></div>
+
+    <div class="v10-panel">
+        <div class="v10-flex"><div><h2>🎯 Today at a glance</h2><div class="v10-muted">What needs attention and what you can safely do.</div></div><button class="btn" onclick="refreshV10Insights()">Refresh</button></div>
+        <div class="v10-command">
+            <div class="v10-command-card"><div class="v10-muted">Safe to spend</div><div id="v10SafeSpend" class="big v10-good">₹0</div></div>
+            <div class="v10-command-card"><div class="v10-muted">Emergency fund</div><div id="v10EmergencyFund" class="big">₹0</div></div>
+            <div class="v10-command-card"><div class="v10-muted">Annual sinking reserve</div><div id="v10SinkingReserve" class="big">₹0</div></div>
+            <div class="v10-command-card"><div class="v10-muted">Financial status</div><div id="v10RiskStatus" class="big v10-good">Healthy</div></div>
+        </div>
+        <div id="v10CommandAlerts" style="margin-top:10px"></div>
+    </div>
+
+    <div class="v10-shell" style="margin-top:16px">
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>⚡ Quick Add</h2><div class="v10-muted">Fast entry with automatic category suggestions.</div></div><button class="btn" onclick="openQuickAddModal()">Open</button></div>
+            <div id="v10RecentQuick"></div>
+        </div>
+        <div class="v10-panel">
+            <h2>🧠 Smart Categorization</h2>
+            <div class="v10-muted">Common names are automatically matched to likely categories while using Quick Add.</div>
+            <div id="v10CategoryTips" style="margin-top:10px"></div>
+        </div>
+    </div>
+
+    <div class="v10-shell" style="margin-top:16px">
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>💰 Emergency Fund</h2><div class="v10-muted">Automatic essential-expense reserve target.</div></div></div>
+            <div id="v10EmergencyDetail"></div>
+        </div>
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🔄 Sinking Funds</h2><div class="v10-muted">Monthly reserve for yearly / non-monthly commitments.</div></div></div>
+            <div id="v10SinkingDetail"></div>
+        </div>
+    </div>
+
+    <div class="v10-panel" style="margin-top:16px">
+        <div class="v10-flex"><div><h2>🔎 Search Everything</h2><div class="v10-muted">Search expenses, income, loans, goals, cards, investments, vehicles, renewals and more.</div></div></div>
+        <div class="v10-search" style="margin-top:10px"><input id="v10GlobalSearch" placeholder="Search e.g. LIC, SBI, car, loan..." oninput="renderGlobalSearch()"><select id="v10SearchType" onchange="renderGlobalSearch()"><option value="all">Everything</option><option value="expense">Expenses</option><option value="income">Income</option><option value="loan">Loans</option><option value="goal">Goals</option><option value="card">Cards</option><option value="asset">Assets</option><option value="investment">Investments</option><option value="renewal">Renewals</option><option value="vehicle">Vehicles</option><option value="bill">Household Bills</option><option value="life">Life Events</option></select></div>
+        <div id="v10GlobalResults"></div>
+    </div>
+
+    <div class="v10-shell" style="margin-top:16px">
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🔁 Recurring Detection</h2><div class="v10-muted">Repeated quick expenses/income that look like subscriptions or bills.</div></div><button class="btn" onclick="renderRecurringDetection()">Scan</button></div>
+            <div id="v10RecurringDetect"></div>
+        </div>
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🧩 Smart Rules</h2><div class="v10-muted">Create alert rules. Rules never move or delete your money.</div></div><button class="btn" onclick="openRuleModal()">+ Rule</button></div>
+            <div id="v10Rules"></div>
+        </div>
+    </div>
+
+    <div class="v10-shell" style="margin-top:16px">
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🏆 Financial Milestones</h2><div class="v10-muted">Automatic achievements from your real data.</div></div></div>
+            <div id="v10Milestones"></div>
+        </div>
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>📆 Monthly Review</h2><div class="v10-muted">Automatic month-end style summary.</div></div></div>
+            <div id="v10MonthlyReview"></div>
+        </div>
+    </div>
+
+    <div class="v10-shell" style="margin-top:16px">
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🔔 Adaptive Reminders</h2><div class="v10-muted">Shows recommended notice windows based on what is coming due.</div></div></div>
+            <div id="v10ReminderPlan"></div>
+        </div>
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🎯 Goal Priority</h2><div class="v10-muted">Goals ranked by deadline and required monthly contribution.</div></div></div>
+            <div id="v10GoalPriority"></div>
+        </div>
+    </div>
+
+    <div class="v10-panel" style="margin-top:16px">
+        <div class="v10-flex"><div><h2>🧮 Debt-Free Simulator</h2><div class="v10-muted">See how an extra monthly EMI could shorten your loans.</div></div></div>
+        <div class="v10-inline" style="margin-bottom:10px"><label style="margin:0">Extra monthly payment</label><input id="v10ExtraEmi" type="number" min="0" step="100" value="0" style="max-width:180px" oninput="renderDebtSimulator()"></div>
+        <div id="v10DebtSimulator"></div>
+    </div>
+
+    <div class="v10-shell" style="margin-top:16px">
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🛡 Renewals & Warranties</h2><div class="v10-muted">Insurance, LIC, subscriptions, warranty expiry and annual renewals.</div></div><button class="btn" onclick="openRenewalModal()">+ Renewal</button></div>
+            <div id="v10Renewals"></div>
+        </div>
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🏠 Household Bills</h2><div class="v10-muted">Track recurring household obligations separately.</div></div><button class="btn" onclick="openHouseholdBillModal()">+ Bill</button></div>
+            <div id="v10HouseholdBills"></div>
+        </div>
+    </div>
+
+    <div class="v10-shell" style="margin-top:16px">
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🚗 Vehicles</h2><div class="v10-muted">Fuel/charging, service, insurance and repair costs.</div></div><button class="btn" onclick="openVehicleModal()">+ Vehicle</button></div>
+            <div id="v10Vehicles"></div>
+        </div>
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>📎 Document Vault</h2><div class="v10-muted">Keep private receipts, warranties and financial documents.</div></div><button class="btn" onclick="openDocumentModal()">+ Document</button></div>
+            <div id="v10Documents"></div>
+        </div>
+    </div>
+
+    <div class="v10-shell" style="margin-top:16px">
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>👨‍👩‍👧 Shared Household</h2><div class="v10-muted">Share selected household expenses; private finances stay private.</div></div><button class="btn" onclick="openSharedInviteModal()">Invite</button></div>
+            <div class="v10-inline" style="margin:8px 0"><button class="btn-light" onclick="createSharedHousehold()">Create Household</button><button class="btn" onclick="openSharedExpenseModal()">+ Shared Expense</button></div>
+            <div id="v10SharedHouseholds"></div>
+            <div id="v10SharedExpenses" style="margin-top:10px"></div>
+        </div>
+        <div class="v10-panel">
+            <div class="v10-flex"><div><h2>🗓 Life-Event Planner</h2><div class="v10-muted">Plan big future purchases and milestones.</div></div><button class="btn" onclick="openLifeEventModal()">+ Event</button></div>
+            <div id="v10LifeEvents"></div>
+        </div>
+    </div>
+
+    <div class="v10-panel" style="margin-top:16px">
+        <h2>📝 Planning Notes</h2>
+        <div class="v10-muted">Assets already support Property, Vehicle, Gold and other values; investments and credit cards remain in their dedicated tabs. This area adds planning and automation without bank-data import.</div>
+    </div>
+</div>
+
+
 <!-- V9 MODALS -->
 <div id="creditCardModal" class="modal"><div class="modal-box"><h2 id="creditCardModalTitle">Add Credit Card</h2><input type="hidden" id="creditCardId"><div class="form-grid"><div class="form-group"><label>Card name</label><input id="creditCardName" placeholder="SBI Credit Card"></div><div class="form-group"><label>Bank / issuer</label><input id="creditCardBank"></div><div class="form-group"><label>Credit limit</label><input id="creditCardLimit" type="number" step="0.01"></div><div class="form-group"><label>Current used amount</label><input id="creditCardUsed" type="number" step="0.01"></div><div class="form-group"><label>Billing day</label><input id="creditCardBillingDay" type="number" min="1" max="31" value="1"></div><div class="form-group"><label>Payment due day</label><input id="creditCardDueDay" type="number" min="1" max="31" value="15"></div></div><div class="modal-actions"><button class="btn-gray" onclick="closeV9Modal('creditCardModal')">Cancel</button><button class="btn" onclick="saveCreditCard()">Save</button></div></div></div>
 
 <div id="assetModal" class="modal"><div class="modal-box"><h2 id="assetModalTitle">Add Asset</h2><input type="hidden" id="assetId"><div class="form-grid"><div class="form-group"><label>Asset name</label><input id="assetName" placeholder="House"></div><div class="form-group"><label>Category</label><select id="assetCategory"><option>Property</option><option>Vehicle</option><option>Gold</option><option>Cash</option><option>Other</option></select></div><div class="form-group"><label>Current value</label><input id="assetValue" type="number" step="0.01"></div><div class="form-group"><label>Notes</label><input id="assetNotes"></div></div><div class="modal-actions"><button class="btn-gray" onclick="closeV9Modal('assetModal')">Cancel</button><button class="btn" onclick="saveAsset()">Save</button></div></div></div>
 
 <div id="investmentModal" class="modal"><div class="modal-box"><h2 id="investmentModalTitle">Add Investment</h2><input type="hidden" id="investmentId"><div class="form-grid"><div class="form-group"><label>Name</label><input id="investmentName" placeholder="SGB / Mutual Fund"></div><div class="form-group"><label>Type</label><select id="investmentType"><option>Mutual Fund</option><option>Stocks</option><option>SGB</option><option>FD</option><option>PPF</option><option>Other</option></select></div><div class="form-group"><label>Invested amount</label><input id="investmentInvested" type="number" step="0.01"></div><div class="form-group"><label>Current value</label><input id="investmentCurrent" type="number" step="0.01"></div><div class="form-group"><label>Investment date</label><input id="investmentDate" type="date"></div><div class="form-group"><label>Notes</label><input id="investmentNotes"></div></div><div class="modal-actions"><button class="btn-gray" onclick="closeV9Modal('investmentModal')">Cancel</button><button class="btn" onclick="saveInvestment()">Save</button></div></div></div>
+
+
+
+<!-- V10 MODALS -->
+<div id="quickAddModal" class="modal"><div class="modal-box"><h2>⚡ Quick Add</h2><div class="form-grid">
+<div class="form-group"><label>Type</label><select id="qaType"><option value="expense">Expense</option><option value="income">Income</option><option value="saving">Savings contribution</option></select></div>
+<div class="form-group"><label>Amount</label><input id="qaAmount" type="number" min="0" step="0.01"></div>
+<div class="form-group"><label>Name</label><input id="qaName" placeholder="e.g. Airtel / Salary / Petrol"></div>
+<div class="form-group"><label>Date</label><input id="qaDate" type="date"></div>
+<div class="form-group"><label>Category</label><select id="qaCategory"><option>Housing</option><option>Utilities</option><option>Insurance</option><option>Loan / EMI</option><option>Investment</option><option>Education</option><option>Shopping</option><option>Food</option><option>Transport</option><option>Other</option></select></div>
+<div class="form-group"><label>Note</label><input id="qaNote" placeholder="Optional"></div>
+</div><div class="v10-banner" id="qaSuggestion" style="margin-top:10px;display:none"></div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('quickAddModal')">Cancel</button><button class="btn" onclick="saveQuickAdd()">Save</button></div></div></div>
+
+<div id="renewalModal" class="modal"><div class="modal-box"><h2 id="renewalModalTitle">Add Renewal / Warranty</h2><input type="hidden" id="renewalId"><div class="form-grid">
+<div class="form-group"><label>Name</label><input id="renewalName" placeholder="LIC / Insurance / Warranty"></div><div class="form-group"><label>Type</label><select id="renewalType"><option>Insurance</option><option>LIC</option><option>Subscription</option><option>Warranty</option><option>Tax</option><option>Membership</option><option>Other</option></select></div>
+<div class="form-group"><label>Due / Expiry Date</label><input id="renewalDate" type="date"></div><div class="form-group"><label>Amount (optional)</label><input id="renewalAmount" type="number" step="0.01"></div>
+<div class="form-group"><label>Reminder days before</label><input id="renewalReminder" type="number" min="0" value="14"></div><div class="form-group"><label>Notes</label><input id="renewalNotes"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('renewalModal')">Cancel</button><button class="btn" onclick="saveRenewal()">Save</button></div></div></div>
+
+<div id="vehicleModal" class="modal"><div class="modal-box"><h2 id="vehicleModalTitle">Add Vehicle</h2><input type="hidden" id="vehicleId"><div class="form-grid">
+<div class="form-group"><label>Name</label><input id="vehicleName" placeholder="Ather 450 / Car"></div><div class="form-group"><label>Type</label><select id="vehicleType"><option>EV Scooter</option><option>Petrol Bike</option><option>Car</option><option>Other</option></select></div>
+<div class="form-group"><label>Purchase Date</label><input id="vehiclePurchaseDate" type="date"></div><div class="form-group"><label>Current Value</label><input id="vehicleValue" type="number" step="0.01"></div>
+<div class="form-group"><label>Insurance Renewal</label><input id="vehicleInsuranceDate" type="date"></div><div class="form-group"><label>Notes</label><input id="vehicleNotes"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('vehicleModal')">Cancel</button><button class="btn" onclick="saveVehicle()">Save</button></div></div></div>
+
+<div id="vehicleLogModal" class="modal"><div class="modal-box"><h2>Add Vehicle Expense</h2><input type="hidden" id="vehicleLogVehicleId"><div class="form-grid">
+<div class="form-group"><label>Type</label><select id="vehicleLogType"><option>Fuel</option><option>Charging</option><option>Service</option><option>Insurance</option><option>Repair</option><option>Tyres</option><option>Tax / RC</option><option>Other</option></select></div><div class="form-group"><label>Amount</label><input id="vehicleLogAmount" type="number" step="0.01"></div>
+<div class="form-group"><label>Date</label><input id="vehicleLogDate" type="date"></div><div class="form-group"><label>Odometer (optional)</label><input id="vehicleLogOdometer" type="number" step="0.1"></div><div class="form-group"><label>Notes</label><input id="vehicleLogNotes"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('vehicleLogModal')">Cancel</button><button class="btn" onclick="saveVehicleLog()">Save</button></div></div></div>
+
+<div id="householdBillModal" class="modal"><div class="modal-box"><h2 id="householdBillModalTitle">Add Household Bill</h2><input type="hidden" id="householdBillId"><div class="form-grid">
+<div class="form-group"><label>Name</label><input id="householdBillName" placeholder="Electricity / Water / Internet"></div><div class="form-group"><label>Category</label><select id="householdBillCategory"><option>Electricity</option><option>Water</option><option>Internet</option><option>Maintenance</option><option>Property Tax</option><option>Other</option></select></div>
+<div class="form-group"><label>Amount</label><input id="householdBillAmount" type="number" step="0.01"></div><div class="form-group"><label>Due Day</label><input id="householdBillDay" type="number" min="1" max="31" value="1"></div>
+<div class="form-group"><label>Frequency</label><select id="householdBillFrequency"><option>Monthly</option><option>Quarterly</option><option>Yearly</option></select></div><div class="form-group"><label>Notes</label><input id="householdBillNotes"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('householdBillModal')">Cancel</button><button class="btn" onclick="saveHouseholdBill()">Save</button></div></div></div>
+
+<div id="lifeEventModal" class="modal"><div class="modal-box"><h2 id="lifeEventModalTitle">Add Life Event</h2><input type="hidden" id="lifeEventId"><div class="form-grid">
+<div class="form-group"><label>Event</label><input id="lifeEventName" placeholder="Car purchase / renovation"></div><div class="form-group"><label>Target Amount</label><input id="lifeEventAmount" type="number" step="0.01"></div>
+<div class="form-group"><label>Target Date</label><input id="lifeEventDate" type="date"></div><div class="form-group"><label>Current Saved</label><input id="lifeEventSaved" type="number" step="0.01" value="0"></div>
+<div class="form-group"><label>Priority</label><select id="lifeEventPriority"><option>High</option><option>Medium</option><option>Low</option></select></div><div class="form-group"><label>Notes</label><input id="lifeEventNotes"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('lifeEventModal')">Cancel</button><button class="btn" onclick="saveLifeEvent()">Save</button></div></div></div>
+
+<div id="ruleModal" class="modal"><div class="modal-box"><h2 id="ruleModalTitle">Add Smart Rule</h2><input type="hidden" id="ruleId"><div class="form-grid">
+<div class="form-group"><label>Rule</label><select id="ruleType"><option value="category_threshold">Category monthly spending above limit</option><option value="monthly_threshold">Total monthly spending above limit</option><option value="forecast_deficit">Forecast deficit</option><option value="goal_behind">Savings goal behind pace</option><option value="renewal_due">Renewal due soon</option></select></div>
+<div class="form-group"><label>Category (for category rule)</label><select id="ruleCategory"><option>Food</option><option>Shopping</option><option>Transport</option><option>Utilities</option><option>Housing</option><option>Insurance</option><option>Loan / EMI</option><option>Investment</option><option>Education</option><option>Other</option></select></div>
+<div class="form-group"><label>Threshold / Days</label><input id="ruleThreshold" type="number" step="0.01" value="5000"></div><div class="form-group"><label>Label</label><input id="ruleLabel" placeholder="My alert rule"></div>
+</div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('ruleModal')">Cancel</button><button class="btn" onclick="saveRule()">Save Rule</button></div></div></div>
+
+<div id="documentModal" class="modal"><div class="modal-box"><h2>📎 Add Document</h2><div class="form-grid"><div class="form-group"><label>Title</label><input id="documentTitle" placeholder="LIC policy"></div><div class="form-group"><label>Type</label><select id="documentType"><option>Receipt</option><option>Policy</option><option>Warranty</option><option>Loan</option><option>Tax</option><option>Other</option></select></div><div class="form-group"><label>File</label><input id="documentFile" type="file"></div></div><div class="small" style="margin-top:8px">Files are stored privately in your Supabase storage bucket.</div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('documentModal')">Cancel</button><button class="btn" onclick="saveDocument()">Upload</button></div></div></div>
+
+<div id="sharedInviteModal" class="modal"><div class="modal-box"><h2>👨‍👩‍👧 Invite Household Member</h2><div class="form-group"><label>Member email</label><input id="sharedMemberEmail" type="email"></div><div class="small">The member must already have an account.</div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('sharedInviteModal')">Cancel</button><button class="btn" onclick="inviteSharedMember()">Invite</button></div></div></div>
+
+<div id="sharedExpenseModal" class="modal"><div class="modal-box"><h2>+ Shared Expense</h2><div class="form-grid"><div class="form-group"><label>Household</label><select id="sharedExpenseHousehold"></select></div><div class="form-group"><label>Description</label><input id="sharedExpenseName"></div><div class="form-group"><label>Amount</label><input id="sharedExpenseAmount" type="number" step="0.01"></div><div class="form-group"><label>Date</label><input id="sharedExpenseDate" type="date"></div></div><div class="modal-actions"><button class="btn-gray" onclick="closeV10Modal('sharedExpenseModal')">Cancel</button><button class="btn" onclick="saveSharedExpense()">Save</button></div></div></div>
+
+<div id="resetPasswordModal" class="modal"></div>
 
 <script>
 
@@ -1467,6 +1658,17 @@ let budgets = [];
 let creditCards = [];
 let assets = [];
 let investments = [];
+let oneTimeExpenses = [];
+let financeRules = [];
+let renewals = [];
+let vehicles = [];
+let vehicleLogs = [];
+let householdBills = [];
+let lifeEvents = [];
+let documents = [];
+let sharedHouseholds = [];
+let sharedMembers = [];
+let sharedExpenses = [];
 
 let currentDate = new Date();
 let selectedDate = new Date();
@@ -4493,6 +4695,427 @@ if("serviceWorker" in navigator){
     );
 
 }
+
+
+
+
+/* =========================
+   VERSION 10 - AUTOMATION
+   ========================= */
+
+function closeV10Modal(id){ const el=document.getElementById(id); if(el) el.style.display='none'; }
+function numV10(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+function dateV10(v){ return v ? new Date(v+'T00:00:00') : new Date(); }
+function monthStartV10(d){ return new Date(d.getFullYear(),d.getMonth(),1); }
+function daysUntilV10(date){ const a=new Date();a.setHours(0,0,0,0);const b=new Date(date.getFullYear(),date.getMonth(),date.getDate());return Math.round((b-a)/86400000); }
+function statusPillV10(text,kind){ return `<span class="v10-pill ${kind||'info'}">${escapeHtml(text)}</span>`; }
+
+function suggestCategoryV10(name){
+    const s=String(name||'').toLowerCase();
+    if(/electric|water|gas|internet|wifi|airtel|jio|vi |bsnl/.test(s)) return 'Utilities';
+    if(/lic|insurance|premium|policy/.test(s)) return 'Insurance';
+    if(/loan|emi|mortgage/.test(s)) return 'Loan / EMI';
+    if(/rent|house|property|maintenance/.test(s)) return 'Housing';
+    if(/petrol|diesel|fuel|charging|ather|uber|ola|auto/.test(s)) return 'Transport';
+    if(/school|college|course|exam|book/.test(s)) return 'Education';
+    if(/amazon|flipkart|shopping|clothes|mall/.test(s)) return 'Shopping';
+    if(/food|restaurant|swiggy|zomato|hotel|grocery|supermarket/.test(s)) return 'Food';
+    if(/stock|mutual|sgb|investment|sip|ppf|fd/.test(s)) return 'Investment';
+    return '';
+}
+
+function openQuickAddModal(){
+    document.getElementById('quickAddModal').style.display='flex';
+    document.getElementById('qaType').value='expense';
+    document.getElementById('qaAmount').value='';
+    document.getElementById('qaName').value='';
+    document.getElementById('qaDate').value=dateKey(new Date());
+    document.getElementById('qaCategory').value='Other';
+    document.getElementById('qaNote').value='';
+    document.getElementById('qaSuggestion').style.display='none';
+    document.getElementById('qaName').oninput=()=>{
+        const s=suggestCategoryV10(document.getElementById('qaName').value);
+        const box=document.getElementById('qaSuggestion');
+        if(s){ document.getElementById('qaCategory').value=s;box.style.display='block';box.textContent='Suggested category: '+s; }
+        else box.style.display='none';
+    };
+}
+async function saveQuickAdd(){
+    const type=document.getElementById('qaType').value,name=document.getElementById('qaName').value.trim(),amount=numV10(document.getElementById('qaAmount').value),date=document.getElementById('qaDate').value,category=document.getElementById('qaCategory').value,note=document.getElementById('qaNote').value.trim();
+    if(!name||amount<=0||!date) return alert('Enter name, amount and date.');
+    if(type==='expense'){
+        const {data,error}=await supabaseClient.from('one_time_expenses').insert({user_id:currentUser.id,name,amount,expense_date:date,category,note}).select().single();
+        if(error)return alert(error.message); oneTimeExpenses.unshift(data);
+    }else if(type==='income'){
+        const {data,error}=await supabaseClient.from('income').insert({user_id:currentUser.id,name,amount,income_date:date}).select().single();
+        if(error)return alert(error.message); income.unshift(data);
+    }else{
+        const goals=savingsGoals.filter(g=>numV10(g.target_amount)>numV10(g.current_amount));
+        if(!goals.length)return alert('Add a savings goal first.');
+        const goal=goals.slice().sort((a,b)=>numV10(a.target_amount)-numV10(b.target_amount))[0];
+        const {data,error}=await supabaseClient.from('savings_transactions').insert({user_id:currentUser.id,goal_id:goal.id,amount,transaction_date:date,note:note||'Quick Add contribution'}).select().single();
+        if(error)return alert(error.message);
+        savingsTransactions.push(data);
+        const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:numV10(goal.current_amount)+amount}).eq('id',goal.id).eq('user_id',currentUser.id).select().single();
+        if(ue)return alert(ue.message); Object.assign(goal,updated);
+    }
+    closeV10Modal('quickAddModal'); saveOfflineSnapshot(); renderAll();
+}
+
+function oneTimeExpensesForMonthV10(d){
+    const key=monthKey(d); return oneTimeExpenses.filter(x=>String(x.expense_date||'').slice(0,7)===key);
+}
+function householdBillsForMonthV10(d){
+    const list=[]; const month=d.getMonth(),year=d.getFullYear();
+    householdBills.forEach(b=>{
+        const freq=b.frequency||'Monthly',start=new Date((b.start_month||`${year}-${String(month+1).padStart(2,'0')}`)+'-01T00:00:00');
+        const diff=(year-start.getFullYear())*12+(month-start.getMonth());
+        const step=freq==='Quarterly'?3:freq==='Yearly'?12:1;
+        if(diff>=0&&diff%step===0){ const day=Math.min(numV10(b.due_day)||1,new Date(year,month+1,0).getDate()); list.push({bill:b,date:new Date(year,month,day)}); }
+    }); return list;
+}
+function renewalsUpcomingV10(){
+    const today=new Date();today.setHours(0,0,0,0);return renewals.filter(r=>r.due_date&&dateV10(r.due_date)>=today).sort((a,b)=>dateV10(a.due_date)-dateV10(b.due_date));
+}
+function essentialPlannedV10(d){
+    const essentials=new Set(['Housing','Utilities','Insurance','Loan / EMI','Food','Transport']);
+    let total=getMonthExpenses(d).filter(x=>essentials.has(x.expense.category)).reduce((s,x)=>s+numV10(x.expense.amount),0);
+    total+=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0);
+    return total;
+}
+function monthlyIncomeV10(d){ return recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+numV10(x.amount),0); }
+function monthlyOutflowV10(d){
+    const recurring=getMonthExpenses(d).reduce((s,x)=>s+numV10(x.expense.amount),0);
+    const one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0);
+    const bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0);
+    const loanExtra=activeLoanEmiForMonth(d);
+    const included=getMonthExpenses(d).filter(x=>x.expense.category==='Loan / EMI').reduce((s,x)=>s+numV10(x.expense.amount),0);
+    return recurring+one+bills+Math.max(0,loanExtra-included);
+}
+function safeToSpendV10(){
+    const d=currentDate, incomeTotal=monthlyIncomeV10(d), outflow=monthlyOutflowV10(d), sinking=sinkingReserveV10(), goalReserve=goalRequiredReserveV10(), emergencyTarget=emergencyTargetV10();
+    const currentGoals=savingsGoals.reduce((s,g)=>s+numV10(g.current_amount),0);
+    const emergencyGap=Math.max(0,emergencyTarget-currentGoals);
+    return {value:Math.max(0,incomeTotal-outflow-sinking-goalReserve-Math.min(emergencyGap,Math.max(0,incomeTotal-outflow)*0.25)),income:incomeTotal,outflow,sinking,goalReserve,emergencyTarget};
+}
+function emergencyTargetV10(){
+    const d=currentDate, monthly=Math.max(essentialPlannedV10(d),0); return monthly*6;
+}
+function sinkingReserveV10(){
+    let annual=0;
+    expenses.forEach(e=>{const step=frequencyMonths(e.frequency);if(step>1) annual+=numV10(e.amount)*(12/step);});
+    renewals.forEach(r=>annual+=numV10(r.amount||0));
+    lifeEvents.forEach(e=>{const target=numV10(e.target_amount),saved=numV10(e.current_saved);if(target>saved&&e.target_date){const m=Math.max(1,monthDifference(new Date(),dateV10(e.target_date)));annual+=Math.max(0,target-saved)/m*12;}});
+    return annual/12;
+}
+function goalRequiredReserveV10(){
+    let total=0; const now=new Date();
+    savingsGoals.forEach(g=>{if(g.target_date&&numV10(g.target_amount)>numV10(g.current_amount)){const m=Math.max(1,monthDifference(now,dateV10(g.target_date)));total+=(numV10(g.target_amount)-numV10(g.current_amount))/m;}});
+    return total;
+}
+
+function renderCommandCenterV10(){
+    const s=safeToSpendV10(),target=s.emergencyTarget, saved=savingsGoals.reduce((a,g)=>a+numV10(g.current_amount),0), pct=target?Math.min(100,saved/target*100):100;
+    document.getElementById('v10SafeSpend').textContent=money(s.value);
+    document.getElementById('v10EmergencyFund').textContent=money(target);
+    document.getElementById('v10SinkingReserve').textContent=money(s.sinking);
+    const risk=s.value<0?'Deficit':s.value<Math.max(500,s.income*.05)?'Tight':'Healthy';
+    const rs=document.getElementById('v10RiskStatus');rs.textContent=risk;rs.className='big '+(risk==='Healthy'?'v10-good':risk==='Tight'?'v10-warn':'v10-bad');
+    const alerts=[];
+    const overdue=getUpcoming(30).filter(x=>dateV10(x.date)<new Date(new Date().setHours(0,0,0,0)));
+    const renew=renewalsUpcomingV10().slice(0,5).filter(r=>daysUntilV10(dateV10(r.due_date))<=numV10(r.reminder_days||14));
+    const forecast=getForecastMonthData(new Date(currentDate.getFullYear(),currentDate.getMonth()+1,1));
+    if(s.value<=0)alerts.push(`<div class="v10-banner bad">⚠️ Safe-to-spend is currently ${money(s.value)}. Review discretionary spending.</div>`);
+    if(forecast.surplus<0)alerts.push(`<div class="v10-banner warn">📉 Next month is projected to be in deficit by ${money(Math.abs(forecast.surplus))}.</div>`);
+    if(renew.length)alerts.push(`<div class="v10-banner warn">🔔 ${renew.length} renewal/warranty item(s) are within their reminder window.</div>`);
+    alerts.push(`<div class="v10-banner ${pct>=80?'good':'warn'}">🛡 Emergency fund progress: ${pct.toFixed(0)}% of the 6-month target (${money(saved)} / ${money(target)}).</div>`);
+    document.getElementById('v10CommandAlerts').innerHTML=alerts.join('');
+}
+function refreshV10Insights(){ renderV10Everything(); }
+
+function renderGlobalSearch(){
+    const q=(document.getElementById('v10GlobalSearch').value||'').trim().toLowerCase(), type=document.getElementById('v10SearchType').value;
+    if(!q){document.getElementById('v10GlobalResults').innerHTML='<div class="v10-muted">Type something to search.</div>';return;}
+    const rows=[];
+    const add=(kind,label,meta,amount)=>{if(type==='all'||type===kind)rows.push({kind,label,meta,amount});};
+    expenses.forEach(x=>{if((x.name+' '+x.category).toLowerCase().includes(q))add('expense',x.name,`${x.category} · ${x.frequency}`,x.amount);});
+    income.forEach(x=>{if((x.name).toLowerCase().includes(q))add('income',x.name,`Income · ${x.income_date}`,x.amount);});
+    loans.forEach(x=>{if((x.name+' '+(x.lender||'')).toLowerCase().includes(q))add('loan',x.name,`${x.lender||''} · outstanding`,x.outstanding_amount);});
+    savingsGoals.forEach(x=>{if(x.name.toLowerCase().includes(q))add('goal',x.name,'Savings goal',x.current_amount);});
+    creditCards.forEach(x=>{if((x.name+' '+(x.bank||'')).toLowerCase().includes(q))add('card',x.name,`${x.bank||''} · card`,x.used_amount);});
+    assets.forEach(x=>{if((x.name+' '+(x.category||'')).toLowerCase().includes(q))add('asset',x.name,x.category||'Asset',x.current_value);});
+    investments.forEach(x=>{if((x.name+' '+(x.type||'')).toLowerCase().includes(q))add('investment',x.name,x.type||'Investment',x.current_value);});
+    renewals.forEach(x=>{if((x.name+' '+(x.type||'')).toLowerCase().includes(q))add('renewal',x.name,`${x.type||'Renewal'} · ${x.due_date||''}`,x.amount);});
+    vehicles.forEach(x=>{if((x.name+' '+(x.type||'')).toLowerCase().includes(q))add('vehicle',x.name,x.type||'Vehicle',x.current_value);});
+    householdBills.forEach(x=>{if((x.name+' '+(x.category||'')).toLowerCase().includes(q))add('bill',x.name,`${x.category||''} · ${x.frequency||''}`,x.amount);});
+    lifeEvents.forEach(x=>{if(x.name.toLowerCase().includes(q))add('life',x.name,`${x.priority||''} · ${x.target_date||''}`,x.target_amount);});
+    document.getElementById('v10GlobalResults').innerHTML=rows.length?`<div class="v10-list">${rows.slice(0,80).map(r=>`<div class="v10-item"><div class="v10-item-head"><div><div class="v10-item-title">${escapeHtml(r.label)}</div><div class="v10-muted">${escapeHtml(r.meta)} · ${escapeHtml(r.kind)}</div></div><b>${r.amount!==undefined&&r.amount!==null&&r.amount!==''?money(r.amount):''}</b></div></div>`).join('')}</div>`:'<div class="v10-muted">No matches.</div>';
+}
+
+function openDetectedRecurring(name,amount){
+    openExpenseModal();
+    document.getElementById('expenseName').value=name;
+    document.getElementById('expenseAmount').value=Math.round(amount*100)/100;
+    document.getElementById('expenseFrequency').value='Monthly';
+    document.getElementById('expenseDueDay').value=new Date().getDate();
+    document.getElementById('expenseStartMonth').value=monthKey(new Date());
+    const s=suggestCategoryV10(name);document.getElementById('expenseCategory').value=s||'Other';
+}
+
+function renderRecurringDetection(){
+    const map={};
+    oneTimeExpenses.forEach(x=>{const k=(x.name||'').trim().toLowerCase(); if(!k)return;(map[k]??=[]).push(x);});
+    income.forEach(x=>{const k='income:'+String(x.name||'').trim().toLowerCase();(map[k]??=[]).push(x);});
+    const hits=[];
+    Object.entries(map).forEach(([k,list])=>{
+        if(list.length<3)return;
+        const am=list.map(x=>numV10(x.amount)); const avg=am.reduce((a,b)=>a+b,0)/am.length; const spread=Math.max(...am)-Math.min(...am); const dates=list.map(x=>dateV10(x.expense_date||x.income_date)).sort((a,b)=>a-b); let monthlyish=false;
+        if(dates.length>=3){const gaps=[];for(let i=1;i<dates.length;i++)gaps.push(monthDifference(dates[i-1],dates[i]));monthlyish=gaps.filter(g=>g>=1&&g<=2).length>=2;}
+        if(monthlyish && (spread<=Math.max(100,avg*.15))) hits.push({name:k.replace(/^income:/,''),count:list.length,avg});
+    });
+    document.getElementById('v10RecurringDetect').innerHTML=hits.length?hits.map(h=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(h.name)}</b><div class="v10-muted">Seen ${h.count} times · average ${money(h.avg)}</div></div>${statusPillV10('Likely recurring','info')}</div><div class="v10-actions"><button class="btn" onclick="openDetectedRecurring('${escapeJs(h.name)}',${h.avg})">Create recurring expense</button></div></div>`).join(''):'<div class="v10-muted">No strong repeating pattern found yet. Add a few quick transactions first.</div>';
+}
+
+function ruleTriggeredV10(r){
+    const d=currentDate;
+    if(r.rule_type==='category_threshold') return getMonthExpenses(d).filter(x=>x.expense.category===r.category).reduce((s,x)=>s+numV10(x.expense.amount),0) + oneTimeExpensesForMonthV10(d).filter(x=>x.category===r.category).reduce((s,x)=>s+numV10(x.amount),0) > numV10(r.threshold);
+    if(r.rule_type==='monthly_threshold') return monthlyOutflowV10(d)>numV10(r.threshold);
+    if(r.rule_type==='forecast_deficit') return getForecastMonthData(new Date(d.getFullYear(),d.getMonth()+1,1)).surplus<0;
+    if(r.rule_type==='goal_behind') return savingsGoals.some(g=>{if(!g.target_date)return false;const m=Math.max(1,monthDifference(new Date(),dateV10(g.target_date)));const need=Math.max(0,numV10(g.target_amount)-numV10(g.current_amount))/m;return need>numV10(r.threshold);});
+    if(r.rule_type==='renewal_due') return renewalsUpcomingV10().some(x=>daysUntilV10(dateV10(x.due_date))<=numV10(r.threshold));
+    return false;
+}
+function renderRules(){
+    const box=document.getElementById('v10Rules');box.innerHTML=financeRules.length?financeRules.map(r=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.label||r.rule_type)}</b><div class="v10-muted">${escapeHtml(r.rule_type)} · ${r.threshold||0}</div></div>${statusPillV10(ruleTriggeredV10(r)?'TRIGGERED':'OK',ruleTriggeredV10(r)?'warn':'good')}</div><div class="v10-actions"><button class="btn-danger" onclick="deleteRule('${r.id}')">Delete</button></div></div>`).join(''):'<div class="v10-muted">No smart rules yet.</div>';
+}
+function openRuleModal(id=null){document.getElementById('ruleModal').style.display='flex';document.getElementById('ruleId').value=id||'';if(id){const r=financeRules.find(x=>x.id===id);document.getElementById('ruleModalTitle').textContent='Edit Smart Rule';document.getElementById('ruleType').value=r.rule_type;document.getElementById('ruleCategory').value=r.category||'Food';document.getElementById('ruleThreshold').value=r.threshold||0;document.getElementById('ruleLabel').value=r.label||'';}else{document.getElementById('ruleModalTitle').textContent='Add Smart Rule';document.getElementById('ruleType').value='category_threshold';document.getElementById('ruleCategory').value='Food';document.getElementById('ruleThreshold').value=5000;document.getElementById('ruleLabel').value='';}}
+async function saveRule(){const id=document.getElementById('ruleId').value,row={user_id:currentUser.id,rule_type:document.getElementById('ruleType').value,category:document.getElementById('ruleCategory').value,threshold:numV10(document.getElementById('ruleThreshold').value),label:document.getElementById('ruleLabel').value.trim()||'Smart alert'};const q=id?supabaseClient.from('finance_rules').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('finance_rules').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=financeRules.findIndex(x=>x.id===id);if(i>=0)financeRules[i]=data;}else financeRules.push(data);closeV10Modal('ruleModal');saveOfflineSnapshot();renderAll();}
+async function deleteRule(id){if(!confirm('Delete this smart rule?'))return;const{error}=await supabaseClient.from('finance_rules').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);financeRules=financeRules.filter(x=>x.id!==id);renderAll();}
+
+function renderEmergencyAndSinking(){
+    const target=emergencyTargetV10(), saved=savingsGoals.reduce((s,g)=>s+numV10(g.current_amount),0), pct=target?Math.min(100,saved/target*100):100, monthly=target/6;
+    document.getElementById('v10EmergencyDetail').innerHTML=`<div class="v10-kpis"><div class="v10-kpi"><div class="label">Target</div><div class="value">${money(target)}</div></div><div class="v10-kpi"><div class="label">Saved</div><div class="value">${money(saved)}</div></div><div class="v10-kpi"><div class="label">Progress</div><div class="value">${pct.toFixed(0)}%</div></div><div class="v10-kpi"><div class="label">Essential / month</div><div class="value">${money(monthly)}</div></div></div><div class="v5-meter" style="margin-top:10px"><div style="width:${pct}%"></div></div><div class="v10-muted" style="margin-top:6px">6-month target based on essential planned expenses.</div>`;
+    const reserve=sinkingReserveV10();
+    const rows=renewalsUpcomingV10().slice(0,8).map(r=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${escapeHtml(r.type||'Renewal')} · ${r.due_date||''}</div></div><b>${money(r.amount||0)}</b></div></div>`).join('');
+    document.getElementById('v10SinkingDetail').innerHTML=`<div class="v10-kpi"><div class="label">Recommended monthly reserve</div><div class="value">${money(reserve)}</div></div><div class="v10-muted" style="margin:8px 0">Includes non-monthly recurring commitments, renewals and future life-event funding estimates.</div>${rows||'<div class="v10-muted">No non-monthly renewals entered.</div>'}`;
+}
+
+function renderMilestones(){
+    const all=[]; const totalSaved=savingsGoals.reduce((s,g)=>s+numV10(g.current_amount),0); const debt=loans.reduce((s,l)=>s+numV10(l.outstanding_amount),0); const paid=payments.filter(p=>p.paid).length;
+    [10000,50000,100000,500000,1000000].forEach(v=>all.push({ok:totalSaved>=v,text:`Saved ${money(v)} across goals`}));
+    [25,50,75,100].forEach(v=>{const original=loans.reduce((s,l)=>s+numV10(l.original_amount),0),done=original?Math.max(0,1-debt/original)*100:0;all.push({ok:done>=v,text:`Reduced debt by ${v}%`});});
+    if(paid>=10)all.push({ok:true,text:`Recorded ${paid} paid payments`});
+    const deficit=getForecastMonthData(new Date(currentDate.getFullYear(),currentDate.getMonth()+1,1)).surplus<0; all.push({ok:!deficit,text:'Next month forecast is not in deficit'});
+    document.getElementById('v10Milestones').innerHTML=all.map(m=>`<div class="v10-item"><div class="v10-item-head"><span>${m.ok?'🏆':'🔒'} ${escapeHtml(m.text)}</span>${statusPillV10(m.ok?'Achieved':'In progress',m.ok?'good':'info')}</div></div>`).join('');
+}
+function renderMonthlyReview(){
+    const d=currentDate, incomeTotal=monthlyIncomeV10(d), outflow=monthlyOutflowV10(d), surplus=incomeTotal-outflow, prev=new Date(d.getFullYear(),d.getMonth()-1,1), prevOut=monthlyOutflowV10(prev), delta=prevOut?((outflow-prevOut)/prevOut*100):0;
+    const cats={};getMonthExpenses(d).forEach(x=>cats[x.expense.category]=(cats[x.expense.category]||0)+numV10(x.expense.amount));oneTimeExpensesForMonthV10(d).forEach(x=>cats[x.category]=(cats[x.category]||0)+numV10(x.amount)); const top=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('v10MonthlyReview').innerHTML=`<div class="v10-mini-grid"><div class="v10-kpi"><div class="label">Income</div><div class="value">${money(incomeTotal)}</div></div><div class="v10-kpi"><div class="label">Outflow</div><div class="value">${money(outflow)}</div></div><div class="v10-kpi"><div class="label">Surplus</div><div class="value ${surplus>=0?'v10-good':'v10-bad'}">${money(surplus)}</div></div></div><div class="v10-item" style="margin-top:8px"><b>${escapeHtml(monthName(d))}</b><div class="v10-muted">Spending ${delta>=0? 'up':'down'} ${Math.abs(delta).toFixed(1)}% vs previous month. Largest category: ${top?escapeHtml(top[0])+' ('+money(top[1])+')':'No spending yet'}.</div></div>`;
+}
+function renderReminderPlan(){
+    const items=getUpcoming(5), renew=renewalsUpcomingV10().slice(0,5), html=[];
+    items.forEach(x=>{const days=daysUntilV10(x.date);const lead=days<=1?1:days<=7?3:7;html.push(`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.expense.name)}</b><div class="v10-muted">Due ${x.date.toLocaleDateString('en-IN')}</div></div>${statusPillV10(`Recommend ${lead} day notice`,days<=1?'bad':days<=3?'warn':'info')}</div></div>`);});
+    renew.forEach(r=>{const days=daysUntilV10(dateV10(r.due_date));html.push(`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${r.due_date}</div></div>${statusPillV10(`${r.reminder_days||14} day notice`,days<=3?'warn':'info')}</div></div>`);});
+    document.getElementById('v10ReminderPlan').innerHTML=html.join('')||'<div class="v10-muted">No upcoming reminder items.</div>';
+}
+function renderGoalPriority(){
+    const list=savingsGoals.slice().filter(g=>numV10(g.target_amount)>numV10(g.current_amount)).map(g=>{const rem=numV10(g.target_amount)-numV10(g.current_amount),m=g.target_date?Math.max(1,monthDifference(new Date(),dateV10(g.target_date))):24,req=rem/m;const days=g.target_date?daysUntilV10(dateV10(g.target_date)):99999;return {g,rem,req,days};}).sort((a,b)=>a.days-b.days||b.req-a.req);
+    document.getElementById('v10GoalPriority').innerHTML=list.length?list.slice(0,8).map((x,i)=>`<div class="v10-item"><div class="v10-item-head"><div><b>${i+1}. ${escapeHtml(x.g.name)}</b><div class="v10-muted">Remaining ${money(x.rem)} · target ${x.g.target_date||'not set'}</div></div><b>${money(x.req)}/mo</b></div></div>`).join(''):'<div class="v10-muted">No unfinished goals.</div>';
+}
+function renderDebtSimulator(){
+    const extra=numV10(document.getElementById('v10ExtraEmi')?.value); const box=document.getElementById('v10DebtSimulator');
+    if(!loans.length){box.innerHTML='<div class="v10-muted">Add a loan to use the simulator.</div>';return;}
+    box.innerHTML=`<div class="v10-table-wrap"><table class="v10-table"><thead><tr><th>Loan</th><th>Outstanding</th><th>Current EMI</th><th>Est. months</th><th>With +${money(extra)}</th><th>Months saved</th></tr></thead><tbody>${loans.map(l=>{const bal=numV10(l.outstanding_amount),emi=Math.max(numV10(l.emi_amount),0),rate=Math.max(0,numV10(l.interest_rate))/100/12;const months=rate>0? (emi>bal*rate?Math.ceil(-Math.log(1-bal*rate/emi)/Math.log(1+rate)):999):(emi>0?Math.ceil(bal/emi):999);const emi2=emi+extra;const months2=rate>0?(emi2>bal*rate?Math.ceil(-Math.log(1-bal*rate/emi2)/Math.log(1+rate)):999):(emi2>0?Math.ceil(bal/emi2):999);return `<tr><td>${escapeHtml(l.name)}</td><td>${money(bal)}</td><td>${money(emi)}</td><td>${months===999?'—':months}</td><td>${months2===999?'—':months2}</td><td class="${months2<months?'v10-good':''}">${months===999||months2===999?'—':Math.max(0,months-months2)}</td></tr>`;}).join('')}</tbody></table></div>`;
+}
+
+function openRenewalModal(id=null){document.getElementById('renewalModal').style.display='flex';document.getElementById('renewalId').value=id||'';if(id){const r=renewals.find(x=>x.id===id);document.getElementById('renewalModalTitle').textContent='Edit Renewal / Warranty';document.getElementById('renewalName').value=r.name||'';document.getElementById('renewalType').value=r.type||'Other';document.getElementById('renewalDate').value=r.due_date||'';document.getElementById('renewalAmount').value=r.amount||'';document.getElementById('renewalReminder').value=r.reminder_days??14;document.getElementById('renewalNotes').value=r.notes||'';}else{document.getElementById('renewalModalTitle').textContent='Add Renewal / Warranty';document.getElementById('renewalName').value='';document.getElementById('renewalType').value='Insurance';document.getElementById('renewalDate').value=dateKey(new Date());document.getElementById('renewalAmount').value='';document.getElementById('renewalReminder').value=14;document.getElementById('renewalNotes').value='';}}
+async function saveRenewal(){const id=document.getElementById('renewalId').value,row={user_id:currentUser.id,name:document.getElementById('renewalName').value.trim(),type:document.getElementById('renewalType').value,due_date:document.getElementById('renewalDate').value,amount:numV10(document.getElementById('renewalAmount').value),reminder_days:numV10(document.getElementById('renewalReminder').value),notes:document.getElementById('renewalNotes').value.trim()};if(!row.name||!row.due_date)return alert('Enter name and date.');const q=id?supabaseClient.from('renewals').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('renewals').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=renewals.findIndex(x=>x.id===id);if(i>=0)renewals[i]=data;}else renewals.push(data);closeV10Modal('renewalModal');saveOfflineSnapshot();renderAll();}
+async function deleteRenewal(id){if(!confirm('Delete this renewal?'))return;const{error}=await supabaseClient.from('renewals').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);renewals=renewals.filter(x=>x.id!==id);renderAll();}
+function renderRenewals(){document.getElementById('v10Renewals').innerHTML=renewals.length?renewals.slice().sort((a,b)=>dateV10(a.due_date)-dateV10(b.due_date)).map(r=>{const days=daysUntilV10(dateV10(r.due_date));return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${escapeHtml(r.type||'Renewal')} · ${r.due_date}</div></div><div>${statusPillV10(days<0?'Overdue':days===0?'Today':days+' days',days<=0?'bad':days<=numV10(r.reminder_days||14)?'warn':'info')}</div></div>${numV10(r.amount)?'<div style="margin-top:5px">Amount: <b>'+money(r.amount)+'</b></div>':''}<div class="v10-actions"><button class="btn" onclick="openRenewalModal('${r.id}')">Edit</button><button class="btn-danger" onclick="deleteRenewal('${r.id}')">Delete</button></div></div>`}).join(''):'<div class="v10-muted">No renewals/warranties added.</div>';}
+
+function openVehicleModal(id=null){document.getElementById('vehicleModal').style.display='flex';document.getElementById('vehicleId').value=id||'';if(id){const v=vehicles.find(x=>x.id===id);document.getElementById('vehicleModalTitle').textContent='Edit Vehicle';document.getElementById('vehicleName').value=v.name||'';document.getElementById('vehicleType').value=v.type||'Other';document.getElementById('vehiclePurchaseDate').value=v.purchase_date||'';document.getElementById('vehicleValue').value=v.current_value||'';document.getElementById('vehicleInsuranceDate').value=v.insurance_date||'';document.getElementById('vehicleNotes').value=v.notes||'';}else{document.getElementById('vehicleModalTitle').textContent='Add Vehicle';document.getElementById('vehicleName').value='';document.getElementById('vehicleType').value='EV Scooter';document.getElementById('vehiclePurchaseDate').value=dateKey(new Date());document.getElementById('vehicleValue').value='';document.getElementById('vehicleInsuranceDate').value='';document.getElementById('vehicleNotes').value='';}}
+async function saveVehicle(){const id=document.getElementById('vehicleId').value,row={user_id:currentUser.id,name:document.getElementById('vehicleName').value.trim(),type:document.getElementById('vehicleType').value,purchase_date:document.getElementById('vehiclePurchaseDate').value||null,current_value:numV10(document.getElementById('vehicleValue').value),insurance_date:document.getElementById('vehicleInsuranceDate').value||null,notes:document.getElementById('vehicleNotes').value.trim()};if(!row.name)return alert('Enter vehicle name.');const q=id?supabaseClient.from('vehicles').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('vehicles').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=vehicles.findIndex(x=>x.id===id);if(i>=0)vehicles[i]=data;}else vehicles.push(data);closeV10Modal('vehicleModal');saveOfflineSnapshot();renderAll();}
+async function deleteVehicle(id){if(!confirm('Delete this vehicle and its logs?'))return;const{error}=await supabaseClient.from('vehicles').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);vehicles=vehicles.filter(x=>x.id!==id);vehicleLogs=vehicleLogs.filter(x=>x.vehicle_id!==id);renderAll();}
+function openVehicleLogModal(id){document.getElementById('vehicleLogModal').style.display='flex';document.getElementById('vehicleLogVehicleId').value=id;document.getElementById('vehicleLogAmount').value='';document.getElementById('vehicleLogDate').value=dateKey(new Date());document.getElementById('vehicleLogOdometer').value='';document.getElementById('vehicleLogNotes').value='';}
+async function saveVehicleLog(){const vehicle_id=document.getElementById('vehicleLogVehicleId').value,row={user_id:currentUser.id,vehicle_id,log_type:document.getElementById('vehicleLogType').value,amount:numV10(document.getElementById('vehicleLogAmount').value),log_date:document.getElementById('vehicleLogDate').value,odometer:numV10(document.getElementById('vehicleLogOdometer').value)||null,notes:document.getElementById('vehicleLogNotes').value.trim()};if(!vehicle_id||row.amount<=0||!row.log_date)return alert('Enter amount and date.');const{data,error}=await supabaseClient.from('vehicle_logs').insert(row).select().single();if(error)return alert(error.message);vehicleLogs.unshift(data);closeV10Modal('vehicleLogModal');saveOfflineSnapshot();renderAll();}
+async function deleteVehicleLog(id){if(!confirm('Delete this vehicle expense?'))return;const{error}=await supabaseClient.from('vehicle_logs').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);vehicleLogs=vehicleLogs.filter(x=>x.id!==id);renderAll();}
+function renderVehicles(){document.getElementById('v10Vehicles').innerHTML=vehicles.length?vehicles.map(v=>{const logs=vehicleLogs.filter(x=>x.vehicle_id===v.id),spent=logs.reduce((s,x)=>s+numV10(x.amount),0);const insurance=v.insurance_date?daysUntilV10(dateV10(v.insurance_date)):null;return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(v.name)}</b><div class="v10-muted">${escapeHtml(v.type||'Vehicle')} · current value ${money(v.current_value)}</div></div>${insurance!==null?statusPillV10(insurance<0?'Insurance overdue':insurance+'d to renewal',insurance<=30?'warn':'good'):''}</div><div style="margin-top:6px">Total logged cost: <b>${money(spent)}</b></div><div class="v10-actions"><button class="btn" onclick="openVehicleLogModal('${v.id}')">+ Expense</button><button class="btn" onclick="openVehicleModal('${v.id}')">Edit</button><button class="btn-danger" onclick="deleteVehicle('${v.id}')">Delete</button></div>${logs.slice(0,3).map(l=>`<div class="v10-muted" style="margin-top:4px">${l.log_date} · ${escapeHtml(l.log_type)} · ${money(l.amount)} <button style="padding:2px 5px;font-size:10px" class="btn-danger" onclick="deleteVehicleLog('${l.id}')">x</button></div>`).join('')}</div>`}).join(''):'<div class="v10-muted">No vehicles added.</div>';}
+
+async function loadDocumentsV10(){
+    const q=await supabaseClient.from('finance_documents').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}); if(q.error)throw q.error;documents=q.data||[];
+}
+function openDocumentModal(){document.getElementById('documentModal').style.display='flex';document.getElementById('documentTitle').value='';document.getElementById('documentType').value='Receipt';document.getElementById('documentFile').value='';}
+async function saveDocument(){const title=document.getElementById('documentTitle').value.trim(),type=document.getElementById('documentType').value,file=document.getElementById('documentFile').files[0];if(!title||!file)return alert('Choose a title and file.');if(file.size>10*1024*1024)return alert('Maximum file size is 10 MB.');const ext=(file.name.split('.').pop()||'bin').toLowerCase();const path=currentUser.id+'/'+crypto.randomUUID()+'.'+ext;const up=await supabaseClient.storage.from('finance-documents').upload(path,file,{upsert:false});if(up.error)return alert(up.error.message);const{data,error}=await supabaseClient.from('finance_documents').insert({user_id:currentUser.id,title,type,file_name:file.name,storage_path:path,mime_type:file.type||null,size_bytes:file.size}).select().single();if(error){await supabaseClient.storage.from('finance-documents').remove([path]);return alert(error.message);}documents.unshift(data);closeV10Modal('documentModal');saveOfflineSnapshot();renderAll();}
+async function openDocument(id){const d=documents.find(x=>x.id===id);if(!d)return;const {data,error}=await supabaseClient.storage.from('finance-documents').createSignedUrl(d.storage_path,120);if(error)return alert(error.message);window.open(data.signedUrl,'_blank','noopener');}
+async function deleteDocument(id){if(!confirm('Delete this document?'))return;const d=documents.find(x=>x.id===id);if(!d)return;await supabaseClient.storage.from('finance-documents').remove([d.storage_path]);const{error}=await supabaseClient.from('finance_documents').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);documents=documents.filter(x=>x.id!==id);renderAll();}
+function renderDocuments(){document.getElementById('v10Documents').innerHTML=documents.length?documents.map(d=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(d.title)}</b><div class="v10-muted">${escapeHtml(d.type||'Document')} · ${escapeHtml(d.file_name||'')}</div></div>${d.size_bytes?'<span class="v10-muted">'+(d.size_bytes/1024/1024).toFixed(2)+' MB</span>':''}</div><div class="v10-actions"><button class="btn" onclick="openDocument('${d.id}')">Open</button><button class="btn-danger" onclick="deleteDocument('${d.id}')">Delete</button></div></div>`).join(''):'<div class="v10-muted">No documents yet.</div>';}
+
+function openHouseholdBillModal(id=null){document.getElementById('householdBillModal').style.display='flex';document.getElementById('householdBillId').value=id||'';if(id){const b=householdBills.find(x=>x.id===id);document.getElementById('householdBillModalTitle').textContent='Edit Household Bill';document.getElementById('householdBillName').value=b.name||'';document.getElementById('householdBillCategory').value=b.category||'Other';document.getElementById('householdBillAmount').value=b.amount||'';document.getElementById('householdBillDay').value=b.due_day||1;document.getElementById('householdBillFrequency').value=b.frequency||'Monthly';document.getElementById('householdBillNotes').value=b.notes||'';}else{document.getElementById('householdBillModalTitle').textContent='Add Household Bill';document.getElementById('householdBillName').value='';document.getElementById('householdBillCategory').value='Electricity';document.getElementById('householdBillAmount').value='';document.getElementById('householdBillDay').value=1;document.getElementById('householdBillFrequency').value='Monthly';document.getElementById('householdBillNotes').value='';}}
+async function saveHouseholdBill(){const id=document.getElementById('householdBillId').value,row={user_id:currentUser.id,name:document.getElementById('householdBillName').value.trim(),category:document.getElementById('householdBillCategory').value,amount:numV10(document.getElementById('householdBillAmount').value),due_day:numV10(document.getElementById('householdBillDay').value),frequency:document.getElementById('householdBillFrequency').value,notes:document.getElementById('householdBillNotes').value.trim(),start_month:monthKey(new Date())};if(!row.name||row.amount<=0||row.due_day<1||row.due_day>31)return alert('Enter valid bill details.');const q=id?supabaseClient.from('household_bills').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('household_bills').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=householdBills.findIndex(x=>x.id===id);if(i>=0)householdBills[i]=data;}else householdBills.push(data);closeV10Modal('householdBillModal');saveOfflineSnapshot();renderAll();}
+async function deleteHouseholdBill(id){if(!confirm('Delete this household bill?'))return;const{error}=await supabaseClient.from('household_bills').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);householdBills=householdBills.filter(x=>x.id!==id);renderAll();}
+function renderHouseholdBills(){document.getElementById('v10HouseholdBills').innerHTML=householdBills.length?householdBills.map(b=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(b.name)}</b><div class="v10-muted">${escapeHtml(b.category||'Bill')} · ${escapeHtml(b.frequency||'Monthly')} · day ${b.due_day}</div></div><b>${money(b.amount)}</b></div><div class="v10-actions"><button class="btn" onclick="openHouseholdBillModal('${b.id}')">Edit</button><button class="btn-danger" onclick="deleteHouseholdBill('${b.id}')">Delete</button></div></div>`).join(''):'<div class="v10-muted">No household bills added.</div>';}
+
+function openLifeEventModal(id=null){document.getElementById('lifeEventModal').style.display='flex';document.getElementById('lifeEventId').value=id||'';if(id){const e=lifeEvents.find(x=>x.id===id);document.getElementById('lifeEventModalTitle').textContent='Edit Life Event';document.getElementById('lifeEventName').value=e.name||'';document.getElementById('lifeEventAmount').value=e.target_amount||'';document.getElementById('lifeEventDate').value=e.target_date||'';document.getElementById('lifeEventSaved').value=e.current_saved||0;document.getElementById('lifeEventPriority').value=e.priority||'Medium';document.getElementById('lifeEventNotes').value=e.notes||'';}else{document.getElementById('lifeEventModalTitle').textContent='Add Life Event';document.getElementById('lifeEventName').value='';document.getElementById('lifeEventAmount').value='';document.getElementById('lifeEventDate').value='';document.getElementById('lifeEventSaved').value=0;document.getElementById('lifeEventPriority').value='Medium';document.getElementById('lifeEventNotes').value='';}}
+async function saveLifeEvent(){const id=document.getElementById('lifeEventId').value,row={user_id:currentUser.id,name:document.getElementById('lifeEventName').value.trim(),target_amount:numV10(document.getElementById('lifeEventAmount').value),target_date:document.getElementById('lifeEventDate').value||null,current_saved:numV10(document.getElementById('lifeEventSaved').value),priority:document.getElementById('lifeEventPriority').value,notes:document.getElementById('lifeEventNotes').value.trim()};if(!row.name||row.target_amount<=0)return alert('Enter event and target amount.');const q=id?supabaseClient.from('life_events').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('life_events').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=lifeEvents.findIndex(x=>x.id===id);if(i>=0)lifeEvents[i]=data;}else lifeEvents.push(data);closeV10Modal('lifeEventModal');saveOfflineSnapshot();renderAll();}
+async function deleteLifeEvent(id){if(!confirm('Delete this life event?'))return;const{error}=await supabaseClient.from('life_events').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);lifeEvents=lifeEvents.filter(x=>x.id!==id);renderAll();}
+function renderLifeEvents(){document.getElementById('v10LifeEvents').innerHTML=lifeEvents.length?lifeEvents.slice().sort((a,b)=>dateV10(a.target_date)-dateV10(b.target_date)).map(e=>{const rem=Math.max(0,numV10(e.target_amount)-numV10(e.current_saved)),m=e.target_date?Math.max(1,monthDifference(new Date(),dateV10(e.target_date))):24,req=rem/m;return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(e.name)}</b><div class="v10-muted">${escapeHtml(e.priority||'Medium')} · ${e.target_date||'No date'}</div></div><b>${money(req)}/mo</b></div><div class="v5-meter" style="margin-top:8px"><div style="width:${Math.min(100,numV10(e.target_amount)?numV10(e.current_saved)/numV10(e.target_amount)*100:0)}%"></div></div><div class="v10-muted" style="margin-top:5px">Saved ${money(e.current_saved)} of ${money(e.target_amount)} · remaining ${money(rem)}</div><div class="v10-actions"><button class="btn" onclick="openLifeEventModal('${e.id}')">Edit</button><button class="btn-danger" onclick="deleteLifeEvent('${e.id}')">Delete</button></div></div>`}).join(''):'<div class="v10-muted">No life events planned.</div>';}
+
+function sharedOwnerHousehold(){ return sharedHouseholds.find(h=>h.owner_id===currentUser.id) || sharedHouseholds[0] || null; }
+async function createSharedHousehold(){const name=prompt('Household name:','Family');if(!name)return;const{data,error}=await supabaseClient.rpc('create_shared_household',{p_name:name});if(error)return alert(error.message);await loadSharedDataV10();renderAll();}
+function openSharedInviteModal(){if(!sharedHouseholds.length)return alert('Create or access a shared household first.');document.getElementById('sharedInviteModal').style.display='flex';document.getElementById('sharedMemberEmail').value='';}
+async function inviteSharedMember(){const h=sharedOwnerHousehold(),email=document.getElementById('sharedMemberEmail').value.trim();if(!h||!email)return alert('Select a household and enter email.');const{error}=await supabaseClient.rpc('add_shared_member',{p_household_id:h.id,p_email:email});if(error)return alert(error.message);closeV10Modal('sharedInviteModal');await loadSharedDataV10();renderAll();alert('Member added.');}
+function openSharedExpenseModal(){if(!sharedHouseholds.length)return alert('Create or join a shared household first.');document.getElementById('sharedExpenseModal').style.display='flex';document.getElementById('sharedExpenseHousehold').innerHTML=sharedHouseholds.map(h=>`<option value="${h.id}">${escapeHtml(h.name)}</option>`).join('');document.getElementById('sharedExpenseName').value='';document.getElementById('sharedExpenseAmount').value='';document.getElementById('sharedExpenseDate').value=dateKey(new Date());}
+async function saveSharedExpense(){const household_id=document.getElementById('sharedExpenseHousehold').value,name=document.getElementById('sharedExpenseName').value.trim(),amount=numV10(document.getElementById('sharedExpenseAmount').value),expense_date=document.getElementById('sharedExpenseDate').value;if(!household_id||!name||amount<=0)return alert('Enter valid shared expense.');const{data,error}=await supabaseClient.from('shared_expenses').insert({household_id,user_id:currentUser.id,name,amount,expense_date}).select().single();if(error)return alert(error.message);sharedExpenses.unshift(data);closeV10Modal('sharedExpenseModal');saveOfflineSnapshot();renderAll();}
+async function loadSharedDataV10(){const h=await supabaseClient.from('shared_households').select('*');if(h.error)throw h.error;sharedHouseholds=h.data||[];if(sharedHouseholds.length){const ids=sharedHouseholds.map(x=>x.id);const m=await supabaseClient.from('shared_household_members').select('*').in('household_id',ids);if(m.error)throw m.error;sharedMembers=m.data||[];const e=await supabaseClient.from('shared_expenses').select('*').in('household_id',ids).order('expense_date',{ascending:false});if(e.error)throw e.error;sharedExpenses=e.data||[];}else{sharedMembers=[];sharedExpenses=[];}}
+async function deleteSharedExpense(id){if(!confirm('Delete this shared expense?'))return;const{error}=await supabaseClient.from('shared_expenses').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);sharedExpenses=sharedExpenses.filter(x=>x.id!==id);renderAll();}
+function renderShared(){document.getElementById('v10SharedHouseholds').innerHTML=sharedHouseholds.length?sharedHouseholds.map(h=>{const members=sharedMembers.filter(m=>m.household_id===h.id).length;return `<div class="v10-item"><b>${escapeHtml(h.name)}</b><div class="v10-muted">${members} member(s) · ${h.owner_id===currentUser.id?'Owner':'Member'}</div></div>`}).join(''):'<div class="v10-muted">No shared household yet.</div>';document.getElementById('v10SharedExpenses').innerHTML=sharedExpenses.length?'<div class="v10-list">'+sharedExpenses.slice(0,10).map(x=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.name)}</b><div class="v10-muted">${x.expense_date}</div></div><b>${money(x.amount)}</b></div>${x.user_id===currentUser.id?'<div class="v10-actions"><button class="btn-danger" onclick="deleteSharedExpense(\''+x.id+'\')">Delete</button></div>':''}</div>`).join('')+'</div>':'<div class="v10-muted">No shared expenses.</div>';}
+
+async function loadV10Data(){
+    if(!currentUser)return;
+    if(!navigator.onLine){loadV10OfflineSnapshot();return;}
+    try{
+        const queries = await Promise.all([
+            supabaseClient.from('one_time_expenses').select('*').eq('user_id',currentUser.id).order('expense_date',{ascending:false}),
+            supabaseClient.from('finance_rules').select('*').eq('user_id',currentUser.id),
+            supabaseClient.from('renewals').select('*').eq('user_id',currentUser.id).order('due_date',{ascending:true}),
+            supabaseClient.from('vehicles').select('*').eq('user_id',currentUser.id),
+            supabaseClient.from('vehicle_logs').select('*').eq('user_id',currentUser.id).order('log_date',{ascending:false}),
+            supabaseClient.from('household_bills').select('*').eq('user_id',currentUser.id),
+            supabaseClient.from('life_events').select('*').eq('user_id',currentUser.id).order('target_date',{ascending:true}),
+            supabaseClient.from('finance_documents').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false})
+        ]);
+        queries.forEach((q,i)=>{
+            if(q.error)throw q.error;
+            const value=q.data||[];
+            if(i===0) oneTimeExpenses=value;
+            else if(i===1) financeRules=value;
+            else if(i===2) renewals=value;
+            else if(i===3) vehicles=value;
+            else if(i===4) vehicleLogs=value;
+            else if(i===5) householdBills=value;
+            else if(i===6) lifeEvents=value;
+            else if(i===7) documents=value;
+        });
+        try{await loadSharedDataV10();}catch(e){console.warn('Shared data unavailable',e);sharedHouseholds=[];sharedMembers=[];sharedExpenses=[];}
+        saveOfflineSnapshot();
+    }catch(error){console.warn('V10 load failed',error);if(!loadV10OfflineSnapshot())console.warn(error.message);}
+}
+
+function saveOfflineSnapshotV10(){if(!currentUser)return;try{localStorage.setItem('expense-calendar-v10-snapshot-'+currentUser.id,JSON.stringify({oneTimeExpenses,financeRules,renewals,vehicles,vehicleLogs,householdBills,lifeEvents,documents,sharedHouseholds,sharedMembers,sharedExpenses,savedAt:new Date().toISOString()}));}catch(e){console.warn(e);}}
+function loadV10OfflineSnapshot(){if(!currentUser)return false;try{const raw=localStorage.getItem('expense-calendar-v10-snapshot-'+currentUser.id);if(!raw)return false;const s=JSON.parse(raw);oneTimeExpenses=s.oneTimeExpenses||[];financeRules=s.financeRules||[];renewals=s.renewals||[];vehicles=s.vehicles||[];vehicleLogs=s.vehicleLogs||[];householdBills=s.householdBills||[];lifeEvents=s.lifeEvents||[];documents=s.documents||[];sharedHouseholds=s.sharedHouseholds||[];sharedMembers=s.sharedMembers||[];sharedExpenses=s.sharedExpenses||[];return true;}catch(e){return false;}}
+
+function renderQuickRecent(){
+    const box=document.getElementById('v10RecentQuick'); const list=oneTimeExpenses.slice(0,5); box.innerHTML=list.length?`<div class="v10-list" style="margin-top:10px">${list.map(x=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.name)}</b><div class="v10-muted">${x.expense_date} · ${escapeHtml(x.category||'Other')}</div></div><b>${money(x.amount)}</b></div></div>`).join('')}</div>`:'<div class="v10-muted" style="margin-top:10px">No quick expenses yet.</div>';
+    document.getElementById('v10CategoryTips').innerHTML=['Electricity / Airtel → Utilities','LIC / insurance → Insurance','Petrol / charging → Transport','Amazon / shopping → Shopping','Food / grocery → Food'].map(x=>`<div class="v10-item">${escapeHtml(x)}</div>`).join('');
+}
+function renderV10Everything(){
+    renderCommandCenterV10();renderEmergencyAndSinking();renderGlobalSearch();renderRecurringDetection();renderRules();renderMilestones();renderMonthlyReview();renderReminderPlan();renderGoalPriority();renderDebtSimulator();renderRenewals();renderHouseholdBills();renderVehicles();renderDocuments();renderShared();renderLifeEvents();renderQuickRecent();
+}
+
+/* Include V10 data in existing loader without disrupting V9. */
+const _v9LoadData = loadData;
+loadData = async function(){ await _v9LoadData(); await loadV10Data(); };
+
+/* Include V10 data in existing offline snapshot. */
+const _v9SaveOfflineSnapshot = saveOfflineSnapshot;
+saveOfflineSnapshot = function(){ _v9SaveOfflineSnapshot(); saveOfflineSnapshotV10(); };
+
+const _v9LoadOfflineSnapshot = loadOfflineSnapshot;
+loadOfflineSnapshot = function(){
+    const ok = _v9LoadOfflineSnapshot();
+    return loadV10OfflineSnapshot() || ok;
+};
+
+/* Add V10 data to backup without touching the existing backup importer logic. */
+const _v9ExportBackup = exportBackup;
+exportBackup = function(){
+    const backup={version:10,exportedAt:new Date().toISOString(),expenses,payments,income,recurringIncome,loans,savingsGoals,savingsTransactions,budgets,creditCards,assets,investments,oneTimeExpenses,financeRules,renewals,vehicles,vehicleLogs,householdBills,lifeEvents,documents};
+    const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='expense-calendar-v10-backup-'+dateKey(new Date())+'.json';a.click();URL.revokeObjectURL(url);
+};
+
+/* Import extension for V10 tables. */
+const _v9ImportBackup = importBackup;
+importBackup = async function(event){
+    const file=event.target.files[0]; if(!file)return;
+    let backup; try{backup=JSON.parse(await file.text());}catch(e){return alert('Invalid backup file.');}
+    await _v9ImportBackup(event);
+    try{
+        const inserts=[
+            ['one_time_expenses',backup.oneTimeExpenses],['finance_rules',backup.financeRules],['renewals',backup.renewals],['vehicles',backup.vehicles],['vehicle_logs',backup.vehicleLogs],['household_bills',backup.householdBills],['life_events',backup.lifeEvents]
+        ];
+        const idMap={};
+        if(Array.isArray(backup.vehicles)){
+            for(const v of backup.vehicles){const old=v.id,{data,error}=await supabaseClient.from('vehicles').insert({...v,id:undefined,user_id:currentUser.id}).select().single();if(error)throw error;idMap[old]=data.id;vehicles.push(data);}
+        }
+        if(Array.isArray(backup.vehicleLogs))for(const x of backup.vehicleLogs){const row={...x,id:undefined,user_id:currentUser.id,vehicle_id:idMap[x.vehicle_id]||x.vehicle_id};delete row.id;const{data,error}=await supabaseClient.from('vehicle_logs').insert(row).select().single();if(error)throw error;vehicleLogs.push(data);}
+        for(const [table,arr] of inserts){if(table==='vehicles'||!Array.isArray(arr))continue;for(const x of arr){const row={...x,id:undefined,user_id:currentUser.id};delete row.id;const{data,error}=await supabaseClient.from(table).insert(row).select().single();if(error)throw error;const prop=table==='one_time_expenses'?'oneTimeExpenses':table==='finance_rules'?'financeRules':table==='renewals'?'renewals':table==='household_bills'?'householdBills':'lifeEvents';window[prop].push(data);}}
+        await loadV10Data();renderAll();alert('V10 backup data restored successfully. Documents and shared memberships are not included in JSON backup.');
+    }catch(e){alert('Backup restore partly failed: '+e.message);}
+};
+
+/* Forecast now includes one-time expenses and household bills. */
+const _v9Forecast = getForecastMonthData;
+getForecastMonthData = function(d){
+    const base=_v9Forecast(d), one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0), bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0); const out=base.outflow+one+bills; return {...base,oneTimeExpenses:one,householdBills:bills,outflow,surplus:base.income-out};
+};
+
+/* Dashboard includes quick one-time expenses and household bills. */
+const _v9RenderDashboard = renderDashboard;
+renderDashboard = function(){
+    _v9RenderDashboard();
+    const one=oneTimeExpensesForMonthV10(currentDate).reduce((s,x)=>s+numV10(x.amount),0), bills=householdBillsForMonthV10(currentDate).reduce((s,x)=>s+numV10(x.bill.amount),0), planned=one+bills, paid=one;
+    const p=document.getElementById('dashPlanned'),pa=document.getElementById('dashPaid'),pe=document.getElementById('dashPending'),bal=document.getElementById('dashBalance'),inc=Number(String(document.getElementById('dashIncome').textContent).replace(/[^0-9.-]/g,''))||0;
+    const oldPlanned=(window.__v10BasePlanned===undefined)?0:window.__v10BasePlanned;
+    // Read base values from current dashboard by parsing displayed currency, then add V10 entries.
+    const parseMoney=s=>Number(String(s||'').replace(/[^0-9.-]/g,''))||0;
+    const baseP=parseMoney(p.textContent),basePaid=parseMoney(pa.textContent);p.textContent=money(baseP+planned);pa.textContent=money(basePaid+paid);pe.textContent=money(Math.max(0,baseP+planned-(basePaid+paid)));bal.textContent=money(inc-(baseP+planned));
+};
+
+/* Calendar additions for one-time expenses, renewals, household bills and life events. */
+const _v9RenderCalendar = renderCalendar;
+renderCalendar = function(){
+    _v9RenderCalendar();
+    const calendar=document.getElementById('calendar'); const cells=[...calendar.querySelectorAll('.day')]; if(!cells.length)return;
+    const first=firstDay(currentDate); const cellMap={}; cells.forEach(cell=>{const n=Number(cell.querySelector('.day-number')?.textContent);if(n)cellMap[n]=cell;});
+    oneTimeExpensesForMonthV10(currentDate).forEach(x=>{const n=dateV10(x.expense_date).getDate(),cell=cellMap[n];if(cell)cell.innerHTML+=`<div class="day-expense v9-event-extra">${escapeHtml(x.name)} - ${money(x.amount)}</div>`;});
+    householdBillsForMonthV10(currentDate).forEach(x=>{const n=x.date.getDate(),cell=cellMap[n];if(cell)cell.innerHTML+=`<div class="day-expense v9-event-loan">${escapeHtml(x.bill.name)} - ${money(x.bill.amount)}</div>`;});
+    renewalsUpcomingV10().forEach(r=>{const d=dateV10(r.due_date);if(d.getFullYear()===currentDate.getFullYear()&&d.getMonth()===currentDate.getMonth()){const cell=cellMap[d.getDate()];if(cell)cell.innerHTML+=`<div class="day-expense v9-event-saving">${escapeHtml(r.name)} 🔔</div>`;}});
+};
+
+const _v9RenderSelectedDay = renderSelectedDay;
+renderSelectedDay = function(){
+    _v9RenderSelectedDay();
+    const box=document.getElementById('selectedDayDetails'),key=dateKey(selectedDate); const extras=[];
+    oneTimeExpenses.filter(x=>String(x.expense_date)===key).forEach(x=>extras.push(`<div class="card" style="margin-top:8px"><b>${escapeHtml(x.name)}</b><div>${money(x.amount)}</div><div class="small">One-time expense · ${escapeHtml(x.category||'Other')}</div></div>`));
+    householdBillsForMonthV10(selectedDate).filter(x=>dateKey(x.date)===key).forEach(x=>extras.push(`<div class="card" style="margin-top:8px"><b>${escapeHtml(x.bill.name)}</b><div>${money(x.bill.amount)}</div><div class="small">Household bill · pending until paid elsewhere</div></div>`));
+    renewals.filter(x=>String(x.due_date)===key).forEach(x=>extras.push(`<div class="card" style="margin-top:8px"><b>${escapeHtml(x.name)}</b><div class="small">${escapeHtml(x.type||'Renewal')} · reminder ${x.reminder_days||14} days before</div></div>`));
+    if(extras.length)box.insertAdjacentHTML('beforeend',extras.join(''));
+};
+
+/* Adaptive notification wrapper. */
+const _v9CheckReminders = checkReminders;
+checkReminders = function(){
+    _v9CheckReminders();
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    const key='expense-v10-reminder-'+dateKey(new Date());if(localStorage.getItem(key))return;
+    const due=getUpcoming(10).filter(x=>daysUntilV10(x.date)<=3); const ren=renewalsUpcomingV10().filter(r=>daysUntilV10(dateV10(r.due_date))<=numV10(r.reminder_days||14));
+    if(due.length||ren.length){new Notification('Expense Calendar',{body:`${due.length} payment(s) due within 3 days and ${ren.length} renewal(s) need attention.`});localStorage.setItem(key,'1');}
+};
+
+/* Privacy mode */
+function applyPrivacyMode(){document.body.classList.toggle('v10-privacy',localStorage.getItem('expense-calendar-privacy')==='1');if(localStorage.getItem('expense-calendar-privacy')==='1'){document.querySelectorAll('.stat-value,.v10-kpi .value,.v10-command-card .big').forEach(el=>el.classList.add('v10-private'));}else{document.querySelectorAll('.v10-private').forEach(el=>el.classList.remove('v10-private'));}}
+function togglePrivacyMode(){const now=localStorage.getItem('expense-calendar-privacy')==='1';localStorage.setItem('expense-calendar-privacy',now?'0':'1');applyPrivacyMode();}
+
+/* Unified V10 renderer on top of the last V9 renderer. */
+const _v9FinalRenderAll = renderAll;
+renderAll = function(){ _v9FinalRenderAll(); renderV10Everything(); applyPrivacyMode(); const lab=document.getElementById('overviewMonthLabel'); if(lab)lab.textContent=monthName(currentDate); };
+
+const _v9ShowV3 = showV3;
+showV3 = function(id,button){ _v9ShowV3(id,button); if(id==='more')renderV10Everything(); };
+
+/* V10 initial render once the DOM exists */
+setTimeout(()=>{try{applyPrivacyMode();}catch(e){}},0);
 
 
 /* ---------------- FILTER ---------------- */
