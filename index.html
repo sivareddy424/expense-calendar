@@ -5226,6 +5226,118 @@ function escapeHtml(value){
 window.addEventListener("online",()=>{ if(currentUser){ loadData().then(()=>renderAll()).catch(()=>{}); } });
 window.addEventListener("offline",()=>{ const pill=document.getElementById("overviewMonthLabel"); if(pill) pill.textContent=monthName(currentDate)+" · Offline snapshot"; });
 
+/* ===================== V10.2 UNIFIED REFRESH ===================== */
+function renderAllV102(){
+    const jobs=[
+        ["Overview",()=>renderV3()],
+        ["Forecast/Budgets",()=>renderV5()],
+        ["Dashboard",()=>renderDashboard()],
+        ["Calendar",()=>renderCalendar()],
+        ["Selected day",()=>renderSelectedDay()],
+        ["Upcoming payments",()=>renderUpcoming()],
+        ["Expenses",()=>renderExpenseList()],
+        ["Income",()=>renderIncome()],
+        ["Reports",()=>renderReports()],
+        ["V10 panels",()=>renderV10Everything()],
+        ["Privacy",()=>applyPrivacyMode()]
+    ];
+    const failures=[];
+    for(const [name,fn] of jobs){
+        try{ fn(); }
+        catch(error){
+            console.error("Expense Calendar refresh error in "+name,error);
+            failures.push(name);
+        }
+    }
+    refreshDerivedTilesV102();
+    return failures;
+}
+
+function refreshDerivedTilesV102(){
+    if(!currentUser) return;
+
+    const d=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
+
+    const recurringInc=recurringIncomeForMonth(d);
+    const oneTimeInc=getMonthIncome(d).reduce((sum,x)=>sum+Number(x.amount||0),0);
+    const totalIncome=recurringInc+oneTimeInc;
+
+    const recurringItems=getMonthExpenses(d);
+    const recurringPlanned=recurringItems.reduce((sum,x)=>sum+Number(x.expense.amount||0),0);
+    const recurringPaid=recurringItems
+        .filter(x=>x.payment && x.payment.paid)
+        .reduce((sum,x)=>sum+Number(x.expense.amount||0),0);
+
+    const oneTimeOut=oneTimeExpensesForMonthV10(d)
+        .reduce((sum,x)=>sum+Number(x.amount||0),0);
+
+    const householdOut=householdBillsForMonthV10(d)
+        .reduce((sum,x)=>sum+Number(x.bill?.amount||0),0);
+
+    /* One-time expenses are already incurred, so count them as paid. */
+    const planned=recurringPlanned+oneTimeOut+householdOut;
+    const paid=recurringPaid+oneTimeOut;
+    const pending=Math.max(0,planned-paid);
+    const balance=totalIncome-planned;
+    const savings=totalIncome-planned;
+
+    const set=(id,value)=>{
+        const el=document.getElementById(id);
+        if(el) el.textContent=money(value);
+    };
+
+    set("dashIncome",totalIncome);
+    set("dashPlanned",planned);
+    set("dashPaid",paid);
+    set("dashPending",pending);
+    set("dashBalance",balance);
+
+    set("v3RecurringIncome",totalIncome);
+    set("v3Savings",savings);
+
+    const label=document.getElementById("overviewMonthLabel");
+    if(label) label.textContent=monthName(d);
+
+    const snapshot=document.getElementById("overviewMonthSnapshot");
+    if(snapshot){
+        const pct=planned>0 ? Math.min(100,paid/planned*100) : 0;
+        snapshot.innerHTML=`
+            <div class="snapshot-grid">
+                <div><span>Income</span><b class="green">${money(totalIncome)}</b></div>
+                <div><span>Planned</span><b>${money(planned)}</b></div>
+                <div><span>Paid</span><b class="green">${money(paid)}</b></div>
+                <div><span>Pending</span><b class="red">${money(pending)}</b></div>
+            </div>
+            <div class="snapshot-progress-head"><span>Payment progress</span><b>${pct.toFixed(0)}%</b></div>
+            <div class="v3-progress snapshot-progress"><div class="v3-bar" style="width:${pct}%"></div></div>
+            <div class="small" style="margin-top:8px">
+                ${monthName(d)} · ${planned ? "Recurring + one-time + household commitments" : "No planned commitments"}
+            </div>
+        `;
+    }
+}
+
+/* Replace the earlier V10.1 renderer with one authoritative refresh function. */
+renderAll = function(){
+    const failures=renderAllV102();
+    if(failures.length){
+        showV101Toast("Some sections could not refresh: "+failures.join(", "),"error");
+    }
+};
+
+window.addEventListener("online",()=>{
+    if(!currentUser) return;
+    loadData()
+        .then(()=>renderAll())
+        .catch(error=>console.warn("Online refresh failed",error));
+});
+
+window.addEventListener("offline",()=>{
+    const pill=document.getElementById("overviewMonthLabel");
+    if(pill) pill.textContent=monthName(currentDate)+" · Offline snapshot";
+});
+
+
 
 
 /* ===================== V10.1 RENDER ERROR BOUNDARY ===================== */
