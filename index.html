@@ -6333,9 +6333,37 @@ body.calendar-mode #specialReport{grid-template-columns:repeat(3,1fr)}
         const md=new Date(currentDate.getFullYear(),currentDate.getMonth(),1),rows=[];
         arr(recurringIncome).forEach(x=>{
             const st=x.start_date?dateV10(x.start_date):null,end=x.end_date?dateV10(x.end_date):null;
-            if(st && md>=new Date(st.getFullYear(),st.getMonth(),1) && (!end || md<=new Date(end.getFullYear(),end.getMonth(),1))) rows.push(`<div class="card" style="margin-bottom:8px"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">Recurring income · starts ${escapeHtml(x.start_date)}</div></div>`);
+            if(st && md>=new Date(st.getFullYear(),st.getMonth(),1) && (!end || md<=new Date(end.getFullYear(),end.getMonth(),1))) {
+                rows.push(`<div class="card" style="margin-bottom:8px">
+                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+                        <div style="flex:1">
+                            <b>${escapeHtml(x.name)}</b>
+                            <div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div>
+                            <div class="small">Recurring income · starts ${escapeHtml(x.start_date)}${x.end_date ? ' · ends '+escapeHtml(x.end_date) : ''}</div>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                            <button class="btn-light" onclick="openRecurringIncomeModal('${x.id}')">Edit</button>
+                            <button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button>
+                        </div>
+                    </div>
+                </div>`);
+            }
         });
-        arr(income).filter(x=>String(x.income_date||'').slice(0,7)===monthKey(currentDate)).forEach(x=>rows.push(`<div class="card" style="margin-bottom:8px"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)}</div><div class="small">${escapeHtml(x.income_date)} · One-time income</div></div>`));
+        arr(income).filter(x=>String(x.income_date||'').slice(0,7)===monthKey(currentDate)).forEach(x=>{
+            rows.push(`<div class="card" style="margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+                    <div style="flex:1">
+                        <b>${escapeHtml(x.name)}</b>
+                        <div class="green">${money(x.amount)}</div>
+                        <div class="small">${escapeHtml(x.income_date)} · One-time income</div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                        <button class="btn-light" onclick="openIncomeModal('${x.id}')">Edit</button>
+                        <button class="btn-danger" onclick="deleteIncome('${x.id}')">Delete</button>
+                    </div>
+                </div>
+            </div>`);
+        });
         box.innerHTML=rows.join('')||`<div class="v105-empty">No income entries for ${escapeHtml(monthName(currentDate))}.</div>`;
     }
 
