@@ -454,10 +454,10 @@ th{
     }
 }
 
-/* VERSION 3 */
+/* CORE FINANCE FEATURES */
 .v3-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}.v3-tab{background:#e5e7eb;color:#1f2937}.v3-tab.active{background:#2563eb;color:#fff}.v3-view{display:none}.v3-view.active{display:block}.v3-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.v3-progress{height:9px;background:#e5e7eb;border-radius:10px;overflow:hidden}.v3-bar{height:100%;background:#2563eb}.v3-item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;padding:12px;margin-bottom:8px}.v3-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}@media(max-width:700px){.v3-grid{grid-template-columns:1fr}}.forecast-table{width:100%;border-collapse:collapse}.forecast-table th,.forecast-table td{padding:9px;border-bottom:1px solid #e5e7eb;font-size:13px}.forecast-table th{background:#f8fafc;position:sticky;top:0}.forecast-surplus{font-weight:bold}.forecast-positive{color:#16a34a;font-weight:bold}.forecast-warning{color:#ea580c;font-weight:bold}.forecast-negative{color:#dc2626;font-weight:bold}.forecast-note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:11px;font-size:13px;margin-bottom:12px}.forecast-status{display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:bold}.forecast-status.ok{background:#dcfce7;color:#166534}.forecast-status.warn{background:#ffedd5;color:#9a3412}.forecast-status.bad{background:#fee2e2;color:#991b1b}.forecast-table-wrap{overflow:auto;max-height:560px}.forecast-goal{background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;padding:12px;margin-bottom:8px}
 
-/* VERSION 5 */
+/* BUDGETS & SMART FINANCE */
 .v5-alert{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:11px;margin-bottom:8px}
 .v5-alert.bad{background:#fee2e2;border-color:#fecaca}.v5-alert.warn{background:#ffedd5;border-color:#fed7aa}.v5-alert.good{background:#dcfce7;border-color:#bbf7d0}
 .v5-metric{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:11px;margin-bottom:8px}
@@ -471,7 +471,7 @@ th{
 @media(max-width:700px){.v5-bar-row{grid-template-columns:90px 1fr 78px;font-size:12px}}
 
 
-/* VERSION 6 UI REFRESH */
+/* UI REFRESH */
 :root{--primary:#2563eb;--ink:#0f172a;--muted:#64748b;--surface:#fff;--surface-2:#f8fafc;--line:#e2e8f0;--shadow:0 10px 30px rgba(15,23,42,.08);--shadow-sm:0 4px 14px rgba(15,23,42,.06);--radius:16px}
 html{scroll-behavior:smooth}
 body{background:linear-gradient(180deg,#eef4ff 0,#f8fafc 230px,#f8fafc 100%);color:var(--ink)}
@@ -502,6 +502,43 @@ input,select{border-color:#cbd5e1;border-radius:10px;padding:10px 11px}input:foc
 .modal-box{border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(15,23,42,.18)}.forecast-table-wrap{border:1px solid var(--line);border-radius:12px}.forecast-table th{background:#f8fafc}.v5-alert,.v5-metric,.forecast-goal{border-radius:12px}
 @media(max-width:1000px){#monthlyReport{grid-template-columns:repeat(2,1fr)}#specialReport{grid-template-columns:1fr}}
 @media(max-width:700px){header{padding:9px 12px}.header-inner{align-items:flex-start}header h1{font-size:16px}.header-actions{max-width:68vw}.container{padding:12px 10px 28px}.v3-tabs{top:57px;margin-bottom:12px;padding:6px}.v3-tab{padding:8px 10px;font-size:12px}#v3-overview > .section:first-child h2::after{display:none}.snapshot-grid{grid-template-columns:1fr 1fr}#monthlyReport{grid-template-columns:1fr}.overview-payment{align-items:flex-start}.overview-payment-right{font-size:12px}}
+
+
+/* VERSION 7 - VISUAL POLISH */
+body{background:linear-gradient(180deg,#eef5ff 0,#f7f9fc 260px,#f7f9fc 100%)}
+header{backdrop-filter:saturate(140%);}
+.overview-hero{padding:22px;background:linear-gradient(135deg,#ffffff 0%,#f8fbff 58%,#eef5ff 100%);position:relative;overflow:hidden}
+.overview-hero::before{content:"";position:absolute;width:230px;height:230px;right:-80px;top:-95px;border-radius:50%;background:rgba(59,130,246,.08);pointer-events:none}
+.overview-hero h2{position:relative;font-size:21px;margin:0 0 3px;letter-spacing:-.4px}
+.overview-subtitle{position:relative;color:var(--muted);font-size:13px;margin-bottom:17px}
+.overview-kpis{grid-template-columns:repeat(6,minmax(0,1fr));margin-bottom:0}
+.overview-kpis .card{min-height:108px;display:flex;flex-direction:column;justify-content:center;padding:15px 15px 14px;background:rgba(255,255,255,.92)}
+.overview-kpis .stat-title{font-size:12px;text-transform:uppercase;letter-spacing:.35px;margin-bottom:9px;color:#64748b}
+.overview-kpis .stat-value{font-size:24px;letter-spacing:-.45px}
+.overview-status-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 1px 16px}
+.overview-month-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:999px;background:#eaf2ff;color:#1d4ed8;font-size:12px;font-weight:700}
+.overview-status-note{font-size:12px;color:#94a3b8}
+.v3-grid>.section{background:rgba(255,255,255,.96)}
+.v3-grid>.section .section-heading h2{font-size:17px}
+.v3-item{box-shadow:none}
+.overview-payment{background:linear-gradient(180deg,#fff,#fbfdff)}
+.snapshot-grid>div{background:#fbfdff}
+#v3GoalMini .v3-item{padding:13px 12px}
+.section-heading{align-items:center}
+.section-heading .small{line-height:1.45}
+#overviewUpcoming .overview-payment-right b{font-size:15px}
+#overviewUpcoming .overview-payment-right .tiny-pill{background:#eef4ff;color:#3157a6}
+@media(max-width:1100px){.overview-kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){
+  .overview-hero{padding:16px}
+  .overview-hero h2{font-size:19px}
+  .overview-subtitle{font-size:12px;max-width:92%}
+  .overview-kpis{grid-template-columns:repeat(2,1fr);gap:9px}
+  .overview-kpis .card{min-height:94px;padding:12px}
+  .overview-kpis .stat-value{font-size:20px}
+  .overview-status-row{align-items:flex-start;flex-direction:column;margin:10px 1px 13px}
+  .overview-status-note{font-size:11px}
+}
 
 </style>
 </head>
@@ -586,14 +623,21 @@ input,select{border-color:#cbd5e1;border-radius:10px;padding:10px 11px}input:foc
 </div>
 
 <div id="v3-overview" class="v3-view active">
-<div class="section"><h2>Version 3 Financial Overview</h2><div class="dashboard">
+<div class="section overview-hero">
+<h2>Financial Overview</h2>
+<div class="overview-subtitle">A quick view of this month’s income, commitments, surplus and savings progress.</div>
+<div class="dashboard overview-kpis">
 <div class="card"><div class="stat-title">Recurring Income</div><div id="v3RecurringIncome" class="stat-value green">₹0</div></div>
 <div class="card"><div class="stat-title">Total Debt</div><div id="v3Debt" class="stat-value red">₹0</div></div>
 <div class="card"><div class="stat-title">Monthly EMI</div><div id="v3Emi" class="stat-value orange">₹0</div></div>
-<div class="card"><div class="stat-title">Monthly Savings</div><div id="v3Savings" class="stat-value blue">₹0</div></div>
-<div class="card"><div class="stat-title">Savings Goals</div><div id="v3GoalTotal" class="stat-value">₹0</div></div>
+<div class="card"><div class="stat-title">Monthly Surplus</div><div id="v3Savings" class="stat-value blue">₹0</div></div>
+<div class="card"><div class="stat-title">Goals Saved</div><div id="v3GoalTotal" class="stat-value">₹0</div></div>
 <div class="card"><div class="stat-title">Goal Progress</div><div id="v3GoalProgress" class="stat-value green">0%</div></div>
 </div></div>
+<div class="overview-status-row">
+  <div class="overview-month-chip">📅 <span id="overviewMonthLabel">Selected month</span></div>
+  <div class="overview-status-note">Your data is synced to Supabase</div>
+</div>
 <div class="v3-grid">
     <div class="section">
         <div class="section-heading"><div><h2>💼 Recurring Income</h2><div class="small">Your automatic income sources</div></div></div>
@@ -3030,6 +3074,8 @@ function renderForecast(){
 }
 
 function renderV3(){
+ const overviewMonthLabel=document.getElementById("overviewMonthLabel");
+ if(overviewMonthLabel) overviewMonthLabel.textContent=monthName(currentDate);
  renderForecast();
  const ri=recurringIncomeForMonth(currentDate),oneTime=getMonthIncome(currentDate).reduce((s,x)=>s+Number(x.amount),0),totalIncome=ri+oneTime,debt=loans.reduce((s,x)=>s+Number(x.outstanding_amount),0),emi=loans.reduce((s,x)=>s+Number(x.emi_amount),0),goaltarget=savingsGoals.reduce((s,x)=>s+Number(x.target_amount),0),goalsaved=savingsGoals.reduce((s,x)=>s+Number(x.current_amount),0),goalpct=goaltarget?goalsaved/goaltarget*100:0;
  const planned=getMonthExpenses(currentDate).reduce((s,x)=>s+Number(x.expense.amount),0);document.getElementById('v3RecurringIncome').textContent=money(totalIncome);document.getElementById('v3Debt').textContent=money(debt);document.getElementById('v3Emi').textContent=money(emi);document.getElementById('v3Savings').textContent=money(totalIncome-planned);document.getElementById('v3GoalTotal').textContent=money(goalsaved);document.getElementById('v3GoalProgress').textContent=goalpct.toFixed(1)+'%';
