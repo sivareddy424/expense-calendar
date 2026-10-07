@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#2563eb">
-<meta name="description" content="Personal Expense Calendar">
+<meta name="description" content="Personal Finance Manager">
 
 <link rel="manifest" href="manifest.json">
 
@@ -540,6 +540,42 @@ header{backdrop-filter:saturate(140%);}
   .overview-status-note{font-size:11px}
 }
 
+
+/* =========================
+   V8 AUTH & ACCOUNT UI
+========================= */
+.auth-subtitle{font-size:13px;color:#64748b;text-align:center;margin:-8px 0 16px}
+.auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.auth-link-row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.auth-link{background:none;border:0;padding:4px 5px;color:#2563eb;font-size:12px;cursor:pointer}
+.auth-link:hover{text-decoration:underline}
+.password-wrap{position:relative}
+.password-wrap input{padding-right:72px}
+.password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:#eef2ff;color:#334155;padding:6px 8px;font-size:11px}
+.account-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.account-profile{display:flex;align-items:center;gap:12px}
+.account-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-weight:700}
+.account-email{font-weight:700;word-break:break-all}
+.account-verified{font-size:11px;color:#16a34a;font-weight:700;margin-top:3px}
+.account-unverified{font-size:11px;color:#dc2626;font-weight:700;margin-top:3px}
+.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}
+.account-tile{border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px;padding:13px}
+.account-tile h4{margin:0 0 5px;font-size:14px}
+.account-tile p{margin:0;color:#64748b;font-size:12px;line-height:1.45}
+.account-tile button{margin-top:9px}
+.security-note{font-size:12px;color:#64748b;background:#f8fafc;border-radius:10px;padding:10px;margin-top:10px}
+.danger-zone{border:1px solid #fecaca;background:#fff7f7;border-radius:12px;padding:14px;margin-top:15px}
+.danger-zone h3{margin:0 0 5px;color:#991b1b;font-size:16px}
+.danger-zone p{margin:0;color:#7f1d1d;font-size:12px;line-height:1.5}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:#16a34a}
+.auth-strength{height:6px;background:#e5e7eb;border-radius:8px;overflow:hidden;margin-top:6px}
+.auth-strength-bar{height:100%;width:0%;background:#2563eb;transition:width .2s}
+.auth-strength-text{font-size:11px;color:#64748b;margin-top:4px}
+@media(max-width:700px){
+  .account-grid{grid-template-columns:1fr}
+  .auth-actions{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 
@@ -548,26 +584,33 @@ header{backdrop-filter:saturate(140%);}
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
         <h1>💰 Expense Calendar</h1>
+        <div class="auth-subtitle">Secure personal finance management</div>
 
         <div id="loginMessage" class="message"></div>
 
         <div class="form-group">
             <label>Email</label>
-            <input id="loginEmail" type="email" placeholder="Email">
+            <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
         </div>
 
         <div class="form-group">
             <label>Password</label>
-            <input id="loginPassword" type="password" placeholder="Password">
+            <div class="password-wrap">
+                <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+                <button type="button" class="password-toggle" onclick="togglePassword('loginPassword',this)">Show</button>
+            </div>
         </div>
 
         <button class="btn" style="width:100%;margin-top:10px" onclick="login()">
             Login
         </button>
 
-        <button class="btn-gray" style="width:100%;margin-top:8px" onclick="signup()">
-            Create Account
-        </button>
+        <div class="auth-link-row">
+            <button class="auth-link" onclick="openForgotPasswordModal()">Forgot password?</button>
+            <button class="auth-link" onclick="openSignupModal()">Create account</button>
+            <button class="auth-link" onclick="openResendConfirmationModal()">Resend confirmation</button>
+            <button class="auth-link" onclick="openMagicLoginModal()">Email me a login link</button>
+        </div>
     </div>
 </div>
 
@@ -586,6 +629,7 @@ header{backdrop-filter:saturate(140%);}
             <button class="btn-light" onclick="requestNotifications()">🔔 Alerts</button>
             <button class="btn-light" onclick="exportBackup()">Backup</button>
             <button class="btn-light" onclick="document.getElementById('importFile').click()">Restore</button>
+            <button class="btn-light" onclick="openAccountModal()">⚙ Account</button>
             <button class="btn-danger" onclick="logout()">Logout</button>
             <input id="importFile" type="file" accept=".json" style="display:none" onchange="importBackup(event)">
         </div>
@@ -595,12 +639,18 @@ header{backdrop-filter:saturate(140%);}
 <div class="container">
 
 <div class="user-bar">
-    <div>
-        <b id="userEmail"></b>
-    </div>
-
-    <div class="small">
-        Cloud synced with Supabase
+    <div class="account-summary" style="width:100%">
+        <div class="account-profile">
+            <div class="account-avatar" id="headerAvatar">U</div>
+            <div>
+                <div class="account-email" id="userEmail"></div>
+                <div id="headerVerification" class="account-verified"><span class="status-dot"></span>Email verified</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div class="small">Cloud synced with Supabase</div>
+            <button class="btn" onclick="openAccountModal()">Account & Security</button>
+        </div>
     </div>
 </div>
 
@@ -1009,6 +1059,127 @@ header{backdrop-filter:saturate(140%);}
 
 </div>
 
+
+<!-- ========================= V8 AUTH MODALS ========================= -->
+<div id="signupModal" class="modal">
+  <div class="modal-box">
+    <h2>Create Account</h2>
+    <div class="small" style="margin-bottom:12px">Use an email address you can access. A confirmation email will be sent.</div>
+    <div class="form-group"><label>Email</label><input id="signupEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="form-group"><label>Password</label>
+      <div class="password-wrap"><input id="signupPassword" type="password" autocomplete="new-password" placeholder="Minimum 6 characters" oninput="updateSignupStrength()"><button type="button" class="password-toggle" onclick="togglePassword('signupPassword',this)">Show</button></div>
+      <div class="auth-strength"><div id="signupStrengthBar" class="auth-strength-bar"></div></div>
+      <div id="signupStrengthText" class="auth-strength-text">Enter a password</div>
+    </div>
+    <div class="form-group"><label>Confirm Password</label><input id="signupPasswordConfirm" type="password" autocomplete="new-password" placeholder="Re-enter password"></div>
+    <div class="modal-actions"><button class="btn-gray" onclick="closeAuthModal('signupModal')">Cancel</button><button class="btn" onclick="signupFromModal()">Create Account</button></div>
+  </div>
+</div>
+
+<div id="forgotPasswordModal" class="modal">
+  <div class="modal-box">
+    <h2>Forgot Password</h2>
+    <div class="small" style="margin-bottom:12px">Enter your email and we'll send a secure password reset link.</div>
+    <div class="form-group"><label>Email</label><input id="forgotEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div id="forgotMessage" class="message"></div>
+    <div class="modal-actions"><button class="btn-gray" onclick="closeAuthModal('forgotPasswordModal')">Cancel</button><button class="btn" onclick="sendPasswordReset()">Send Reset Link</button></div>
+  </div>
+</div>
+
+<div id="resendConfirmationModal" class="modal">
+  <div class="modal-box">
+    <h2>Resend Confirmation Email</h2>
+    <div class="small" style="margin-bottom:12px">Use this when a new account has not yet been confirmed.</div>
+    <div class="form-group"><label>Email</label><input id="resendEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div id="resendMessage" class="message"></div>
+    <div class="modal-actions"><button class="btn-gray" onclick="closeAuthModal('resendConfirmationModal')">Cancel</button><button class="btn" onclick="resendConfirmation()">Resend Email</button></div>
+  </div>
+</div>
+
+<div id="magicLoginModal" class="modal">
+  <div class="modal-box">
+    <h2>Email Login Link</h2>
+    <div class="small" style="margin-bottom:12px">We'll send a one-time login link to your email.</div>
+    <div class="form-group"><label>Email</label><input id="magicEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div id="magicMessage" class="message"></div>
+    <div class="modal-actions"><button class="btn-gray" onclick="closeAuthModal('magicLoginModal')">Cancel</button><button class="btn" onclick="sendMagicLogin()">Send Login Link</button></div>
+  </div>
+</div>
+
+<div id="passwordRecoveryModal" class="modal">
+  <div class="modal-box">
+    <h2>Set New Password</h2>
+    <div class="small" style="margin-bottom:12px">You arrived from a password recovery link.</div>
+    <div class="form-group"><label>New Password</label><div class="password-wrap"><input id="recoveryPassword" type="password" autocomplete="new-password"><button type="button" class="password-toggle" onclick="togglePassword('recoveryPassword',this)">Show</button></div></div>
+    <div class="form-group"><label>Confirm New Password</label><input id="recoveryPasswordConfirm" type="password" autocomplete="new-password"></div>
+    <div id="recoveryMessage" class="message"></div>
+    <div class="modal-actions"><button class="btn" onclick="applyRecoveredPassword()">Update Password</button></div>
+  </div>
+</div>
+
+<div id="accountModal" class="modal">
+  <div class="modal-box">
+    <h2>Account & Security</h2>
+    <div class="account-tile" style="margin-top:8px;background:#fff">
+      <div class="account-profile">
+        <div class="account-avatar" id="accountAvatar">U</div>
+        <div><div class="account-email" id="accountEmail"></div><div id="accountVerification"></div></div>
+      </div>
+      <div class="security-note" id="accountMeta">Loading account details...</div>
+    </div>
+
+    <div class="account-grid">
+      <div class="account-tile"><h4>🔑 Change Password</h4><p>Change your current password while signed in.</p><button class="btn" onclick="openChangePasswordModal()">Change Password</button></div>
+      <div class="account-tile"><h4>✉️ Change Email</h4><p>Change the email address used for this account.</p><button class="btn" onclick="openChangeEmailModal()">Change Email</button></div>
+      <div class="account-tile"><h4>📨 Email Confirmation</h4><p>Resend verification when your email is not confirmed.</p><button class="btn" onclick="resendCurrentConfirmation()">Resend Confirmation</button></div>
+      <div class="account-tile"><h4>🔒 Sign Out Other Devices</h4><p>Keep this device signed in and end other active sessions.</p><button class="btn-gray" onclick="signOutOtherDevices()">Sign Out Others</button></div>
+      <div class="account-tile"><h4>🚪 Sign Out Everywhere</h4><p>End all active sessions on every device.</p><button class="btn-gray" onclick="signOutEverywhere()">Sign Out Everywhere</button></div>
+      <div class="account-tile"><h4>💾 My Data</h4><p>Download your current backup before making account changes.</p><button class="btn" onclick="exportBackup()">Export My Data</button></div>
+    </div>
+
+    <div class="danger-zone">
+      <h3>Delete Account</h3>
+      <p>This permanently deletes your login and cloud data associated with this account. This cannot be undone.</p>
+      <button class="btn-danger" style="margin-top:10px" onclick="openDeleteAccountModal()">Delete My Account</button>
+    </div>
+    <div class="modal-actions"><button class="btn-gray" onclick="closeAuthModal('accountModal')">Close</button></div>
+  </div>
+</div>
+
+<div id="changePasswordModal" class="modal">
+  <div class="modal-box">
+    <h2>Change Password</h2>
+    <div class="form-group"><label>Current Password</label><div class="password-wrap"><input id="currentPassword" type="password" autocomplete="current-password"><button type="button" class="password-toggle" onclick="togglePassword('currentPassword',this)">Show</button></div></div>
+    <div class="form-group"><label>New Password</label><div class="password-wrap"><input id="newPassword" type="password" autocomplete="new-password"><button type="button" class="password-toggle" onclick="togglePassword('newPassword',this)">Show</button></div></div>
+    <div class="form-group"><label>Confirm New Password</label><input id="newPasswordConfirm" type="password" autocomplete="new-password"></div>
+    <div id="changePasswordMessage" class="message"></div>
+    <div class="modal-actions"><button class="btn-gray" onclick="closeAuthModal('changePasswordModal')">Cancel</button><button class="btn" onclick="changePassword()">Update Password</button></div>
+  </div>
+</div>
+
+<div id="changeEmailModal" class="modal">
+  <div class="modal-box">
+    <h2>Change Email Address</h2>
+    <div class="small" style="margin-bottom:12px">Supabase may require confirmation at the current and new email addresses, depending on your Auth settings.</div>
+    <div class="form-group"><label>Current Email</label><input id="currentEmailDisplay" type="email" disabled></div>
+    <div class="form-group"><label>New Email</label><input id="newEmail" type="email" autocomplete="email"></div>
+    <div id="changeEmailMessage" class="message"></div>
+    <div class="modal-actions"><button class="btn-gray" onclick="closeAuthModal('changeEmailModal')">Cancel</button><button class="btn" onclick="changeEmail()">Send Email Change</button></div>
+  </div>
+</div>
+
+<div id="deleteAccountModal" class="modal">
+  <div class="modal-box">
+    <h2 style="color:#991b1b">Delete Account Permanently</h2>
+    <div class="danger-zone">
+      <p><b>Warning:</b> Your account and cloud data will be permanently removed. Export a backup first if you need your records later.</p>
+    </div>
+    <div class="form-group" style="margin-top:12px"><label>Type <b>DELETE</b> to confirm</label><input id="deleteConfirmText" placeholder="DELETE" autocomplete="off"></div>
+    <div id="deleteAccountMessage" class="message"></div>
+    <div class="modal-actions"><button class="btn-gray" onclick="closeAuthModal('deleteAccountModal')">Cancel</button><button class="btn-danger" onclick="deleteMyAccount()">Permanently Delete Account</button></div>
+  </div>
+</div>
+
 <!-- EXPENSE MODAL -->
 
 <div id="expenseModal" class="modal">
@@ -1209,133 +1380,385 @@ let deferredInstallPrompt = null;
 
 /* ---------------- AUTH ---------------- */
 
-async function login(){
+const APP_URL = "https://sivareddy424.github.io/expense-calendar/";
 
-    const email =
-        document.getElementById("loginEmail").value.trim();
-
-    const password =
-        document.getElementById("loginPassword").value;
-
-    showLoginMessage("");
-
-    const {error} =
-        await supabaseClient.auth.signInWithPassword({
-            email,
-            password
-        });
-
-    if(error){
-        showLoginMessage(error.message,true);
-    }
-
+function authMessage(id,text,error=false){
+    const box=document.getElementById(id);
+    if(!box) return;
+    box.textContent=text || "";
+    box.className="message " + (error ? "error" : "success");
 }
 
+function togglePassword(inputId,button){
+    const input=document.getElementById(inputId);
+    if(!input) return;
+    const show=input.type === "password";
+    input.type=show ? "text" : "password";
+    button.textContent=show ? "Hide" : "Show";
+}
 
-async function signup(){
-
-    const email =
-        document.getElementById("loginEmail").value.trim();
-
-    const password =
-        document.getElementById("loginPassword").value;
-
+async function login(){
+    const email=document.getElementById("loginEmail").value.trim();
+    const password=document.getElementById("loginPassword").value;
     showLoginMessage("");
 
     if(!email || !password){
-        showLoginMessage(
-            "Please enter your email and password.",
-            true
-        );
+        showLoginMessage("Please enter your email and password.",true);
         return;
     }
 
-    const {data,error} =
-        await supabaseClient.auth.signUp({
-            email,
-            password,
-            options:{
-                emailRedirectTo:
-                    "https://sivareddy424.github.io/expense-calendar/"
-            }
-        });
+    const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
 
     if(error){
+        showLoginMessage(error.message,true);
+        return;
+    }
 
-        showLoginMessage(
-            error.message,
-            true
-        );
-
-    }else{
-
-        showLoginMessage(
-            "Account created. Check your email and click the confirmation link. You will be returned to Expense Calendar.",
-            false
-        );
-
+    if(data?.user && !data.user.email_confirmed_at){
+        showLoginMessage("Login succeeded, but your email is not confirmed yet.",true);
     }
 }
 
+function openSignupModal(){
+    document.getElementById("signupEmail").value=document.getElementById("loginEmail").value.trim();
+    document.getElementById("signupPassword").value="";
+    document.getElementById("signupPasswordConfirm").value="";
+    updateSignupStrength();
+    document.getElementById("signupModal").style.display="flex";
+}
+
+async function signup(){
+    openSignupModal();
+}
+
+async function signupFromModal(){
+    const email=document.getElementById("signupEmail").value.trim();
+    const password=document.getElementById("signupPassword").value;
+    const confirm=document.getElementById("signupPasswordConfirm").value;
+
+    if(!email || !password || !confirm){
+        alert("Please fill all account fields.");
+        return;
+    }
+    if(password.length < 6){
+        alert("Password must be at least 6 characters.");
+        return;
+    }
+    if(password !== confirm){
+        alert("Passwords do not match.");
+        return;
+    }
+
+    const {data,error}=await supabaseClient.auth.signUp({
+        email,
+        password,
+        options:{ emailRedirectTo: APP_URL }
+    });
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    closeAuthModal("signupModal");
+    document.getElementById("loginEmail").value=email;
+    document.getElementById("loginPassword").value="";
+    showLoginMessage("Account created. Check your email and click the confirmation link. You will return to Expense Calendar.",false);
+
+    if(data?.session){
+        currentUser=data.user;
+        await startApp();
+    }
+}
+
+function updateSignupStrength(){
+    const password=document.getElementById("signupPassword")?.value || "";
+    const bar=document.getElementById("signupStrengthBar");
+    const text=document.getElementById("signupStrengthText");
+    if(!bar || !text) return;
+    let score=0;
+    if(password.length>=6) score++;
+    if(password.length>=10) score++;
+    if(/[A-Z]/.test(password)) score++;
+    if(/[0-9]/.test(password)) score++;
+    if(/[^A-Za-z0-9]/.test(password)) score++;
+    const pct=[0,20,40,60,80,100][score];
+    bar.style.width=pct+"%";
+    text.textContent=!password ? "Enter a password" : score<=1 ? "Weak" : score<=3 ? "Good" : "Strong";
+}
+
+function openForgotPasswordModal(){
+    document.getElementById("forgotEmail").value=document.getElementById("loginEmail").value.trim();
+    authMessage("forgotMessage","");
+    document.getElementById("forgotPasswordModal").style.display="flex";
+}
+
+async function sendPasswordReset(){
+    const email=document.getElementById("forgotEmail").value.trim();
+    if(!email){ authMessage("forgotMessage","Please enter your email.",true); return; }
+
+    const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{ redirectTo: APP_URL });
+    if(error){
+        authMessage("forgotMessage",error.message,true);
+        return;
+    }
+    authMessage("forgotMessage","If the account can receive a reset email, a secure link has been sent. Check your inbox.",false);
+}
+
+function openResendConfirmationModal(){
+    document.getElementById("resendEmail").value=document.getElementById("loginEmail").value.trim();
+    authMessage("resendMessage","");
+    document.getElementById("resendConfirmationModal").style.display="flex";
+}
+
+async function resendConfirmation(){
+    const email=document.getElementById("resendEmail").value.trim();
+    if(!email){ authMessage("resendMessage","Please enter your email.",true); return; }
+    const {error}=await supabaseClient.auth.resend({
+        type:"signup",
+        email,
+        options:{ emailRedirectTo: APP_URL }
+    });
+    if(error){
+        authMessage("resendMessage",error.message,true);
+        return;
+    }
+    authMessage("resendMessage","Confirmation email sent. Check your inbox and spam folder.",false);
+}
+
+function openMagicLoginModal(){
+    document.getElementById("magicEmail").value=document.getElementById("loginEmail").value.trim();
+    authMessage("magicMessage","");
+    document.getElementById("magicLoginModal").style.display="flex";
+}
+
+async function sendMagicLogin(){
+    const email=document.getElementById("magicEmail").value.trim();
+    if(!email){ authMessage("magicMessage","Please enter your email.",true); return; }
+    const {error}=await supabaseClient.auth.signInWithOtp({
+        email,
+        options:{ emailRedirectTo: APP_URL, shouldCreateUser:false }
+    });
+    if(error){
+        authMessage("magicMessage",error.message,true);
+        return;
+    }
+    authMessage("magicMessage","Login link sent. Check your email.",false);
+}
 
 async function logout(){
+    const {error}=await supabaseClient.auth.signOut({scope:"global"});
+    if(error){ alert(error.message); return; }
+    currentUser=null;
+    document.getElementById("app").style.display="none";
+    document.getElementById("loginScreen").style.display="flex";
+    showLoginMessage("You have been signed out.",false);
+}
 
-    await supabaseClient.auth.signOut();
-
-    currentUser = null;
-
+async function logoutCurrentDevice(){
+    const {error}=await supabaseClient.auth.signOut({scope:"local"});
+    if(error){ alert(error.message); return; }
+    currentUser=null;
     document.getElementById("app").style.display="none";
     document.getElementById("loginScreen").style.display="flex";
 }
 
-
-function showLoginMessage(text,error=false){
-
-    const box =
-        document.getElementById("loginMessage");
-
-    box.textContent=text;
-
-    box.className =
-        "message " + (error ? "error" : "success");
+async function signOutOtherDevices(){
+    if(!confirm("Sign out from all other devices? This device will stay signed in.")) return;
+    const {error}=await supabaseClient.auth.signOut({scope:"others"});
+    if(error){ alert(error.message); return; }
+    alert("Other active sessions were signed out.");
 }
 
+async function signOutEverywhere(){
+    if(!confirm("Sign out from every device?")) return;
+    await logout();
+}
+
+function showLoginMessage(text,error=false){
+    const box=document.getElementById("loginMessage");
+    box.textContent=text;
+    box.className="message " + (error ? "error" : "success");
+}
+
+function closeAuthModal(id){
+    const el=document.getElementById(id);
+    if(el) el.style.display="none";
+}
+
+function openAccountModal(){
+    if(!currentUser) return;
+    const email=currentUser.email || "";
+    const initial=(email.charAt(0)||"U").toUpperCase();
+    document.getElementById("accountEmail").textContent=email;
+    document.getElementById("accountAvatar").textContent=initial;
+    const verified=!!currentUser.email_confirmed_at;
+    const v=document.getElementById("accountVerification");
+    v.className=verified ? "account-verified" : "account-unverified";
+    v.innerHTML=verified ? '<span class="status-dot"></span>Email verified' : '⚠ Email not confirmed';
+    const created=currentUser.created_at ? new Date(currentUser.created_at).toLocaleString("en-IN") : "-";
+    const last=currentUser.last_sign_in_at ? new Date(currentUser.last_sign_in_at).toLocaleString("en-IN") : "-";
+    document.getElementById("accountMeta").textContent=`Account created: ${created} · Last sign-in: ${last}`;
+    document.getElementById("currentEmailDisplay").value=email;
+    document.getElementById("accountModal").style.display="flex";
+}
+
+function openChangePasswordModal(){
+    closeAuthModal("accountModal");
+    document.getElementById("currentPassword").value="";
+    document.getElementById("newPassword").value="";
+    document.getElementById("newPasswordConfirm").value="";
+    authMessage("changePasswordMessage","");
+    document.getElementById("changePasswordModal").style.display="flex";
+}
+
+async function changePassword(){
+    const current=document.getElementById("currentPassword").value;
+    const next=document.getElementById("newPassword").value;
+    const confirm=document.getElementById("newPasswordConfirm").value;
+    if(!current || !next || !confirm){ authMessage("changePasswordMessage","Please fill all fields.",true); return; }
+    if(next.length<6){ authMessage("changePasswordMessage","New password must be at least 6 characters.",true); return; }
+    if(next!==confirm){ authMessage("changePasswordMessage","New passwords do not match.",true); return; }
+
+    const {error}=await supabaseClient.auth.updateUser({ password:next, current_password:current });
+    if(error){ authMessage("changePasswordMessage",error.message,true); return; }
+    authMessage("changePasswordMessage","Password updated successfully.",false);
+    setTimeout(()=>closeAuthModal("changePasswordModal"),900);
+}
+
+function openChangeEmailModal(){
+    closeAuthModal("accountModal");
+    document.getElementById("currentEmailDisplay").value=currentUser?.email || "";
+    document.getElementById("newEmail").value="";
+    authMessage("changeEmailMessage","");
+    document.getElementById("changeEmailModal").style.display="flex";
+}
+
+async function changeEmail(){
+    const email=document.getElementById("newEmail").value.trim();
+    if(!email){ authMessage("changeEmailMessage","Please enter the new email.",true); return; }
+    if(email.toLowerCase()===(currentUser?.email||"").toLowerCase()){ authMessage("changeEmailMessage","That is already your current email.",true); return; }
+
+    const {error}=await supabaseClient.auth.updateUser({ email });
+    if(error){ authMessage("changeEmailMessage",error.message,true); return; }
+    authMessage("changeEmailMessage","Email change request sent. Check the email inboxes required by your Supabase Auth settings.",false);
+}
+
+async function resendCurrentConfirmation(){
+    const email=currentUser?.email;
+    if(!email) return;
+    const {error}=await supabaseClient.auth.resend({type:"signup",email,options:{emailRedirectTo:APP_URL}});
+    if(error){ alert(error.message); return; }
+    alert("Confirmation email sent.");
+}
+
+function openDeleteAccountModal(){
+    closeAuthModal("accountModal");
+    document.getElementById("deleteConfirmText").value="";
+    authMessage("deleteAccountMessage","");
+    document.getElementById("deleteAccountModal").style.display="flex";
+}
+
+async function deleteMyAccount(){
+    const typed=document.getElementById("deleteConfirmText").value.trim();
+    if(typed!=="DELETE"){
+        authMessage("deleteAccountMessage","Type DELETE exactly to confirm.",true);
+        return;
+    }
+
+    if(!confirm("Final confirmation: permanently delete this account and its cloud data?")) return;
+
+    authMessage("deleteAccountMessage","Deleting account...",false);
+    const {data,error}=await supabaseClient.rpc("delete_my_account");
+
+    if(error){
+        authMessage("deleteAccountMessage","Account deletion failed: "+error.message,true);
+        return;
+    }
+
+    if(data===false){
+        authMessage("deleteAccountMessage","Account could not be deleted.",true);
+        return;
+    }
+
+    currentUser=null;
+    await supabaseClient.auth.signOut({scope:"local"});
+    document.getElementById("app").style.display="none";
+    document.getElementById("loginScreen").style.display="flex";
+    closeAuthModal("deleteAccountModal");
+    showLoginMessage("Your account and associated cloud data were deleted.",false);
+}
+
+async function applyRecoveredPassword(){
+    const next=document.getElementById("recoveryPassword").value;
+    const confirm=document.getElementById("recoveryPasswordConfirm").value;
+    if(!next || !confirm){ authMessage("recoveryMessage","Please fill both password fields.",true); return; }
+    if(next.length<6){ authMessage("recoveryMessage","Password must be at least 6 characters.",true); return; }
+    if(next!==confirm){ authMessage("recoveryMessage","Passwords do not match.",true); return; }
+
+    const {error}=await supabaseClient.auth.updateUser({password:next});
+    if(error){ authMessage("recoveryMessage",error.message,true); return; }
+
+    authMessage("recoveryMessage","Password updated successfully. You can now use your new password.",false);
+    setTimeout(async()=>{
+        closeAuthModal("passwordRecoveryModal");
+        await supabaseClient.auth.signOut({scope:"local"});
+        currentUser=null;
+        document.getElementById("app").style.display="none";
+        document.getElementById("loginScreen").style.display="flex";
+    },1000);
+}
+
+function handleAuthRedirectHints(){
+    const hash=window.location.hash || "";
+    const query=window.location.search || "";
+    if(/type=signup/.test(hash) || /type=signup/.test(query)){
+        showLoginMessage("Email confirmed successfully. You can now log in.",false);
+    }
+}
 
 /* ---------------- INIT ---------------- */
 
 async function init(){
-
-    const {data} =
-        await supabaseClient.auth.getSession();
-
+    const {data}=await supabaseClient.auth.getSession();
+    handleAuthRedirectHints();
     if(data.session){
-
         currentUser=data.session.user;
-
         await startApp();
-
     }else{
-
         document.getElementById("loginScreen").style.display="flex";
-
     }
-
 }
 
-
-supabaseClient.auth.onAuthStateChange(
-    async(event,session)=>{
-
-        if(session && !currentUser){
-
-            currentUser=session.user;
-
-            await startApp();
-
-        }
-
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+    if(event === "PASSWORD_RECOVERY"){
+        setTimeout(()=>{
+            document.getElementById("recoveryPassword").value="";
+            document.getElementById("recoveryPasswordConfirm").value="";
+            authMessage("recoveryMessage","");
+            document.getElementById("passwordRecoveryModal").style.display="flex";
+        },0);
+        return;
     }
-);
+
+    if(event === "SIGNED_OUT"){
+        currentUser=null;
+        document.getElementById("app").style.display="none";
+        document.getElementById("loginScreen").style.display="flex";
+        return;
+    }
+
+    if(event === "USER_UPDATED" && session?.user){
+        currentUser=session.user;
+        if(document.getElementById("app").style.display !== "none") startApp();
+        return;
+    }
+
+    if(event === "SIGNED_IN" && session && !currentUser){
+        currentUser=session.user;
+        setTimeout(()=>startApp(),0);
+    }
+});
 
 
 /* ---------------- APP START ---------------- */
@@ -1347,6 +1770,13 @@ async function startApp(){
 
     document.getElementById("userEmail").textContent =
         currentUser.email;
+
+    const initial=(currentUser.email || "U").charAt(0).toUpperCase();
+    document.getElementById("headerAvatar").textContent=initial;
+    const verified=!!currentUser.email_confirmed_at;
+    const hv=document.getElementById("headerVerification");
+    hv.className=verified ? "account-verified" : "account-unverified";
+    hv.innerHTML=verified ? '<span class="status-dot"></span>Email verified' : '⚠ Email not confirmed';
 
     await loadData();
 
