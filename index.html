@@ -1242,21 +1242,39 @@ async function signup(){
 
     showLoginMessage("");
 
-    const {error} =
+    if(!email || !password){
+        showLoginMessage(
+            "Please enter your email and password.",
+            true
+        );
+        return;
+    }
+
+    const {data,error} =
         await supabaseClient.auth.signUp({
             email,
-            password
+            password,
+            options:{
+                emailRedirectTo:
+                    "https://sivareddy424.github.io/expense-calendar/"
+            }
         });
 
     if(error){
-        showLoginMessage(error.message,true);
-    }else{
+
         showLoginMessage(
-            "Account created. You can now login.",
+            error.message,
+            true
+        );
+
+    }else{
+
+        showLoginMessage(
+            "Account created. Check your email and click the confirmation link. You will be returned to Expense Calendar.",
             false
         );
-    }
 
+    }
 }
 
 
