@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v7";
+const CACHE_NAME = "expense-calendar-v8";
 
 const APP_SHELL = [
     "./",
@@ -11,11 +11,13 @@ const APP_SHELL = [
 ========================= */
 
 self.addEventListener("install", event => {
+
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => cache.addAll(APP_SHELL))
             .then(() => self.skipWaiting())
     );
+
 });
 
 /* =========================
@@ -23,15 +25,23 @@ self.addEventListener("install", event => {
 ========================= */
 
 self.addEventListener("activate", event => {
+
     event.waitUntil(
+
         caches.keys().then(keys =>
+
             Promise.all(
+
                 keys
                     .filter(key => key !== CACHE_NAME)
                     .map(key => caches.delete(key))
+
             )
+
         ).then(() => self.clients.claim())
+
     );
+
 });
 
 /* =========================
@@ -46,36 +56,58 @@ self.addEventListener("fetch", event => {
 
     const url = new URL(event.request.url);
 
-    // Let external resources such as Supabase and CDN
-    // continue normally through the network.
+    /*
+     * External resources such as:
+     * Supabase
+     * jsDelivr
+     * other CDNs
+     *
+     * remain network-only.
+     */
     if (url.origin !== self.location.origin) {
         return;
     }
 
     /*
-     * Navigation:
-     * Network first so the latest GitHub Pages version
-     * is normally loaded.
+     * Main page:
+     * Network first.
+     *
+     * This makes sure GitHub Pages updates
+     * are loaded instead of an old cached version.
      */
     if (event.request.mode === "navigate") {
 
         event.respondWith(
+
             fetch(event.request)
+
                 .then(response => {
 
                     const copy = response.clone();
 
                     caches.open(CACHE_NAME)
                         .then(cache => {
-                            cache.put("./index.html", copy);
+
+                            cache.put(
+                                "./index.html",
+                                copy
+                            );
+
                         })
                         .catch(() => {});
 
                     return response;
+
                 })
+
                 .catch(() => {
-                    return caches.match("./index.html");
+
+                    return caches.match(
+                        "./index.html"
+                    );
+
                 })
+
         );
 
         return;
@@ -86,26 +118,39 @@ self.addEventListener("fetch", event => {
      * Cache first, then network.
      */
     event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
 
-                if (cachedResponse) {
-                    return cachedResponse;
+        caches.match(event.request)
+
+            .then(cached => {
+
+                if (cached) {
+                    return cached;
                 }
 
                 return fetch(event.request)
+
                     .then(response => {
 
-                        const copy = response.clone();
+                        const copy =
+                            response.clone();
 
                         caches.open(CACHE_NAME)
                             .then(cache => {
-                                cache.put(event.request, copy);
+
+                                cache.put(
+                                    event.request,
+                                    copy
+                                );
+
                             })
                             .catch(() => {});
 
                         return response;
+
                     });
+
             })
+
     );
+
 });
