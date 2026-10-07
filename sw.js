@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v9";
+const CACHE_NAME = "expense-calendar-v10";
 
 const APP_SHELL = [
     "./",
@@ -20,6 +20,7 @@ self.addEventListener("install", event => {
 
 });
 
+
 /* =========================
    ACTIVATE
 ========================= */
@@ -28,21 +29,24 @@ self.addEventListener("activate", event => {
 
     event.waitUntil(
 
-        caches.keys().then(keys =>
-            Promise.all(
+        caches.keys()
+            .then(keys => {
 
-                keys
-                    .filter(key => key !== CACHE_NAME)
-                    .map(key => caches.delete(key))
+                return Promise.all(
 
-            )
-        )
+                    keys
+                        .filter(key => key !== CACHE_NAME)
+                        .map(key => caches.delete(key))
 
-        .then(() => self.clients.claim())
+                );
+
+            })
+            .then(() => self.clients.claim())
 
     );
 
 });
+
 
 /* =========================
    FETCH
@@ -50,27 +54,40 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
 
+    /*
+     * Only handle GET requests.
+     */
     if (event.request.method !== "GET") {
         return;
     }
 
     const url = new URL(event.request.url);
 
+
     /*
-     * External resources such as Supabase,
-     * jsDelivr and other CDNs remain network-only.
+     * External resources such as:
+     * Supabase
+     * jsDelivr
+     * other CDNs
+     *
+     * remain network-only.
      */
     if (url.origin !== self.location.origin) {
         return;
     }
 
-    /*
-     * Main page:
-     * Network first so the newest GitHub Pages
-     * version is loaded.
-     *
-     * If offline, use the cached index.html.
-     */
+
+    /* =========================
+       PAGE NAVIGATION
+       =========================
+
+       Network first:
+       always try to load the
+       newest GitHub Pages version.
+
+       If offline, use cache.
+    */
+
     if (event.request.mode === "navigate") {
 
         event.respondWith(
@@ -109,10 +126,19 @@ self.addEventListener("fetch", event => {
         return;
     }
 
-    /*
-     * Other local files:
-     * Cache first, then network.
-     */
+
+    /* =========================
+       OTHER LOCAL FILES
+       =========================
+
+       Cache first:
+       use cached resource when
+       available.
+
+       Otherwise go to network
+       and cache the result.
+    */
+
     event.respondWith(
 
         caches.match(event.request)
