@@ -8,7 +8,7 @@
 
 <link rel="manifest" href="manifest.json">
 
-<title>Expense Calendar</title>
+<title>Expense Calendar · Personal Finance</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -470,6 +470,39 @@ th{
 .budget-over{color:#dc2626;font-weight:bold}.budget-good{color:#16a34a;font-weight:bold}.budget-warn{color:#ea580c;font-weight:bold}
 @media(max-width:700px){.v5-bar-row{grid-template-columns:90px 1fr 78px;font-size:12px}}
 
+
+/* VERSION 6 UI REFRESH */
+:root{--primary:#2563eb;--ink:#0f172a;--muted:#64748b;--surface:#fff;--surface-2:#f8fafc;--line:#e2e8f0;--shadow:0 10px 30px rgba(15,23,42,.08);--shadow-sm:0 4px 14px rgba(15,23,42,.06);--radius:16px}
+html{scroll-behavior:smooth}
+body{background:linear-gradient(180deg,#eef4ff 0,#f8fafc 230px,#f8fafc 100%);color:var(--ink)}
+header{background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 55%,#3b82f6 100%);padding:11px 18px;box-shadow:0 6px 24px rgba(37,99,235,.22)}
+.header-inner{max-width:1280px} header h1{font-size:20px;letter-spacing:-.3px;white-space:nowrap}
+.header-actions{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.header-actions::-webkit-scrollbar{display:none}
+.header-actions button{white-space:nowrap;border-radius:10px;padding:8px 11px}.header-actions .btn-light{background:rgba(255,255,255,.96);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.container{max-width:1280px;padding:18px 16px 40px}.user-bar{border:1px solid rgba(226,232,240,.9);box-shadow:var(--shadow-sm);border-radius:14px}.install-box{box-shadow:var(--shadow-sm);border-radius:14px}
+.v3-tabs{position:sticky;top:67px;z-index:15;margin:0 -2px 18px;padding:8px;background:rgba(248,250,252,.90);backdrop-filter:blur(12px);border:1px solid rgba(226,232,240,.95);border-radius:15px;box-shadow:0 8px 20px rgba(15,23,42,.05);flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.v3-tabs::-webkit-scrollbar{display:none}
+.v3-tab{border:1px solid transparent;background:transparent;color:#475569;border-radius:10px;padding:9px 13px;white-space:nowrap;font-weight:600}.v3-tab:hover{background:#eef2ff;color:var(--primary)}.v3-tab.active{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.24)}
+.v3-view{display:none}.v3-view.active{display:block;animation:v6fade .18s ease}@keyframes v6fade{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:none}}
+.v3-view > .section,.v3-grid > .section,.section{border:1px solid rgba(226,232,240,.9);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.section{padding:18px}.section h2{font-size:18px;letter-spacing:-.25px;margin-bottom:14px}.section h3{color:#334155}.section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.section-heading h2{margin-bottom:4px}.btn-sm{padding:7px 10px;font-size:12px}
+.v3-grid{gap:16px}.v3-item{background:var(--surface-2);border-color:var(--line);border-radius:12px}.dashboard{gap:12px}.card{border:1px solid rgba(226,232,240,.9);border-radius:14px;box-shadow:var(--shadow-sm)}
+#v3-overview > .section:first-child{background:linear-gradient(135deg,#fff 0%,#f8fbff 100%);box-shadow:var(--shadow)}
+#v3-overview > .section:first-child h2::after{content:'Selected month';float:right;font-size:11px;font-weight:600;color:var(--muted);background:#eef2ff;padding:5px 8px;border-radius:999px}
+#v3RecurringIncome,#v3Debt,#v3Emi,#v3Savings,#v3GoalTotal,#v3GoalProgress{font-size:24px}
+.overview-payment{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:.15s ease}.overview-payment:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm);border-color:#bfdbfe}
+.overview-payment-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;white-space:nowrap}.tiny-pill{font-size:10px;font-weight:700;padding:3px 7px;border-radius:999px;background:#eef2ff;color:#4338ca}
+.snapshot-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.snapshot-grid > div{padding:11px;border:1px solid var(--line);border-radius:12px;background:#fff}.snapshot-grid span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}.snapshot-grid b{font-size:17px}
+.snapshot-progress-head{display:flex;justify-content:space-between;gap:10px;margin-top:12px;font-size:12px;color:var(--muted)}.snapshot-progress{height:11px}
+.legacy-section{display:none}body.calendar-mode .legacy-section{display:block}body.calendar-mode .legacy-grid{display:grid}body:not(.calendar-mode) #v3-calendar{display:none}#v3-calendar.active{display:block}#v3-calendar .section{margin-bottom:16px}
+#monthlyReport{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}#monthlyReport > .card{margin-bottom:0!important}#categoryReport .report-row{padding:4px 0}
+#specialReport{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}#specialReport .card{margin-bottom:0!important}
+.day{min-height:74px;border-color:var(--line);background:#fbfdff;border-radius:10px}.day:hover{box-shadow:inset 0 0 0 1px #bfdbfe}.day-expense{font-size:10px}.calendar-header h2{font-size:18px}
+table{border-radius:12px;overflow:hidden}th{color:#475569;font-weight:700}tr:hover td{background:#f8fafc}
+input,select{border-color:#cbd5e1;border-radius:10px;padding:10px 11px}input:focus,select:focus{outline:none;border-color:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.18)}
+.modal-box{border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(15,23,42,.18)}.forecast-table-wrap{border:1px solid var(--line);border-radius:12px}.forecast-table th{background:#f8fafc}.v5-alert,.v5-metric,.forecast-goal{border-radius:12px}
+@media(max-width:1000px){#monthlyReport{grid-template-columns:repeat(2,1fr)}#specialReport{grid-template-columns:1fr}}
+@media(max-width:700px){header{padding:9px 12px}.header-inner{align-items:flex-start}header h1{font-size:16px}.header-actions{max-width:68vw}.container{padding:12px 10px 28px}.v3-tabs{top:57px;margin-bottom:12px;padding:6px}.v3-tab{padding:8px 10px;font-size:12px}#v3-overview > .section:first-child h2::after{display:none}.snapshot-grid{grid-template-columns:1fr 1fr}#monthlyReport{grid-template-columns:1fr}.overview-payment{align-items:flex-start}.overview-payment-right{font-size:12px}}
+
 </style>
 </head>
 
@@ -540,15 +573,16 @@ th{
     <button class="btn" onclick="installApp()">Install</button>
 </div>
 
-<div class="v3-tabs">
-<button class="v3-tab active" onclick="showV3('overview',this)">💰 Finance Overview</button>
-<button class="v3-tab" onclick="showV3('loans',this)">🏦 Loans & EMI</button>
-<button class="v3-tab" onclick="showV3('goals',this)">🎯 Savings Goals</button>
-<button class="v3-tab" onclick="showV3('yearly',this)">📊 Yearly Finance</button>
-<button class="v3-tab" onclick="showV3('forecast',this)">🔮 Forecast</button>
-<button class="v3-tab" onclick="showV3('budgets',this)">💸 Budgets</button>
-<button class="v3-tab" onclick="showV3('smart',this)">🧠 Smart Finance</button>
-<button class="v3-tab" onclick="showV3('annual',this)">📅 Annual Planner</button>
+<div class="v3-tabs" role="tablist" aria-label="Finance sections">
+<button class="v3-tab active" onclick="showV3('overview',this)" role="tab">🏠 Overview</button>
+<button class="v3-tab" onclick="showV3('calendar',this)" role="tab">📅 Calendar</button>
+<button class="v3-tab" onclick="showV3('loans',this)" role="tab">🏦 Loans</button>
+<button class="v3-tab" onclick="showV3('goals',this)" role="tab">🎯 Goals</button>
+<button class="v3-tab" onclick="showV3('forecast',this)" role="tab">🔮 Forecast</button>
+<button class="v3-tab" onclick="showV3('budgets',this)" role="tab">💸 Budgets</button>
+<button class="v3-tab" onclick="showV3('smart',this)" role="tab">🧠 Smart</button>
+<button class="v3-tab" onclick="showV3('yearly',this)" role="tab">📊 Yearly</button>
+<button class="v3-tab" onclick="showV3('annual',this)" role="tab">🗓 Annual</button>
 </div>
 
 <div id="v3-overview" class="v3-view active">
@@ -560,7 +594,26 @@ th{
 <div class="card"><div class="stat-title">Savings Goals</div><div id="v3GoalTotal" class="stat-value">₹0</div></div>
 <div class="card"><div class="stat-title">Goal Progress</div><div id="v3GoalProgress" class="stat-value green">0%</div></div>
 </div></div>
-<div class="v3-grid"><div class="section"><h2>💼 Recurring Income</h2><div id="v3RecurringIncomeList"></div></div><div class="section"><h2>🎯 Savings Goals</h2><div id="v3GoalMini"></div></div></div>
+<div class="v3-grid">
+    <div class="section">
+        <div class="section-heading"><div><h2>💼 Recurring Income</h2><div class="small">Your automatic income sources</div></div></div>
+        <div id="v3RecurringIncomeList"></div>
+    </div>
+    <div class="section">
+        <div class="section-heading"><div><h2>🎯 Savings Goals</h2><div class="small">Progress across all active goals</div></div></div>
+        <div id="v3GoalMini"></div>
+    </div>
+</div>
+<div class="v3-grid">
+    <div class="section">
+        <div class="section-heading"><div><h2>⏰ Next Payments</h2><div class="small">The next few unpaid bills</div></div><button class="btn btn-sm" onclick="showV3('calendar',document.querySelectorAll('.v3-tab')[1])">View calendar</button></div>
+        <div id="overviewUpcoming"></div>
+    </div>
+    <div class="section">
+        <div class="section-heading"><div><h2>📌 This Month</h2><div class="small">Planned vs paid</div></div></div>
+        <div id="overviewMonthSnapshot"></div>
+    </div>
+</div>
 </div>
 
 <div id="v3-loans" class="v3-view"><div class="section"><h2>🏦 Loans & EMI</h2><div id="v3LoanList"></div></div></div>
@@ -710,9 +763,11 @@ th{
     </div>
 </div>
 
+<div id="v3-calendar" class="v3-view">
+<!-- LEGACY CALENDAR AREA -->
 <!-- DASHBOARD -->
 
-<div class="dashboard">
+<div class="dashboard legacy-section">
 
     <div class="card">
         <div class="stat-title">Monthly Income</div>
@@ -748,7 +803,7 @@ th{
 
 <!-- SEARCH -->
 
-<div class="section">
+<div class="section legacy-section">
 
 <h2>🔎 Search & Filter</h2>
 
@@ -782,7 +837,7 @@ th{
 
 <!-- CALENDAR -->
 
-<div class="section">
+<div class="section legacy-section">
 
 <div class="calendar-header">
 
@@ -812,7 +867,7 @@ th{
 
 </div>
 
-<div class="grid">
+<div class="grid legacy-section legacy-grid">
 
 <!-- SELECTED DAY -->
 
@@ -842,7 +897,7 @@ th{
 
 <!-- REPORTS -->
 
-<div class="section">
+<div class="section legacy-section">
 
 <h2>📊 Monthly Report</h2>
 
@@ -867,7 +922,7 @@ th{
 
 <!-- INCOME -->
 
-<div class="section">
+<div class="section legacy-section">
 
 <h2>💵 Income</h2>
 
@@ -877,7 +932,7 @@ th{
 
 <!-- EXPENSES -->
 
-<div class="section">
+<div class="section legacy-section">
 
 <h2>🔁 Recurring Expenses</h2>
 
@@ -899,6 +954,8 @@ th{
 <tbody id="expenseList"></tbody>
 
 </table>
+
+</div>
 
 </div>
 
@@ -2828,10 +2885,15 @@ async function importBackup(event){
 
 /* ---------------- VERSION 3 ---------------- */
 function showV3(id,button){
+ const target=document.getElementById('v3-'+id);
+ if(!target) return;
  document.querySelectorAll('.v3-view').forEach(x=>x.classList.remove('active'));
- document.getElementById('v3-'+id).classList.add('active');
+ target.classList.add('active');
  document.querySelectorAll('.v3-tab').forEach(x=>x.classList.remove('active'));
- button.classList.add('active'); renderV3();
+ if(button) button.classList.add('active');
+ document.body.classList.toggle('calendar-mode', id==='calendar');
+ window.scrollTo({top:0,behavior:'smooth'});
+ renderV3();
 }
 function closeV3Modal(id){document.getElementById(id).style.display='none'}
 function openRecurringIncomeModal(){document.getElementById('recurringIncomeModal').style.display='flex';document.getElementById('riName').value='';document.getElementById('riAmount').value='';document.getElementById('riFrequency').value='Monthly';document.getElementById('riStart').value=dateKey(new Date());document.getElementById('riEnd').value=''}
@@ -2975,7 +3037,41 @@ function renderV3(){
  document.getElementById('v3GoalMini').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div></div>`}).join(''):'<div class="empty">No savings goals yet.</div>';
  document.getElementById('v3LoanList').innerHTML=loans.length?loans.map(l=>{let paid=Math.max(0,Number(l.original_amount)-Number(l.outstanding_amount)),p=Math.min(100,paid/Number(l.original_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.lender||'')} · ${Number(l.interest_rate||0)}% · ${l.tenure_months} months</div><div>Original: ${money(l.original_amount)} · Outstanding: <b>${money(l.outstanding_amount)}</b></div><div>EMI: <b>${money(l.emi_amount)}</b></div><div class="small" style="margin-top:7px">Loan progress ${p.toFixed(1)}%</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v3-actions"><button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No loans added yet.</div>';
  document.getElementById('v3GoalList').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}%${g.target_date?' · Target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No savings goals added yet.</div>';
- let html='';for(let i=11;i>=0;i--){let d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount),0),ex=getMonthExpenses(d).reduce((s,x)=>s+Number(x.expense.amount),0),paid=getMonthExpenses(d).filter(x=>x.payment?.paid).reduce((s,x)=>s+Number(x.expense.amount),0);html+=`<div class="v3-item"><b>${monthName(d)}</b><div>Income: <span class="green">${money(inc)}</span> · Planned: ${money(ex)} · Paid: ${money(paid)} · Balance: <b>${money(inc-ex)}</b></div></div>`}document.getElementById('v3YearlyReport').innerHTML=html;
+ let html='';for(let i=11;i>=0;i--){let d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount),0),ex=getMonthExpenses(d).reduce((s,x)=>s+Number(x.expense.amount),0),paid=getMonthExpenses(d).filter(x=>x.payment?.paid).reduce((s,x)=>s+Number(x.expense.amount),0);html+=`<div class="v3-item"><b>${monthName(d)}</b><div>Income: <span class="green">${money(inc)}</span> · Planned: ${money(ex)} · Paid: ${money(paid)} · Balance: <b>${money(inc-ex)}</b></div></div>`} document.getElementById('v3YearlyReport').innerHTML=html;
+
+ const overviewUpcoming=document.getElementById('overviewUpcoming');
+ if(overviewUpcoming){
+     const next=getUpcoming(5);
+     overviewUpcoming.innerHTML=next.length ? next.map(x=>{
+         const d=Math.max(0,Math.ceil((x.date-new Date())/86400000));
+         const when=d===0?'Today':(d===1?'Tomorrow':`In ${d} days`);
+         const k=dateKey(x.date);
+         return `<div class="overview-payment" onclick="showV3('calendar',document.querySelectorAll('.v3-tab')[1]); setTimeout(()=>{currentDate=new Date('${k}T00:00:00');selectedDate=new Date('${k}T00:00:00');renderAll();},0)">
+             <div><b>${escapeHtml(x.expense.name)}</b><div class="small">${escapeHtml(x.expense.category)} · ${formatDateNice(k)}</div></div>
+             <div class="overview-payment-right"><b>${money(x.expense.amount)}</b><span class="tiny-pill">${when}</span></div>
+         </div>`;
+     }).join('') : '<div class="empty">No upcoming payments.</div>';
+ }
+
+ const snapshot=document.getElementById('overviewMonthSnapshot');
+ if(snapshot){
+     const items=getMonthExpenses(currentDate);
+     const inc=ri+oneTime;
+     const planned2=items.reduce((s,x)=>s+Number(x.expense.amount||0),0);
+     const paid2=items.filter(x=>x.payment && x.payment.paid).reduce((s,x)=>s+Number(x.expense.amount||0),0);
+     const pct=planned2>0?Math.min(100,paid2/planned2*100):0;
+     snapshot.innerHTML=`
+         <div class="snapshot-grid">
+             <div><span>Income</span><b class="green">${money(inc)}</b></div>
+             <div><span>Planned</span><b>${money(planned2)}</b></div>
+             <div><span>Paid</span><b class="green">${money(paid2)}</b></div>
+             <div><span>Pending</span><b class="red">${money(Math.max(0,planned2-paid2))}</b></div>
+         </div>
+         <div class="snapshot-progress-head"><span>Payment progress</span><b>${pct.toFixed(0)}%</b></div>
+         <div class="v3-progress snapshot-progress"><div class="v3-bar" style="width:${pct}%"></div></div>
+         <div class="small" style="margin-top:8px">${monthName(currentDate)} · ${planned2 ? `${items.length} scheduled item(s)` : 'No planned recurring expenses'}</div>
+     `;
+ }
 }
 
 
