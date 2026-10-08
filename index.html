@@ -659,11 +659,23 @@ header{backdrop-filter:saturate(140%);}
 .v14-source-record button{padding:3px 6px;font-size:10px}
 .v14-record-action{cursor:pointer}
 </style>
-<meta content="V15 Unified Finance" name="expense-calendar-version"/>
+<meta content="V18 Unified Finance" name="expense-calendar-version"/>
 <style id="v17-unified-groups-css">
 .v17-unified-groups #v15UnifiedLedger .v3-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
 .v17-unified-groups .v16-overview-actions{display:flex;gap:7px;flex-wrap:wrap}
 .v17-unified-groups .v14-source-record{display:inline-flex;gap:5px;align-items:center;flex-wrap:wrap;margin:3px 4px 3px 0}
+</style>
+
+<style id="v18-common-entry-css">
+.v18-common-entry-modal .modal-box{max-width:560px}
+.v18-common-entry-note{margin:0 0 14px;color:var(--muted);line-height:1.5}
+.v18-entry-list{display:grid;gap:8px;margin-top:10px;max-height:430px;overflow:auto}
+.v18-entry-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:#fff}
+.v18-entry-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.v18-entry-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.v18-group-card{min-width:0}
+.v18-group-card .v18-entry-list{max-height:520px}
+@media(max-width:700px){.v18-entry-row{grid-template-columns:1fr}.v18-entry-actions{justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -699,10 +711,7 @@ header{backdrop-filter:saturate(140%);}
 <div class="header-inner">
 <h1>💰 Expense Calendar</h1>
 <div class="header-actions">
-<button class="btn-light" onclick="openExpenseModal()">+ Expense</button>
-<button class="btn-light" onclick="openIncomeModal()">+ Income</button>
-<button class="btn-light" onclick="openRecurringIncomeModal()">+ Salary</button>
-<button class="btn-light" onclick="openLoanModal()">+ Loan</button>
+<button class="btn-light" onclick="openCommonEntryModal()">＋ Add Entry</button>
 <button class="btn-light" onclick="openGoalModal()">+ Goal</button>
 <button class="btn-light" onclick="openQuickAddModal()">⚡ Quick Add</button>
 <button class="btn-light" onclick="togglePrivacyMode()">👁 Privacy</button>
@@ -5055,7 +5064,7 @@ function v15SameDate(a,b){return dateKey(v15Date(a))===dateKey(v15Date(b));}
 function v15Arr(v){return Array.isArray(v)?v:[];}
 function v15Today(){const d=new Date();d.setHours(0,0,0,0);return d;}
 function v15Key(kind,id,date){return `${kind}|${id}|${dateKey(v15Date(date))}`;}
-function v15StatusStorageKey(){return currentUser?`expense-calendar-v17-paid-${currentUser.id}`:'';}
+function v15StatusStorageKey(){return currentUser?`expense-calendar-v18-paid-${currentUser.id}`:'';}
 
 function v15CanonicalGroup(kindOrEvent, rawCategory=''){
     const e=typeof kindOrEvent==='object'?kindOrEvent:null;
@@ -5857,11 +5866,11 @@ function v15NormalizeVisibleLabels(){
 /* ---------------- BACKUP ---------------- */
 const v15ExportBackup=exportBackup;
 exportBackup=function(){
-    const backup={version:17,exportedAt:new Date().toISOString(),universalPaidState:v15PaidState,
+    const backup={version:18,exportedAt:new Date().toISOString(),universalPaidState:v15PaidState,
         expenses,payments,income,recurringIncome,loans,savingsGoals,savingsTransactions,budgets,creditCards,assets,investments,
         oneTimeExpenses,financeRules,renewals,vehicles,vehicleLogs,householdBills,lifeEvents,documents};
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='expense-calendar-v17-backup-'+dateKey(new Date())+'.json';a.click();URL.revokeObjectURL(url);
+    a.href=url;a.download='expense-calendar-v18-backup-'+dateKey(new Date())+'.json';a.click();URL.revokeObjectURL(url);
 };
 
 /* ---------------- LIVE SAME-BROWSER SYNC ---------------- */
@@ -5874,7 +5883,7 @@ window.addEventListener('storage',e=>{
 
 window.v15DataAudit=function(){
     const cf=v15CashflowStats(currentDate);
-    return {version:17,month:monthKey(currentDate),groups:V15_GROUPS,counts:{expenses:expenses.length,income:income.length,recurringIncome:recurringIncome.length,loans:loans.length,savingsGoals:savingsGoals.length,savingsTransactions:savingsTransactions.length,budgets:budgets.length,creditCards:creditCards.length,assets:assets.length,investments:investments.length,oneTimeExpenses:oneTimeExpenses.length,renewals:renewals.length,vehicles:vehicles.length,vehicleLogs:vehicleLogs.length,householdBills:householdBills.length,lifeEvents:lifeEvents.length,sharedExpenses:sharedExpenses.length},cashflow:cf};
+    return {version:18,month:monthKey(currentDate),groups:V15_GROUPS,counts:{expenses:expenses.length,income:income.length,recurringIncome:recurringIncome.length,loans:loans.length,savingsGoals:savingsGoals.length,savingsTransactions:savingsTransactions.length,budgets:budgets.length,creditCards:creditCards.length,assets:assets.length,investments:investments.length,oneTimeExpenses:oneTimeExpenses.length,renewals:renewals.length,vehicles:vehicles.length,vehicleLogs:vehicleLogs.length,householdBills:householdBills.length,lifeEvents:lifeEvents.length,sharedExpenses:sharedExpenses.length},cashflow:cf};
 };
 
 function v17NormalizeUnifiedUI(){
@@ -5892,6 +5901,194 @@ loadUniversalPaymentState();
 
 /* Boot only after the V15 controller is installed. */
 init();
+
+/* ========================= V18 COMMON ENTRY + UNIFIED LEDGER ========================= */
+function v18CreateCommonEntryModal(){
+    if(document.getElementById('commonEntryModal'))return;
+    const modal=document.createElement('div');
+    modal.className='modal v18-common-entry-modal';
+    modal.id='commonEntryModal';
+    modal.innerHTML=`
+        <div class="modal-box">
+            <h2>＋ Add Entry</h2>
+            <p class="v18-common-entry-note">All money movements are entered through one place. Use Income for money received and Expense for everything paid out, including recurring expenses and loan/EMI payments.</p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Group</label>
+                    <select id="commonEntryGroup">
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Entry type</label>
+                    <select id="commonEntryType"></select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-gray" type="button" onclick="closeCommonEntryModal()">Cancel</button>
+                <button class="btn" type="button" onclick="continueCommonEntry()">Continue</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    const group=document.getElementById('commonEntryGroup');
+    group.addEventListener('change',v18RefreshCommonEntryTypes);
+    v18RefreshCommonEntryTypes();
+}
+function v18RefreshCommonEntryTypes(){
+    const g=document.getElementById('commonEntryGroup'),t=document.getElementById('commonEntryType');
+    if(!g||!t)return;
+    const options=g.value==='income' ? [
+        ['oneTimeIncome','Income'],
+        ['recurringIncome','Recurring income / Salary']
+    ] : [
+        ['oneTimeExpense','Expense'],
+        ['recurringExpense','Recurring expense'],
+        ['loan','Loan / EMI'],
+        ['householdBill','Household bill'],
+        ['renewal','Renewal / Warranty'],
+        ['investment','Investment'],
+        ['vehicle','Vehicle expense']
+    ];
+    t.innerHTML=options.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+}
+function openCommonEntryModal(){
+    v18CreateCommonEntryModal();
+    const modal=document.getElementById('commonEntryModal');
+    if(modal)modal.style.display='flex';
+}
+function closeCommonEntryModal(){
+    const modal=document.getElementById('commonEntryModal');
+    if(modal)modal.style.display='none';
+}
+function continueCommonEntry(){
+    const type=document.getElementById('commonEntryType')?.value;
+    closeCommonEntryModal();
+    if(type==='oneTimeIncome') return openQuickAddModalForV18('income');
+    if(type==='recurringIncome') return openRecurringIncomeModal();
+    if(type==='oneTimeExpense') return openQuickAddModalForV18('expense');
+    if(type==='recurringExpense') return openExpenseModal();
+    if(type==='loan') return openLoanModal();
+    if(type==='householdBill') return openHouseholdBillModal();
+    if(type==='renewal') return openRenewalModal();
+    if(type==='investment') return openInvestmentModal();
+    if(type==='vehicle') return openVehicleModal();
+}
+function openQuickAddModalForV18(type){
+    openQuickAddModal();
+    const el=document.getElementById('qaType');
+    if(el){el.value=type;el.dispatchEvent(new Event('change'));}
+}
+window.openCommonEntryModal=openCommonEntryModal;
+window.closeCommonEntryModal=closeCommonEntryModal;
+window.continueCommonEntry=continueCommonEntry;
+
+function v18EventEditKind(e){return v15EventKind(e);}
+function v18EventTitle(e){
+    const group=v15CanonicalGroup(e);
+    const subtype=v15Subtype(e);
+    return `${group}${subtype?` · ${subtype}`:''}`;
+}
+function v18RenderGroupEntries(events, group){
+    const rows=events.filter(e=>v15CanonicalGroup(e)===group).sort((a,b)=>a.date-b.date || String(a.name).localeCompare(String(b.name)));
+    if(!rows.length)return '<div class="small">No records in this group for this month.</div>';
+    return `<div class="v18-entry-list">${rows.map((e)=>{
+        const info=v15RecordInfo(e);
+        const paid=v15IsExpenseLike(e)?v15GetPaid(e):null;
+        const sign=group==='Income'?'+':'−';
+        const actions=v15ActionHtml(e,true);
+        return `<div class="v18-entry-row">
+            <div>
+                <div><b>${escapeHtml(e.name||e.source||'Record')}</b></div>
+                <div class="v18-entry-meta">${escapeHtml(v18EventTitle(e))} · ${escapeHtml(e.source||'')} · ${escapeHtml(dateKey(e.date))}${paid===null?'':` · ${paid?'Paid':'Pending'}`}</div>
+            </div>
+            <div>
+                <div style="text-align:right;font-weight:800" class="${group==='Income'?'green':'red'}">${sign}${money(e.amount)}</div>
+                <div class="v18-entry-actions">${actions}</div>
+            </div>
+        </div>`;
+    }).join('')}</div>`;
+}
+
+/* Replace the overview ledger with two expandable-style groups that contain every monthly entry and its actions. */
+v15RenderOverviewLedger=function(){
+    const overview=document.getElementById('v3-overview');
+    if(!overview)return;
+    let box=document.getElementById('v15UnifiedLedger');
+    if(!box){
+        box=document.createElement('div');box.id='v15UnifiedLedger';box.className='section';
+        const status=overview.querySelector('.overview-status-row');
+        if(status)status.insertAdjacentElement('afterend',box);else overview.insertBefore(box,overview.firstChild);
+    }
+    const events=v15MonthEvents(currentDate),s=v15CashflowStats(currentDate);
+    const incomeEvents=events.filter(e=>v15CanonicalGroup(e)==='Income');
+    const expenseEvents=events.filter(e=>v15CanonicalGroup(e)==='Expense');
+    box.innerHTML=`
+        <div class="section-heading">
+            <div><h2>📒 All Entries</h2><div class="small">One common ledger: every income and every expense is grouped here. Recurring items, salary, loans/EMIs and other sources remain identified by subtype, with Edit/Delete on every record.</div></div>
+            <button class="btn" type="button" onclick="openCommonEntryModal()">＋ Add Entry</button>
+        </div>
+        <div class="dashboard" style="margin-bottom:10px">
+            <div class="card"><div class="stat-title">Income</div><div class="stat-value green">${money(s.income)}</div></div>
+            <div class="card"><div class="stat-title">Expense</div><div class="stat-value red">${money(s.outflow)}</div></div>
+            <div class="card"><div class="stat-title">Paid</div><div class="stat-value green">${money(s.paid)}</div></div>
+            <div class="card"><div class="stat-title">Pending</div><div class="stat-value red">${money(s.pending)}</div></div>
+        </div>
+        <div class="v3-grid">
+            <div class="v3-item v18-group-card">
+                <div class="v3-item-title"><b>Income</b><b>${money(s.income)}</b></div>
+                <div class="small">${incomeEvents.length} record(s) · Salary, one-time and recurring income combined</div>
+                ${v18RenderGroupEntries(incomeEvents,'Income')}
+            </div>
+            <div class="v3-item v18-group-card">
+                <div class="v3-item-title"><b>Expense</b><b>${money(s.outflow)}</b></div>
+                <div class="small">${expenseEvents.length} record(s) · Expenses, recurring expenses, loans/EMIs and other outflows combined</div>
+                ${v18RenderGroupEntries(expenseEvents,'Expense')}
+            </div>
+        </div>`;
+    v15BindActions(box);
+};
+
+/* Remove the old duplicate entry buttons if a cached/older DOM version briefly survives. */
+function v18RemoveDuplicateHeaderButtons(){
+    const header=document.querySelector('.header-actions');
+    if(!header)return;
+    const legacy=['+ Expense','+ Income','+ Salary','+ Loan','＋ Expense','＋ Income','＋ Salary','＋ Loan'];
+    [...header.querySelectorAll('button')].forEach(btn=>{
+        const txt=(btn.textContent||'').trim();
+        if(legacy.includes(txt))btn.remove();
+    });
+    const existing=[...header.querySelectorAll('button')].find(btn=>(btn.textContent||'').trim()==='＋ Add Entry' || (btn.textContent||'').trim()==='+ Add Entry');
+    if(existing){
+        existing.classList.add('btn-light');
+        existing.type='button';
+        existing.dataset.v18CommonAdd='1';
+        existing.onclick=openCommonEntryModal;
+        return;
+    }
+    const b=document.createElement('button');
+    b.className='btn-light';b.type='button';b.dataset.v18CommonAdd='1';b.textContent='＋ Add Entry';b.onclick=openCommonEntryModal;
+    const goal=[...header.querySelectorAll('button')].find(x=>(x.textContent||'').includes('Goal'));
+    if(goal)header.insertBefore(b,goal);else header.insertBefore(b,header.firstChild);
+}
+function v18HideDuplicateOverviewInputSections(){
+    /* The unified ledger is the single input ledger on Overview. Specialized tabs remain available. */
+    const recurringIncomeSection=document.querySelector('#v3-overview #v3RecurringIncomeList')?.closest('.section');
+    if(recurringIncomeSection)recurringIncomeSection.style.display='none';
+    const incomeHeading=document.querySelector('#v3-calendar > .legacy-section h2');
+    /* Leave Calendar's dedicated income/history area intact; this only prevents duplicate Overview input panels. */
+}
+function v18ApplyUnifiedUI(){
+    document.body.classList.add('v18-unified-groups');
+    v18RemoveDuplicateHeaderButtons();
+    v18HideDuplicateOverviewInputSections();
+    v18CreateCommonEntryModal();
+}
+
+v18ApplyUnifiedUI();
+setTimeout(v18ApplyUnifiedUI,400);
+setTimeout(v18ApplyUnifiedUI,1200);
+
 </script>
 
 
