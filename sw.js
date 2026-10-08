@@ -1,5 +1,5 @@
-const CACHE_NAME="expense-calendar-v27-production-1";
+const CACHE_NAME="expense-calendar-v28-clean-1";
 const APP_SHELL=["./","./index.html","./manifest.json","./icon.svg"];
-self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(APP_SHELL)).then(()=>self.skipWaiting())));
-self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener("fetch",event=>{if(event.request.method!=="GET")return;const u=new URL(event.request.url);if(u.origin!==location.origin)return;if(event.request.mode==="navigate"){event.respondWith(fetch(event.request).then(r=>{const c=r.clone();caches.open(CACHE_NAME).then(x=>x.put("./index.html",c)).catch(()=>{});return r}).catch(()=>caches.match("./index.html")));}else{event.respondWith(caches.match(event.request).then(r=>r||fetch(event.request)))}});
+self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(APP_SHELL)).then(()=>self.skipWaiting())));
+self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;const u=new URL(e.request.url);if(u.origin!==self.location.origin)return;if(e.request.mode==="navigate"){e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(CACHE_NAME).then(x=>x.put("./index.html",c)).catch(()=>{});return r}).catch(()=>caches.match("./index.html")));}else{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))}});
