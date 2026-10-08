@@ -6091,11 +6091,189 @@ setTimeout(v18ApplyUnifiedUI,1200);
 
 </script>
 
-
-
-
-
-
-
+<!-- ========================= V19 SIMPLIFIED CALENDAR ========================= -->
+<style id="v19-calendar-style">
+.v19-calendar-shell{margin-top:14px}
+.v19-calendar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.v19-calendar-title{font-size:23px;font-weight:850;letter-spacing:-.02em}
+.v19-calendar-actions{display:flex;gap:7px;align-items:center}
+.v19-calendar-actions button{min-width:42px}
+.v19-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.v19-summary .v19-summary-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 14px}
+.v19-summary .label{font-size:12px;color:var(--muted);display:block}
+.v19-summary .value{font-size:19px;font-weight:850;margin-top:3px}
+.v19-calendar-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px;box-shadow:0 2px 7px rgba(15,23,42,.04)}
+.v19-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-bottom:5px}
+.v19-weekday{text-align:center;color:var(--muted);font-size:11px;font-weight:800;padding:5px 0}
+.v19-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.v19-day{min-height:82px;border:1px solid #e6ebf2;border-radius:9px;background:#fbfdff;padding:7px;cursor:pointer;overflow:hidden}
+.v19-day:hover{border-color:#b8c7dd;background:#f8fbff}
+.v19-day.today{outline:2px solid rgba(37,99,235,.18);border-color:#93b4f4}
+.v19-day.selected{box-shadow:inset 0 0 0 2px #2563eb}
+.v19-day-num{font-size:12px;font-weight:850;margin-bottom:4px}
+.v19-badge{font-size:10px;line-height:1.25;border-radius:5px;padding:3px 5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v19-badge.income{background:#dcfce7;color:#166534}
+.v19-badge.expense{background:#fee2e2;color:#991b1b}
+.v19-more{font-size:10px;color:#2563eb;font-weight:800;margin-top:3px}
+.v19-lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.v19-panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;box-shadow:0 2px 7px rgba(15,23,42,.04)}
+.v19-panel h3{margin:0 0 4px;font-size:17px}
+.v19-panel-sub{font-size:12px;color:var(--muted);margin-bottom:10px}
+.v19-day-stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:9px}
+.v19-mini{border:1px solid #e7ebf1;background:#fbfdff;border-radius:9px;padding:8px}
+.v19-mini span{display:block;font-size:10px;color:var(--muted)}
+.v19-mini b{font-size:14px}
+.v19-event{display:flex;justify-content:space-between;gap:9px;align-items:center;border:1px solid #e8edf3;border-radius:10px;padding:9px;margin-top:7px}
+.v19-event-main{min-width:0}
+.v19-event-name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v19-event-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.v19-event-amount{font-weight:850;white-space:nowrap}
+.v19-event-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px}
+.v19-empty{padding:16px;border:1px dashed #cfd7e3;border-radius:10px;color:var(--muted);text-align:center}
+.v19-recurring-wrap{margin-top:12px}
+.v19-recurring-table{width:100%;border-collapse:collapse}
+.v19-recurring-table th,.v19-recurring-table td{padding:9px 8px;border-bottom:1px solid #edf0f4;text-align:left;font-size:12px;vertical-align:middle}
+.v19-recurring-table th{font-size:11px;color:var(--muted);background:#f8fafc}
+.v19-status{font-weight:800}
+.v19-actions{display:flex;gap:5px;flex-wrap:wrap}
+.v19-actions .btn,.v19-actions .btn-light,.v19-actions .btn-danger{padding:6px 9px;font-size:11px}
+@media(max-width:900px){.v19-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.v19-lower{grid-template-columns:1fr}}
+@media(max-width:650px){.v19-calendar-title{font-size:20px}.v19-day{min-height:68px;padding:6px}.v19-badge{font-size:9px}.v19-day-stat{grid-template-columns:repeat(2,minmax(0,1fr))}.v19-recurring-table th:nth-child(2),.v19-recurring-table td:nth-child(2){display:none}.v19-recurring-table th,.v19-recurring-table td{padding:8px 6px;font-size:11px}}
+</style>
+<script id="v19-simplified-calendar">
+(function(){
+    function v19Money(v){return money(Number(v)||0)}
+    function v19Esc(v){return escapeHtml(v==null?'':v)}
+    function v19DateText(d){return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+    function v19BuildShell(){
+        const host=document.getElementById('v3-calendar');
+        if(!host)return;
+        let shell=document.getElementById('v19CalendarShell');
+        if(!shell){
+            shell=document.createElement('div');
+            shell.id='v19CalendarShell';
+            shell.className='v19-calendar-shell';
+            host.insertBefore(shell,host.firstChild);
+        }
+        [...host.children].forEach(ch=>{if(ch!==shell)ch.style.display='none';});
+        shell.innerHTML=`
+            <div class="v19-calendar-top">
+                <div>
+                    <div class="v19-calendar-title" id="v19MonthTitle"></div>
+                    <div class="small">Income and every expense share one calendar. Loan/EMI payments are treated as recurring expenses.</div>
+                </div>
+                <div class="v19-calendar-actions">
+                    <button class="btn-gray" type="button" id="v19Prev">◀</button>
+                    <button class="btn" type="button" id="v19Today">Today</button>
+                    <button class="btn-gray" type="button" id="v19Next">▶</button>
+                </div>
+            </div>
+            <div class="v19-summary" id="v19Summary"></div>
+            <div class="v19-calendar-card">
+                <div class="v19-weekdays"><div class="v19-weekday">Sun</div><div class="v19-weekday">Mon</div><div class="v19-weekday">Tue</div><div class="v19-weekday">Wed</div><div class="v19-weekday">Thu</div><div class="v19-weekday">Fri</div><div class="v19-weekday">Sat</div></div>
+                <div class="v19-grid" id="v19CalendarGrid"></div>
+            </div>
+            <div class="v19-lower">
+                <div class="v19-panel">
+                    <h3>📅 Selected Day</h3>
+                    <div class="v19-panel-sub" id="v19SelectedDate"></div>
+                    <div id="v19SelectedDay"></div>
+                </div>
+                <div class="v19-panel">
+                    <h3>⏰ Upcoming Payments</h3>
+                    <div class="v19-panel-sub">Unpaid expenses and EMI commitments coming next.</div>
+                    <div id="v19Upcoming"></div>
+                </div>
+            </div>
+            <div class="v19-panel v19-recurring-wrap">
+                <h3>🔁 Recurring Expenses &amp; EMIs</h3>
+                <div class="v19-panel-sub">Regular recurring expenses and loan/EMI occurrences for ${monthName(currentDate)}. Loans remain editable in the Loans tab but their EMI is shown here as a recurring expense.</div>
+                <div style="overflow:auto"><table class="v19-recurring-table"><thead><tr><th>Entry</th><th>Type</th><th>Due</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="v19RecurringBody"></tbody></table></div>
+            </div>`;
+        document.getElementById('v19Prev').onclick=()=>v19ChangeMonth(-1);
+        document.getElementById('v19Today').onclick=()=>v19GoToday();
+        document.getElementById('v19Next').onclick=()=>v19ChangeMonth(1);
+    }
+    function v19MonthStats(){return v15CashflowStats(currentDate)}
+    function v19Events(date){return v15EventsForDay(date)}
+    function v19RenderSummary(){
+        const s=v19MonthStats(),box=document.getElementById('v19Summary');if(!box)return;
+        box.innerHTML=`<div class="v19-summary-card"><span class="label">Income</span><div class="value green">${v19Money(s.income)}</div></div><div class="v19-summary-card"><span class="label">Expense</span><div class="value red">${v19Money(s.outflow)}</div></div><div class="v19-summary-card"><span class="label">Paid</span><div class="value green">${v19Money(s.paid)}</div></div><div class="v19-summary-card"><span class="label">Pending</span><div class="value red">${v19Money(s.pending)}</div></div>`;
+    }
+    function v19RenderGrid(){
+        const grid=document.getElementById('v19CalendarGrid');if(!grid)return;
+        const title=document.getElementById('v19MonthTitle');if(title)title.textContent=monthName(currentDate);
+        grid.innerHTML='';
+        const first=firstDay(currentDate),last=lastDay(currentDate);
+        for(let i=0;i<first.getDay();i++)grid.appendChild(document.createElement('div'));
+        const today=dateKey(new Date());
+        const selected=dateKey(selectedDate);
+        for(let day=1;day<=last.getDate();day++){
+            const d=new Date(currentDate.getFullYear(),currentDate.getMonth(),day),events=v19Events(d),cell=document.createElement('div');
+            cell.className='v19-day'+(dateKey(d)===today?' today':'')+(dateKey(d)===selected?' selected':'');
+            cell.innerHTML='<div class="v19-day-num">'+day+'</div>';
+            events.slice(0,3).forEach(e=>{
+                const b=document.createElement('div');b.className='v19-badge '+(e.type==='income'?'income':'expense');
+                const sign=e.type==='income'?'+':'−';
+                const suffix=e.type==='loan'?' · EMI':'';
+                b.textContent=(e.name||e.source||'Entry')+' '+sign+v19Money(e.amount)+suffix;
+                b.title=(e.source||'')+' · '+v15CanonicalGroup(e)+' · '+(e.name||'Entry')+' · '+v19Money(e.amount)+(v15IsExpenseLike(e)?(' · '+(v15GetPaid(e)?'Paid':'Pending')):'');
+                cell.appendChild(b);
+            });
+            if(events.length>3){const m=document.createElement('div');m.className='v19-more';m.textContent='+'+(events.length-3)+' more';cell.appendChild(m)}
+            cell.onclick=()=>{selectedDate=v15Date(d);v19RenderAll()};
+            grid.appendChild(cell);
+        }
+    }
+    function v19ActionButtons(e){return v15ActionHtml(e,true)}
+    function v19RenderSelected(){
+        const box=document.getElementById('v19SelectedDay'),dateBox=document.getElementById('v19SelectedDate');if(!box)return;
+        dateBox.textContent=selectedDate.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        const events=v19Events(selectedDate);let inc=0,out=0,paid=0,pending=0;
+        events.forEach(e=>{if(e.type==='income')inc+=Number(e.amount)||0;else if(v15IsExpenseLike(e)){out+=Number(e.amount)||0;if(v15GetPaid(e))paid+=Number(e.amount)||0;else pending+=Number(e.amount)||0}});
+        let html=`<div class="v19-day-stat"><div class="v19-mini"><span>Income</span><b class="green">${v19Money(inc)}</b></div><div class="v19-mini"><span>Expense</span><b class="red">${v19Money(out)}</b></div><div class="v19-mini"><span>Paid</span><b class="green">${v19Money(paid)}</b></div><div class="v19-mini"><span>Pending</span><b class="red">${v19Money(pending)}</b></div></div>`;
+        if(!events.length){box.innerHTML=html+'<div class="v19-empty">No entries on this date.</div>';return}
+        html+=events.map(e=>{
+            const info=v15RecordInfo(e);const group=v15CanonicalGroup(e);const paid=v15IsExpenseLike(e)?v15GetPaid(e):null;const subtype=v15Subtype(e);
+            return `<div class="v19-event"><div class="v19-event-main"><div class="v19-event-name">${v19Esc(e.name||e.source||'Entry')}</div><div class="v19-event-meta">${v19Esc(group||'Planning')}${subtype?' · '+v19Esc(subtype):''} · ${v19Esc(e.source||'')}</div><div class="v19-event-actions">${info?v19ActionButtons(e):''}</div></div><div class="v19-event-amount ${e.type==='income'?'green':'red'}">${e.type==='income'?'+':'−'}${v19Money(e.amount)}</div></div>`;
+        }).join('');
+        box.innerHTML=html;v15BindActions(box);
+    }
+    function v19RenderUpcoming(){
+        const box=document.getElementById('v19Upcoming');if(!box)return;
+        const list=getUnifiedUpcomingV15(8);
+        if(!list.length){box.innerHTML='<div class="v19-empty">No upcoming payments.</div>';return}
+        box.innerHTML=list.map(e=>`<div class="v19-event"><div class="v19-event-main"><div class="v19-event-name">${v19Esc(e.name)}</div><div class="v19-event-meta">${v19Esc(v15CanonicalGroup(e))}${v15Subtype(e)?' · '+v19Esc(v15Subtype(e)):''} · ${v19Esc(v19DateText(e.date))} · ${v15GetPaid(e)?'Paid':'Pending'}</div><div class="v19-event-actions">${v19ActionButtons(e)}</div></div><div class="v19-event-amount red">−${v19Money(e.amount)}</div></div>`).join('');
+        v15BindActions(box);
+    }
+    function v19RecurringRows(){
+        return v15MonthEvents(currentDate).filter(e=>e.type==='loan'||(e.type==='expense'&&e.source==='Recurring expense')).sort((a,b)=>a.date-b.date||String(a.name).localeCompare(String(b.name)));
+    }
+    function v19RenderRecurring(){
+        const body=document.getElementById('v19RecurringBody');if(!body)return;
+        const rows=v19RecurringRows();
+        if(!rows.length){body.innerHTML='<tr><td colspan="6"><div class="v19-empty">No recurring expenses or EMI commitments for this month.</div></td></tr>';return}
+        body.innerHTML=rows.map(e=>{const subtype=e.type==='loan'?'Loan / EMI':(e.raw?.category||'Other');const paid=v15GetPaid(e);return `<tr><td><b>${v19Esc(e.name)}</b></td><td>${v19Esc(subtype)}</td><td>${v19Esc(v19DateText(e.date))}</td><td class="red"><b>${v19Money(e.amount)}</b></td><td class="v19-status ${paid?'green':'red'}">${paid?'Paid':'Pending'}</td><td><div class="v19-actions">${v19ActionButtons(e)}</div></td></tr>`}).join('');
+        v15BindActions(body);
+    }
+    function v19RenderAll(){
+        v19BuildShell();v19RenderSummary();v19RenderGrid();v19RenderSelected();v19RenderUpcoming();v19RenderRecurring();
+    }
+    function v19ChangeMonth(n){currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()+n,1);selectedDate=new Date(currentDate);v19RenderAll()}
+    function v19GoToday(){currentDate=new Date();selectedDate=new Date();v19RenderAll()}
+    window.renderCalendar=v19RenderGrid;
+    window.renderSelectedDay=v19RenderSelected;
+    window.renderUpcoming=v19RenderUpcoming;
+    window.v19RenderCalendar=v19RenderAll;
+    window.changeMonth=v19ChangeMonth;
+    window.goToday=v19GoToday;
+    const oldShow=window.showV3;
+    window.showV3=function(id,button){if(typeof oldShow==='function')try{oldShow(id,button)}catch(e){} if(id==='calendar')setTimeout(v19RenderAll,0)};
+    const oldAll=window.renderAll;
+    window.renderAll=function(){try{if(typeof oldAll==='function')oldAll()}catch(e){console.warn('base refresh',e)}try{v19RenderAll()}catch(e){console.error('V19 calendar',e)}};
+    v19BuildShell();
+    setTimeout(v19RenderAll,50);
+})();
+</script>
 </body>
 </html>
