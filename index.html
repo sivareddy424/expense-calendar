@@ -659,7 +659,13 @@ header{backdrop-filter:saturate(140%);}
 .v14-source-record button{padding:3px 6px;font-size:10px}
 .v14-record-action{cursor:pointer}
 </style>
-<meta content="V15 Unified Finance" name="expense-calendar-version"/></head>
+<meta content="V15 Unified Finance" name="expense-calendar-version"/>
+<style id="v17-unified-groups-css">
+.v17-unified-groups #v15UnifiedLedger .v3-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+.v17-unified-groups .v16-overview-actions{display:flex;gap:7px;flex-wrap:wrap}
+.v17-unified-groups .v14-source-record{display:inline-flex;gap:5px;align-items:center;flex-wrap:wrap;margin:3px 4px 3px 0}
+</style>
+</head>
 <body>
 <div class="login-screen" id="loginScreen">
 <div class="login-box">
@@ -813,14 +819,14 @@ header{backdrop-filter:saturate(140%);}
 <tr>
 <th>Month</th>
 <th>Income</th>
-<th>Expenses</th>
-<th>Extra EMI</th>
-<th>Outflow</th>
+<th>Expense</th>
+<th>Paid</th>
+<th>Pending</th>
 <th>Surplus / Deficit</th>
 <th>Status</th>
 <th>Cumulative Change</th>
 <th>Income Sources</th>
-<th>Outflow Sources</th>
+<th>Expense Sources</th>
 </tr>
 </thead>
 <tbody id="forecastTable"></tbody>
@@ -1060,11 +1066,11 @@ header{backdrop-filter:saturate(140%);}
 <h2>📊 Monthly Report</h2>
 <div class="grid">
 <div>
-<h3>Category Spending</h3>
+<h3>Income &amp; Expense Groups</h3>
 <div id="categoryReport"></div>
 </div>
 <div>
-<h3>Special Categories</h3>
+<h3>Paid / Pending Summary</h3>
 <div id="specialReport"></div>
 </div>
 </div>
@@ -5014,7 +5020,7 @@ window.addEventListener("unhandledrejection",event=>{
         console.error("Unhandled display promise error",event.reason);
     }
 });
-/* ========================= V16 PRODUCTION CONTROLLER ========================= */
+/* ========================= V17 UNIFIED FINANCE CONTROLLER ========================= */
 /*
    Single source of truth for cross-tab cash flow and payment state.
    Groups:
@@ -5032,10 +5038,7 @@ window.addEventListener("unhandledrejection",event=>{
      Savings (cash outflow, not an expense budget category)
 */
 
-const V15_GROUPS = [
-    'Housing','Utilities','Insurance','Loan / EMI','Investment',
-    'Education','Shopping','Food','Transport','Other'
-];
+const V15_GROUPS = ['Income','Expense'];
 
 let v15PaidState = {};
 
@@ -5052,58 +5055,17 @@ function v15SameDate(a,b){return dateKey(v15Date(a))===dateKey(v15Date(b));}
 function v15Arr(v){return Array.isArray(v)?v:[];}
 function v15Today(){const d=new Date();d.setHours(0,0,0,0);return d;}
 function v15Key(kind,id,date){return `${kind}|${id}|${dateKey(v15Date(date))}`;}
-function v15StatusStorageKey(){return currentUser?`expense-calendar-v15-paid-${currentUser.id}`:'';}
+function v15StatusStorageKey(){return currentUser?`expense-calendar-v17-paid-${currentUser.id}`:'';}
 
 function v15CanonicalGroup(kindOrEvent, rawCategory=''){
     const e=typeof kindOrEvent==='object'?kindOrEvent:null;
     const kind=e?.type||e?.kind||kindOrEvent;
-    const raw=e?.raw||e||{};
-    const source=String(e?.source||'').toLowerCase();
-    const name=String(raw?.name||e?.name||'').toLowerCase().trim();
-    const category=String(raw?.category||raw?.type||rawCategory||'').toLowerCase().trim();
-    const combined=(category+' '+name+' '+source).replace(/\s+/g,' ');
-
+    // There are only two top-level cash-flow groups in the application.
+    // Detailed categories/types remain available through v15Subtype.
     if(kind==='income') return 'Income';
-    if(kind==='saving') return 'Savings';
-    if(kind==='loan') return 'Loan / EMI';
-    if(kind==='investment') return 'Investment';
-    if(kind==='vehicle') return 'Transport';
-    if(kind==='shared') return 'Other';
-
-    if(kind==='bill' || kind==='householdBill'){
-        if(/electric|water|internet|wifi|broadband|gas|phone|mobile|telephone|cable|dth|recharge|utility/.test(combined)) return 'Utilities';
-        if(/maintenance|property|house|rent|society|apartment/.test(combined)) return 'Housing';
-        return 'Other';
-    }
-
-    if(kind==='renewal'){
-        if(/insurance|lic|premium|health policy|life policy|motor policy/.test(combined)) return 'Insurance';
-        if(/tax|property|house/.test(combined)) return 'Housing';
-        return 'Other';
-    }
-
-    if(kind==='expense' || kind==='oneTimeExpense'){
-        if(/loan|emi/.test(combined)) return 'Loan / EMI';
-        if(/investment|mutual fund|sip|stock|shares|bond/.test(combined)) return 'Investment';
-
-        const aliases={
-            'housing':'Housing','house':'Housing','rent':'Housing','property':'Housing',
-            'utilities':'Utilities','utility':'Utilities',
-            'insurance':'Insurance',
-            'loan / emi':'Loan / EMI','loan':'Loan / EMI','emi':'Loan / EMI','recurring emi':'Loan / EMI',
-            'investment':'Investment','investments':'Investment',
-            'education':'Education','study':'Education','school':'Education','college':'Education',
-            'shopping':'Shopping','purchase':'Shopping',
-            'food':'Food','groceries':'Food','grocery':'Food',
-            'transport':'Transport','transportation':'Transport','travel':'Transport','fuel':'Transport',
-            'other':'Other'
-        };
-        if(aliases[category]) return aliases[category];
-        const normalized=category ? category.charAt(0).toUpperCase()+category.slice(1) : 'Other';
-        return V15_GROUPS.includes(normalized)?normalized:'Other';
-    }
-
-    return V15_GROUPS.includes(String(rawCategory))?String(rawCategory):'Other';
+    if(kind==='life') return null; // planning item, not a cash-flow group
+    if(['saving','loan','investment','vehicle','shared','bill','householdBill','renewal','expense','oneTimeExpense'].includes(kind)) return 'Expense';
+    return kindOrEvent==='income'?'Income':'Expense';
 }
 
 function v15IncomeSubtype(raw, recurring=false){
@@ -5169,7 +5131,7 @@ function v15DefaultPaid(e){
     if(e.source==='One-time expense')return v15Date(e.date)<=v15Today();
     return false;
 }
-function v15IsExpenseLike(e){return !!e && (['expense','loan','bill','renewal','shared','vehicle','investment'].includes(e.type) || e.source==='One-time expense');}
+function v15IsExpenseLike(e){return !!e && (['expense','loan','bill','renewal','shared','vehicle','investment','saving'].includes(e.type) || e.source==='One-time expense');}
 function v15GetPaid(e){
     if(!e || !v15IsExpenseLike(e)) return e?.type==='saving';
     const kind=v15EventKind(e);
@@ -5292,7 +5254,8 @@ function v15LoanDuplicate(l,date){
     return v15Arr(expenses).some(e=>{
         if(String(e.name||'').trim().toLowerCase()!==loanName)return false;
         if(Math.abs(v15Num(e.amount)-loanAmount)>=0.01)return false;
-        if(v15CanonicalGroup('expense',e.category)!=='Loan / EMI')return false;
+        const isLoanLike=/\bloan\b|\bemi\b|mortgage/i.test(String(e.name||'')+' '+String(e.category||''));
+        if(!isLoanLike)return false;
         const due=occurrenceForExpense(e,date);
         return !!due && v15SameDate(due,date);
     });
@@ -5310,7 +5273,7 @@ function v15LoanEvents(date){
         const dueDay=Math.min(start.getDate(),lastDay(date).getDate());
         if(date.getDate()!==dueDay)return;
         if(v15LoanDuplicate(l,date))return;
-        const e={type:'loan',name:l.name,amount:v15Num(l.emi_amount),category:'Loan / EMI',group:'Loan / EMI',subtype:'Loan EMI',date:v15Date(date),source:'Loan EMI',raw:l};
+        const e={type:'loan',name:l.name,amount:v15Num(l.emi_amount),category:'Loan / EMI',group:'Expense',subtype:'Loan EMI',date:v15Date(date),source:'Loan EMI',raw:l};
         e.paid=v15GetPaid(e);
         out.push(e);
     });
@@ -5318,7 +5281,7 @@ function v15LoanEvents(date){
 }
 function v15SavingEvents(date){
     return v15Arr(savingsTransactions).filter(x=>String(x.transaction_date||'').slice(0,10)===dateKey(date)).map(x=>({
-        type:'saving',name:x.note||'Savings contribution',amount:v15Num(x.amount),category:'Savings',group:'Savings',subtype:'Goal Saving',date:v15Date(x.transaction_date),source:'Goal saving',raw:x,paid:true
+        type:'saving',name:x.note||'Savings contribution',amount:v15Num(x.amount),category:'Savings',group:'Expense',subtype:'Goal Saving',date:v15Date(x.transaction_date),source:'Goal saving',raw:x,paid:true
     }));
 }
 function v15HouseholdEvents(date){
@@ -5340,7 +5303,7 @@ function v15RenewalEvents(date){
 }
 function v15InvestmentEvents(date){
     return v15Arr(investments).filter(x=>String(x.investment_date||'').slice(0,10)===dateKey(date)).map(x=>{
-        const e={type:'investment',name:x.name,amount:v15Num(x.invested_amount),category:'Investment',group:'Investment',subtype:x.type||'Investment',date:v15Date(x.investment_date),source:'Investment contribution',raw:x};
+        const e={type:'investment',name:x.name,amount:v15Num(x.invested_amount),category:'Investment',group:'Expense',subtype:x.type||'Investment',date:v15Date(x.investment_date),source:'Investment contribution',raw:x};
         e.paid=v15GetPaid(e);
         return e;
     });
@@ -5352,14 +5315,14 @@ function v15LifeEvents(date){
 }
 function v15SharedEvents(date){
     return v15Arr(sharedExpenses).filter(x=>String(x.expense_date||'').slice(0,10)===dateKey(date)).map(x=>{
-        const e={type:'shared',name:x.name,amount:v15Num(x.amount),category:'Other',group:'Other',subtype:'Shared Expense',date:v15Date(x.expense_date),source:'Shared expense',raw:x};
+        const e={type:'shared',name:x.name,amount:v15Num(x.amount),category:'Other',group:'Expense',subtype:'Shared Expense',date:v15Date(x.expense_date),source:'Shared expense',raw:x};
         e.paid=v15GetPaid(e);return e;
     });
 }
 function v15VehicleEvents(date){
     return v15Arr(vehicleLogs).filter(x=>String(x.log_date||'').slice(0,10)===dateKey(date)).map(x=>{
         const v=v15Arr(vehicles).find(z=>z.id===x.vehicle_id);
-        const e={type:'vehicle',name:(v?.name?v.name+' · ':'')+(x.log_type||'Vehicle expense'),amount:v15Num(x.amount),category:'Transport',group:'Transport',subtype:x.log_type||'Vehicle expense',date:v15Date(x.log_date),source:'Vehicle expense',raw:x};
+        const e={type:'vehicle',name:(v?.name?v.name+' · ':'')+(x.log_type||'Vehicle expense'),amount:v15Num(x.amount),category:'Transport',group:'Expense',subtype:x.log_type||'Vehicle expense',date:v15Date(x.log_date),source:'Vehicle expense',raw:x};
         e.paid=v15GetPaid(e);return e;
     });
 }
@@ -5379,27 +5342,30 @@ function v15MonthEvents(date){
 
 function v15CashflowStats(date){
     let income=0,outflow=0,paid=0,savings=0;
-    const groups={};
+    const groups={Income:0,Expense:0};
     v15MonthEvents(date).forEach(e=>{
-        if(e.type==='income'){income+=e.amount;groups.Income=(groups.Income||0)+e.amount;return;}
         if(e.type==='life')return;
-        const group=v15CanonicalGroup(e);
-        if(e.type==='saving'){savings+=e.amount;outflow+=e.amount;paid+=e.amount;groups.Savings=(groups.Savings||0)+e.amount;return;}
+        if(e.type==='income'){
+            income+=e.amount;
+            groups.Income+=e.amount;
+            return;
+        }
         outflow+=e.amount;
-        groups[group]=(groups[group]||0)+e.amount;
-        if(v15GetPaid(e))paid+=e.amount;
+        groups.Expense+=e.amount;
+        if(e.type==='saving') savings+=e.amount;
+        if(v15GetPaid(e)) paid+=e.amount;
     });
+    if(groups.Income===0) delete groups.Income;
+    if(groups.Expense===0) delete groups.Expense;
     return {income,outflow,paid,pending:Math.max(0,outflow-paid),savings,net:income-outflow,groups};
 }
 
 function v15GetForecastMonthData(d){
     const events=v15MonthEvents(d);
     const income=events.filter(e=>e.type==='income').reduce((s,e)=>s+v15Num(e.amount),0);
+    const expense=events.filter(e=>v15IsExpenseLike(e)).reduce((s,e)=>s+v15Num(e.amount),0);
     const savings=events.filter(e=>e.type==='saving').reduce((s,e)=>s+v15Num(e.amount),0);
-    const expenses=events.filter(e=>['expense','bill','renewal','shared','vehicle'].includes(e.type)).reduce((s,e)=>s+v15Num(e.amount),0);
-    const loanEmi=events.filter(e=>e.type==='loan').reduce((s,e)=>s+v15Num(e.amount),0);
-    const outflow=expenses+loanEmi+savings;
-    return {date:d,income,expenses,extraEmi:loanEmi,savings,outflow,surplus:income-outflow};
+    return {date:d,income,expenses:expense,extraEmi:0,savings,outflow:expense,surplus:income-expense};
 }
 
 /* Install canonical calculations before app boot. */
@@ -5460,9 +5426,9 @@ function v15ClearPaidKind(kind,id){
 function v15ActionHtml(e, includePaid=true){
     const info=v15RecordInfo(e);if(!info)return '';
     const actions=[];
-    if(includePaid && v15IsExpenseLike(e)){
+    if(includePaid && v15IsExpenseLike(e) && e.type!=='saving'){
         const paid=v15GetPaid(e);
-        actions.push(`<button type="button" class="btn ${paid?'btn-gray':'btn-green'}" data-v15-paid-kind="${escapeHtml(info.kind)}" data-v15-paid-id="${escapeHtml(info.id)}" data-v15-paid-date="${dateKey(e.date)}">${paid?'Mark Pending':'Mark Paid'}</button>`);
+        actions.push(`<button type="button" class="btn ${paid?'btn-gray':'btn-green'}" data-v17-paid-kind="${escapeHtml(info.kind)}" data-v17-paid-id="${escapeHtml(info.id)}" data-v17-paid-date="${dateKey(e.date)}">${paid?'Mark Pending':'Mark Paid'}</button>`);
     }
     actions.push(`<button type="button" class="btn-light" data-v15-edit="${escapeHtml(info.id)}" data-v15-kind="${escapeHtml(info.kind)}" data-v15-vehicle="${escapeHtml(info.vehicleId||'')}">Edit</button>`);
     actions.push(`<button type="button" class="btn-danger" data-v15-delete="${escapeHtml(info.id)}" data-v15-kind="${escapeHtml(info.kind)}">Delete</button>`);
@@ -5477,7 +5443,7 @@ function v15BindActions(root=document){
     if(!root)return;
     root.querySelectorAll('[data-v15-edit]').forEach(btn=>btn.onclick=ev=>{ev.stopPropagation();v15OpenRecord(btn.dataset.v15Kind,btn.dataset.v15Edit,btn.dataset.v15Vehicle);});
     root.querySelectorAll('[data-v15-delete]').forEach(btn=>btn.onclick=async ev=>{ev.stopPropagation();await v15DeleteRecord(btn.dataset.v15Kind,btn.dataset.v15Delete);});
-    root.querySelectorAll('[data-v15-paid-kind]').forEach(btn=>btn.onclick=async ev=>{
+    root.querySelectorAll('[data-v17-paid-kind]').forEach(btn=>btn.onclick=async ev=>{
         ev.stopPropagation();
         const e=v15FindEvent(btn.dataset.v15PaidKind,btn.dataset.v15PaidId,btn.dataset.v15PaidDate);
         if(e)await v15SetPaid(e,!v15GetPaid(e));
@@ -5588,22 +5554,23 @@ renderDashboard=function(){
 };
 renderReports=function(){
     const events=v15MonthEvents(currentDate);
-    const groups={};
-    events.filter(e=>e.type!=='income'&&e.type!=='life'&&e.type!=='saving').forEach(e=>{const g=v15CanonicalGroup(e);groups[g]=(groups[g]||0)+v15Num(e.amount);});
-    const total=Object.values(groups).reduce((a,b)=>a+b,0);
+    const groupEvents={Income:[],Expense:[]};
+    events.forEach(e=>{const g=v15CanonicalGroup(e);if(g&&groupEvents[g])groupEvents[g].push(e);});
+    const income=groupEvents.Income.reduce((s,e)=>s+v15Num(e.amount),0);
+    const expense=groupEvents.Expense.reduce((s,e)=>s+v15Num(e.amount),0);
+    const renderGroup=(title,total,items,cls)=>{
+        const sub={};items.forEach(e=>{const key=v15Subtype(e)||(title==='Income'?'Income':'Expense');sub[key]=(sub[key]||0)+v15Num(e.amount);});
+        const rows=Object.entries(sub).sort((a,b)=>b[1]-a[1]);
+        return `<div class="card" style="margin-bottom:8px"><div class="report-head"><span><b>${escapeHtml(title)}</b></span><b class="${cls}">${money(total)}</b></div>${rows.length?`<div class="small" style="margin-top:8px">${rows.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:10px;margin-top:4px"><span>${escapeHtml(k)}</span><b>${money(v)}</b></div>`).join('')}</div>`:'<div class="small" style="margin-top:8px">No records this month.</div>'}</div>`;
+    };
     const box=document.getElementById('categoryReport');
-    if(box){const sorted=Object.entries(groups).sort((a,b)=>b[1]-a[1]);box.innerHTML=sorted.length?sorted.map(([g,v])=>`<div class="report-row"><div class="report-head"><span>${escapeHtml(g)}</span><b>${money(v)}</b></div><div class="progress"><div class="progress-bar" style="width:${total?v/total*100:0}%"></div></div></div>`).join(''):'<div class="empty">No outflow recorded this month.</div>';}
+    if(box){box.innerHTML=renderGroup('Income',income,groupEvents.Income,'green')+renderGroup('Expense',expense,groupEvents.Expense,'red');}
     const special=document.getElementById('specialReport');
-    if(special){
-        const cf=v15CashflowStats(currentDate);
-        special.innerHTML=`<div class="card" style="margin-bottom:8px"><div class="small">Unified paid / pending</div><b>Paid ${money(cf.paid)} · Pending ${money(cf.pending)}</b></div>`+Object.entries(groups).sort((a,b)=>b[1]-a[1]).map(([g,v])=>{
-            const ge=events.filter(e=>e.type!=='income'&&e.type!=='life'&&e.type!=='saving'&&v15CanonicalGroup(e)===g);const p=ge.reduce((s,e)=>s+(v15GetPaid(e)?e.amount:0),0);
-            return `<div class="card" style="margin-bottom:8px"><div class="small">${escapeHtml(g)}</div><b>${money(v)}</b><div class="small">Paid ${money(p)} · Pending ${money(Math.max(0,v-p))}</div></div>`;
-        }).join('');
-    }
+    if(special){const paid=groupEvents.Expense.reduce((s,e)=>s+(v15GetPaid(e)?v15Num(e.amount):0),0);special.innerHTML=`<div class="card" style="margin-bottom:8px"><div class="small">Unified groups</div><b>Income ${money(income)} · Expense ${money(expense)}</b></div><div class="card" style="margin-bottom:8px"><div class="small">Expense payment status</div><b class="green">Paid ${money(paid)}</b><div class="small">Pending ${money(Math.max(0,expense-paid))}</div></div><div class="card"><div class="small">Tracking</div><b>${expense?((paid/expense)*100).toFixed(0):0}% of Expense tracked as paid</b></div>`;}
     const monthly=document.getElementById('monthlyReport');
-    if(monthly){let h='';for(let i=5;i>=0;i--){const d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),x=v15CashflowStats(d);h+=`<div class="card" style="margin-bottom:8px"><b>${monthName(d)}</b><div>Income: ${money(x.income)}</div><div>Outflow: ${money(x.outflow)}</div><div>Paid: ${money(x.paid)}</div><div>Pending: ${money(x.pending)}</div><div class="${x.net>=0?'green':'red'}">Net: ${money(x.net)}</div></div>`;}monthly.innerHTML=h;}
+    if(monthly){let h='';for(let i=5;i>=0;i--){const d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),x=v15CashflowStats(d);h+=`<div class="card" style="margin-bottom:8px"><b>${monthName(d)}</b><div>Income: <span class="green">${money(x.income)}</span></div><div>Expense: ${money(x.outflow)}</div><div>Paid: <span class="green">${money(x.paid)}</span></div><div>Pending: <span class="red">${money(x.pending)}</span></div><div class="${x.net>=0?'green':'red'}">Net: ${money(x.net)}</div></div>`;}monthly.innerHTML=h;}
 };
+
 renderBudgets=function(){
     const date=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
     const logical={};
@@ -5660,17 +5627,24 @@ renderForecast=function(){
     const rows=[];let cumulative=0;
     for(let i=0;i<12;i++){
         const d=new Date(currentDate.getFullYear(),currentDate.getMonth()+i,1),r=v15GetForecastMonthData(d),events=v15MonthEvents(d);
-        r.incomeSourceEvents=v15ForecastSourceEvents(events.filter(e=>e.type==='income'));r.outflowSourceEvents=v15ForecastSourceEvents(events.filter(e=>e.type!=='income'&&e.type!=='life'));
+        r.incomeSourceEvents=v15ForecastSourceEvents(events.filter(e=>e.type==='income'));
+        r.outflowSourceEvents=v15ForecastSourceEvents(events.filter(e=>v15CanonicalGroup(e)==='Expense'));
+        const paid=events.filter(e=>v15IsExpenseLike(e)&&v15GetPaid(e)).reduce((s,e)=>s+v15Num(e.amount),0);
+        r.paid=paid;r.pending=Math.max(0,r.outflow-paid);
         cumulative+=r.surplus;rows.push({...r,cumulative});
     }
+    // Normalize unified totals.
+    rows.forEach(r=>{r.expenseTotal=r.outflow;r.pending=Math.max(0,r.outflow-r.paid);});
     const avgIncome=rows.reduce((s,r)=>s+r.income,0)/12,avgOutflow=rows.reduce((s,r)=>s+r.outflow,0)/12,avgSurplus=rows.reduce((s,r)=>s+r.surplus,0)/12;
     const best=rows.reduce((a,b)=>b.surplus>a.surplus?b:a,rows[0]),worst=rows.reduce((a,b)=>b.surplus<a.surplus?b:a,rows[0]);
     const set=(id,v,cls)=>{const el=document.getElementById(id);if(el){el.textContent=v;if(cls)el.className='stat-value '+cls;}};
     set('forecastAvgIncome',money(avgIncome));set('forecastAvgOutflow',money(avgOutflow));set('forecastAvgSurplus',money(avgSurplus));set('forecastNetChange',money(cumulative),cumulative>=0?'green':'red');set('forecastBestMonth',monthName(best.date)+' · '+money(best.surplus));set('forecastWorstMonth',monthName(worst.date)+' · '+money(worst.surplus));
-    const table=document.getElementById('forecastTable');if(table){table.innerHTML=rows.map(r=>{const status=r.surplus<0?'bad':r.surplus<Math.max(500,avgIncome*.1)?'warn':'ok',txt=r.surplus<0?'DEFICIT':r.surplus<Math.max(500,avgIncome*.1)?'TIGHT':'OK';return `<tr><td><b>${escapeHtml(monthName(r.date))}</b></td><td class="green">${money(r.income)}</td><td>${money(r.expenses)}</td><td>${money(r.extraEmi)}</td><td>${money(r.outflow)}</td><td class="${r.surplus<0?'forecast-negative':r.surplus<Math.max(500,avgIncome*.1)?'forecast-warning':'forecast-positive'}">${money(r.surplus)}</td><td><span class="forecast-status ${status}">${txt}</span></td><td class="${r.cumulative<0?'forecast-negative':''}">${money(r.cumulative)}</td><td class="small">${v15ForecastSources(r.incomeSourceEvents)}</td><td class="small">${v15ForecastSources(r.outflowSourceEvents)}</td></tr>`;}).join('');v15BindActions(table);}
-    const warning=document.getElementById('forecastWarnings');if(warning){const w=rows.filter(r=>r.surplus<0||r.surplus<Math.max(500,avgIncome*.1));warning.innerHTML=w.length?w.map(r=>`<div class="v3-item"><b>${monthName(r.date)}</b><div class="${r.surplus<0?'forecast-negative':'forecast-warning'}">${r.surplus<0?'Projected deficit':'Projected tight surplus'}: ${money(r.surplus)}</div><div class="small">Income ${money(r.income)} · Outflow ${money(r.outflow)}</div></div>`).join(''):'<div class="empty">No tight months are currently projected.</div>';}
+    const table=document.getElementById('forecastTable');
+    if(table){table.innerHTML=rows.map(r=>{const status=r.surplus<0?'bad':r.surplus<Math.max(500,avgIncome*.1)?'warn':'ok',txt=r.surplus<0?'DEFICIT':r.surplus<Math.max(500,avgIncome*.1)?'TIGHT':'OK';return `<tr><td><b>${escapeHtml(monthName(r.date))}</b></td><td class="green">${money(r.income)}</td><td>${money(r.outflow)}</td><td class="green">${money(r.paid)}</td><td class="red">${money(r.pending)}</td><td class="${r.surplus<0?'forecast-negative':r.surplus<Math.max(500,avgIncome*.1)?'forecast-warning':'forecast-positive'}">${money(r.surplus)}</td><td><span class="forecast-status ${status}">${txt}</span></td><td class="${r.cumulative<0?'forecast-negative':''}">${money(r.cumulative)}</td><td class="small">${v15ForecastSources(r.incomeSourceEvents)}</td><td class="small">${v15ForecastSources(r.outflowSourceEvents)}</td></tr>`;}).join('');v15BindActions(table);}
+    const warning=document.getElementById('forecastWarnings');if(warning){const w=rows.filter(r=>r.surplus<0||r.surplus<Math.max(500,avgIncome*.1));warning.innerHTML=w.length?w.map(r=>`<div class="v3-item"><b>${monthName(r.date)}</b><div class="${r.surplus<0?'forecast-negative':'forecast-warning'}">${r.surplus<0?'Projected deficit':'Projected tight surplus'}: ${money(r.surplus)}</div><div class="small">Income ${money(r.income)} · Expense ${money(r.outflow)}</div></div>`).join(''):'<div class="empty">No tight months are currently projected.</div>';}
     const goal=document.getElementById('forecastGoals');if(goal){goal.innerHTML=savingsGoals.length?savingsGoals.map(g=>{const target=v15Num(g.target_amount),cur=v15Num(g.current_amount),rem=Math.max(0,target-cur);let req=0,months='No target date';if(g.target_date){months=Math.max(1,monthDifference(new Date(currentDate.getFullYear(),currentDate.getMonth(),1),v15Date(g.target_date))+1);req=rem/months;}return `<div class="forecast-goal"><b>${escapeHtml(g.name)}</b><div>Remaining: <b>${money(rem)}</b></div><div class="small">${typeof months==='number'?months+' month'+(months===1?'':'s')+' remaining':''}${g.target_date?' · Target '+escapeHtml(g.target_date):''}</div>${req?`<div style="margin-top:6px">Required monthly saving: <b>${money(req)}</b></div>`:''}<div class="v3-actions"><button class="btn-light" onclick="openGoalModal('${g.id}')">Edit</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`;}).join(''):'<div class="empty">Add a savings goal to calculate the monthly amount needed.</div>';}
 };
+
 
 /* ---------------- OVERVIEW UNIFIED LEDGER ---------------- */
 function v15RenderOverviewLedger(){
@@ -5681,8 +5655,20 @@ function v15RenderOverviewLedger(){
         const status=overview.querySelector('.overview-status-row');
         if(status)status.insertAdjacentElement('afterend',box);else overview.insertBefore(box,overview.firstChild);
     }
-    const s=v15CashflowStats(currentDate),groupRows=Object.entries(s.groups).filter(([g])=>g!=='Income').sort((a,b)=>b[1]-a[1]);
-    box.innerHTML=`<div class="section-heading"><div><h2>📒 Unified Monthly Ledger</h2><div class="small">Salary and other income are one Income group. Loans and recurring EMI are one Loan / EMI group. Every cash-flow type uses the same totals across the app.</div></div></div><div class="dashboard" style="margin-bottom:10px"><div class="card"><div class="stat-title">Income</div><div class="stat-value green">${money(s.income)}</div></div><div class="card"><div class="stat-title">Outflow</div><div class="stat-value red">${money(s.outflow)}</div></div><div class="card"><div class="stat-title">Paid</div><div class="stat-value green">${money(s.paid)}</div></div><div class="card"><div class="stat-title">Pending</div><div class="stat-value red">${money(s.pending)}</div></div></div><div class="v3-grid">${groupRows.length?groupRows.map(([g,v])=>`<div class="v3-item"><div class="v3-item-title"><b>${escapeHtml(g)}</b><b>${money(v)}</b></div><div class="small">${v15MonthEvents(currentDate).filter(e=>v15CanonicalGroup(e)===g).length} record(s) in this month</div></div>`).join(''):'<div class="empty">No monthly outflow yet.</div>'}</div>`;
+    const s=v15CashflowStats(currentDate), events=v15MonthEvents(currentDate);
+    const subtypeTotals={Income:{},Expense:{}};
+    events.forEach(e=>{
+        const g=v15CanonicalGroup(e);if(!g)return;
+        const sub=v15Subtype(e)|| (g==='Income'?'Income':'Expense');
+        subtypeTotals[g][sub]=(subtypeTotals[g][sub]||0)+v15Num(e.amount);
+    });
+    const renderSub=(g)=>{
+        const rows=Object.entries(subtypeTotals[g]||{}).sort((a,b)=>b[1]-a[1]);
+        return rows.length?`<div style="display:grid;gap:6px;margin-top:8px">${rows.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:10px"><span>${escapeHtml(k)}</span><b>${money(v)}</b></div>`).join('')}</div>`:'<div class="small">No records in this group for this month.</div>';
+    };
+    const incomeCount=events.filter(e=>v15CanonicalGroup(e)==='Income').length;
+    const expenseCount=events.filter(e=>v15CanonicalGroup(e)==='Expense').length;
+    box.innerHTML=`<div class="section-heading"><div><h2>📒 Unified Monthly Ledger</h2><div class="small">Everything is classified into two top-level groups only: Income and Expense. Salary, recurring income and other income stay under Income. Normal expenses, recurring expenses, loans/EMIs, bills, savings and investments stay under Expense.</div></div></div><div class="dashboard" style="margin-bottom:10px"><div class="card"><div class="stat-title">Income</div><div class="stat-value green">${money(s.income)}</div></div><div class="card"><div class="stat-title">Expense</div><div class="stat-value red">${money(s.outflow)}</div></div><div class="card"><div class="stat-title">Paid</div><div class="stat-value green">${money(s.paid)}</div></div><div class="card"><div class="stat-title">Pending</div><div class="stat-value red">${money(s.pending)}</div></div></div><div class="v3-grid"><div class="v3-item"><div class="v3-item-title"><b>Income</b><b>${money(s.income)}</b></div><div class="small">${incomeCount} record(s) · all income sources combined</div>${renderSub('Income')}</div><div class="v3-item"><div class="v3-item-title"><b>Expense</b><b>${money(s.outflow)}</b></div><div class="small">${expenseCount} record(s) · all outflow sources combined</div>${renderSub('Expense')}</div></div>`;
 }
 
 
@@ -5745,7 +5731,7 @@ function v15EnhanceFeaturePaidControls(){
         const list=sharedExpenses.slice(0,20);
         sh.querySelectorAll('.v10-item').forEach((el,i)=>{
             const raw=list[i]; if(!raw||el.querySelector('[data-v15-feature-paid]'))return;
-            const e={type:'shared',name:raw.name,amount:v15Num(raw.amount),category:'Other',group:'Other',subtype:'Shared Expense',date:v15Date(raw.expense_date),source:'Shared expense',raw};
+            const e={type:'shared',name:raw.name,amount:v15Num(raw.amount),category:'Other',group:'Expense',subtype:'Shared Expense',date:v15Date(raw.expense_date),source:'Shared expense',raw};
             const actions=el.querySelector('.v10-actions'); if(actions){const b=document.createElement('button');b.className='btn '+(v15GetPaid(e)?'btn-gray':'btn-green');b.textContent=v15GetPaid(e)?'Mark Pending':'Mark Paid';b.dataset.v15FeaturePaid='1';b.onclick=async(ev)=>{ev.stopPropagation();await v15SetPaid(e,!v15GetPaid(e));};actions.insertBefore(b,actions.firstChild);}
         });
     }
@@ -5772,14 +5758,14 @@ function v16LoanEventForCurrentMonth(loan){
     const recurring=v15Arr(expenses).find(e=>{
         const sameName=String(e.name||'').trim().toLowerCase()===String(loan.name||'').trim().toLowerCase();
         const sameAmount=Math.abs(v15Num(e.amount)-v15Num(loan.emi_amount))<0.01;
-        const isLoan=v15CanonicalGroup('expense',e.category)==='Loan / EMI';
+        const isLoan=/\bloan\b|\bemi\b|mortgage/i.test(String(e.name||'')+' '+String(e.category||''));
         const occ=occurrenceForExpense(e,due);
         return sameName&&sameAmount&&isLoan&&occ&&v15SameDate(occ,due);
     });
     if(recurring){
-        return {type:'expense',name:recurring.name,amount:v15Num(recurring.amount),category:'Loan / EMI',group:'Loan / EMI',subtype:'Recurring EMI',date:v15Date(due),source:'Recurring EMI',raw:recurring};
+        return {type:'expense',name:recurring.name,amount:v15Num(recurring.amount),category:'Loan / EMI',group:'Expense',subtype:'Recurring EMI',date:v15Date(due),source:'Recurring EMI',raw:recurring};
     }
-    return {type:'loan',name:loan.name,amount:v15Num(loan.emi_amount),category:'Loan / EMI',group:'Loan / EMI',subtype:'Loan EMI',date:v15Date(due),source:'Loan EMI',raw:loan};
+    return {type:'loan',name:loan.name,amount:v15Num(loan.emi_amount),category:'Loan / EMI',group:'Expense',subtype:'Loan EMI',date:v15Date(due),source:'Loan EMI',raw:loan};
 }
 function v16AddPaidButton(actions,e){
     if(!actions||!e||!v15IsExpenseLike(e)||actions.querySelector('[data-v16-paid-direct]'))return;
@@ -5829,9 +5815,10 @@ function v16EnhanceOverviewUpcoming(){
     box.querySelectorAll('.overview-payment').forEach((el,i)=>{
         const e=list[i];if(!e)return;
         const right=el.querySelector('.overview-payment-right');if(!right)return;
-        let actions=right.querySelector('.v16-overview-actions');
+        let actions=right.querySelector('.v16-overview-actions') || right.querySelector('.v3-actions');
         if(!actions){actions=document.createElement('div');actions.className='v3-actions v16-overview-actions';actions.style.marginTop='5px';right.appendChild(actions);}
         actions.innerHTML=v15ActionHtml(e,true);
+        actions.classList.add('v16-overview-actions');
         v15BindActions(actions);
     });
 }
@@ -5870,11 +5857,11 @@ function v15NormalizeVisibleLabels(){
 /* ---------------- BACKUP ---------------- */
 const v15ExportBackup=exportBackup;
 exportBackup=function(){
-    const backup={version:16,exportedAt:new Date().toISOString(),universalPaidState:v15PaidState,
+    const backup={version:17,exportedAt:new Date().toISOString(),universalPaidState:v15PaidState,
         expenses,payments,income,recurringIncome,loans,savingsGoals,savingsTransactions,budgets,creditCards,assets,investments,
         oneTimeExpenses,financeRules,renewals,vehicles,vehicleLogs,householdBills,lifeEvents,documents};
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='expense-calendar-v16-backup-'+dateKey(new Date())+'.json';a.click();URL.revokeObjectURL(url);
+    a.href=url;a.download='expense-calendar-v17-backup-'+dateKey(new Date())+'.json';a.click();URL.revokeObjectURL(url);
 };
 
 /* ---------------- LIVE SAME-BROWSER SYNC ---------------- */
@@ -5887,10 +5874,20 @@ window.addEventListener('storage',e=>{
 
 window.v15DataAudit=function(){
     const cf=v15CashflowStats(currentDate);
-    return {version:16,month:monthKey(currentDate),groups:V15_GROUPS,counts:{expenses:expenses.length,income:income.length,recurringIncome:recurringIncome.length,loans:loans.length,savingsGoals:savingsGoals.length,savingsTransactions:savingsTransactions.length,budgets:budgets.length,creditCards:creditCards.length,assets:assets.length,investments:investments.length,oneTimeExpenses:oneTimeExpenses.length,renewals:renewals.length,vehicles:vehicles.length,vehicleLogs:vehicleLogs.length,householdBills:householdBills.length,lifeEvents:lifeEvents.length,sharedExpenses:sharedExpenses.length},cashflow:cf};
+    return {version:17,month:monthKey(currentDate),groups:V15_GROUPS,counts:{expenses:expenses.length,income:income.length,recurringIncome:recurringIncome.length,loans:loans.length,savingsGoals:savingsGoals.length,savingsTransactions:savingsTransactions.length,budgets:budgets.length,creditCards:creditCards.length,assets:assets.length,investments:investments.length,oneTimeExpenses:oneTimeExpenses.length,renewals:renewals.length,vehicles:vehicles.length,vehicleLogs:vehicleLogs.length,householdBills:householdBills.length,lifeEvents:lifeEvents.length,sharedExpenses:sharedExpenses.length},cashflow:cf};
 };
 
-v15NormalizeVisibleLabels();
+function v17NormalizeUnifiedUI(){
+    const body=document.body;
+    body.classList.add('v17-unified-groups');
+    document.querySelectorAll('#v15UnifiedLedger .v3-item-title b:first-child').forEach(el=>{
+        if(el.textContent==='Loan / EMI'||el.textContent==='Other'||el.textContent==='Savings'||el.textContent==='Investment'||el.textContent==='Transport')el.textContent='Expense';
+    });
+    const h=document.querySelector('#v3-forecast h2');
+    if(h && /Projected Monthly Cash Flow/.test(h.textContent)) h.textContent='📅 Projected Monthly Income & Expense';
+}
+
+v17NormalizeUnifiedUI();
 loadUniversalPaymentState();
 
 /* Boot only after the V15 controller is installed. */
