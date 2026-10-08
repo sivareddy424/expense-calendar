@@ -6891,5 +6891,230 @@ header{position:sticky;top:0;z-index:900;box-shadow:0 6px 24px rgba(15,23,42,.14
 })();
 </script>
 
+
+<!-- ========================= V22 TOP BAR REFINEMENT ========================= -->
+<style id="v22-topbar-refinement">
+/* Remove the large identity/install panels from the page body. */
+.user-bar,#installBox{display:none !important;}
+
+/* Cleaner application header. */
+header{
+  z-index:2000 !important;
+  padding:11px 16px !important;
+  background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 55%,#3b82f6 100%) !important;
+  box-shadow:0 6px 22px rgba(37,99,235,.22) !important;
+}
+.header-inner{max-width:1380px !important;}
+.header-actions{align-items:center;gap:7px;flex-wrap:wrap;overflow:visible !important;}
+.header-actions > button{
+  min-height:38px;
+  border-radius:11px;
+  font-weight:800;
+  transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.header-actions > button:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(15,23,42,.14);}
+.v22-header-btn{display:inline-flex!important;align-items:center;justify-content:center;gap:6px;}
+.v22-install-btn{background:#ecfeff !important;color:#0f766e !important;border:1px solid rgba(20,184,166,.22)!important;}
+.v22-more-btn{min-width:82px;}
+
+/* Fixed More popover: never clipped by header/overflow/nav. */
+#v22MoreMenu{
+  position:fixed;
+  min-width:220px;
+  max-width:calc(100vw - 20px);
+  padding:7px;
+  background:#fff;
+  border:1px solid #dfe5ee;
+  border-radius:16px;
+  box-shadow:0 20px 55px rgba(15,23,42,.24);
+  z-index:120000;
+  transform-origin:top right;
+  animation:v22-menu-in .12s ease-out;
+}
+#v22MoreMenu[hidden]{display:none !important;}
+@keyframes v22-menu-in{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.v22-menu-title{padding:7px 10px 6px;font-size:11px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;}
+.v22-menu-status{padding:5px 10px 8px;font-size:11px;color:#64748b;border-bottom:1px solid #eef2f7;margin-bottom:5px;}
+.v22-menu-divider{height:1px;background:#eef2f7;margin:5px 2px;}
+#v22MoreMenu button{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 11px;
+  border:0;
+  background:transparent;
+  border-radius:10px;
+  text-align:left;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:800;
+  color:#1f2937;
+}
+#v22MoreMenu button:hover{background:#eff6ff;color:#1d4ed8;}
+#v22MoreMenu button .v22-menu-icon{width:20px;text-align:center;font-size:16px;}
+
+/* Make the navigation feel like a compact app switcher. */
+#v20NavHost{margin-bottom:13px !important;}
+.v20-nav{box-shadow:0 8px 26px rgba(15,23,42,.08) !important;border-color:#e4eaf3 !important;}
+.v20-tab{font-weight:850!important;}
+
+@media(max-width:800px){
+  header{padding:9px 10px !important;}
+  header h1{font-size:17px !important;}
+  .header-inner{align-items:center !important;}
+  .header-actions{justify-content:flex-end;gap:5px;max-width:100%;}
+  .header-actions > button{min-height:35px;padding:8px 10px!important;font-size:12px!important;}
+  .v22-more-btn{min-width:auto;}
+}
+@media(max-width:520px){
+  header h1{max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .v22-install-btn{font-size:0!important;width:40px;}
+  .v22-install-btn::before{content:"📱";font-size:15px;}
+  .v22-header-btn.quick-text-hidden{font-size:0!important;width:40px;}
+  .v22-header-btn.quick-text-hidden::before{content:"⚡";font-size:15px;}
+}
+</style>
+<script id="v22-topbar-refinement-script">
+(function(){
+  'use strict';
+
+  function q(sel,root){return (root||document).querySelector(sel);}
+  function hideLegacyTopBlocks(){
+    var userBar=q('.user-bar'); if(userBar) userBar.style.display='none';
+    var installBox=q('#installBox'); if(installBox) installBox.style.display='none';
+    var old=q('#v21MoreMenu'); if(old) old.hidden=true;
+    var legacy=q('#v20UtilityMenu'); if(legacy) legacy.style.display='none';
+  }
+
+  function getHeader(){return q('header .header-actions');}
+
+  function ensureInstallButton(){
+    var actions=getHeader(); if(!actions) return null;
+    var btn=q('#v22InstallButton');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='v22InstallButton';
+      btn.className='btn-light v22-header-btn v22-install-btn';
+      btn.textContent='📱 Install';
+      btn.title='Install Expense Calendar';
+      btn.setAttribute('aria-label','Install Expense Calendar');
+      var more=q('.v20-utility-btn',actions);
+      if(more) actions.insertBefore(btn,more); else actions.appendChild(btn);
+    }
+    btn.onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(typeof installApp==='function'){
+        try{installApp();}catch(err){console.warn('Install action failed',err);}
+      }
+    };
+    return btn;
+  }
+
+  function closeMore(){
+    var menu=q('#v22MoreMenu');
+    if(menu) menu.hidden=true;
+    var btn=q('#v22MoreButton') || q('.v20-utility-btn');
+    if(btn) btn.setAttribute('aria-expanded','false');
+  }
+
+  function positionMore(menu,btn){
+    var r=btn.getBoundingClientRect();
+    var gap=8;
+    var left=Math.min(Math.max(10,r.right-menu.offsetWidth),window.innerWidth-menu.offsetWidth-10);
+    var top=r.bottom+gap;
+    if(top+menu.offsetHeight>window.innerHeight-10){top=Math.max(10,r.top-menu.offsetHeight-gap);}
+    menu.style.left=Math.max(10,left)+'px';
+    menu.style.top=Math.max(10,top)+'px';
+  }
+
+  function ensureMoreMenu(){
+    var menu=q('#v22MoreMenu');
+    if(menu)return menu;
+    menu=document.createElement('div');
+    menu.id='v22MoreMenu';
+    menu.hidden=true;
+    menu.setAttribute('role','menu');
+    menu.innerHTML=
+      '<div class="v22-menu-title">Account &amp; app</div>'+
+      '<div class="v22-menu-status" id="v22MenuStatus">Settings and app tools</div>'+
+      '<button type="button" role="menuitem" data-v22-action="account"><span class="v22-menu-icon">⚙️</span><span>Account &amp; Security</span></button>'+
+      '<button type="button" role="menuitem" data-v22-action="privacy"><span class="v22-menu-icon">👁️</span><span>Privacy</span></button>'+
+      '<button type="button" role="menuitem" data-v22-action="alerts"><span class="v22-menu-icon">🔔</span><span>Alerts</span></button>'+
+      '<button type="button" role="menuitem" data-v22-action="install"><span class="v22-menu-icon">📱</span><span>Install App</span></button>'+
+      '<div class="v22-menu-divider"></div>'+
+      '<button type="button" role="menuitem" data-v22-action="backup"><span class="v22-menu-icon">⬇️</span><span>Backup</span></button>'+
+      '<button type="button" role="menuitem" data-v22-action="restore"><span class="v22-menu-icon">⬆️</span><span>Restore</span></button>';
+    document.body.appendChild(menu);
+
+    menu.addEventListener('click',function(e){
+      var b=e.target.closest('button[data-v22-action]');
+      if(!b)return;
+      var action=b.getAttribute('data-v22-action');
+      closeMore();
+      try{
+        if(action==='account' && typeof openAccountModal==='function') openAccountModal();
+        else if(action==='privacy' && typeof togglePrivacyMode==='function') togglePrivacyMode();
+        else if(action==='alerts' && typeof requestNotifications==='function') requestNotifications();
+        else if(action==='install' && typeof installApp==='function') installApp();
+        else if(action==='backup' && typeof exportBackup==='function') exportBackup();
+        else if(action==='restore'){var input=q('#importFile');if(input)input.click();}
+      }catch(err){console.error('V22 More action failed',err);}
+    });
+    return menu;
+  }
+
+  function wireMoreButton(){
+    var actions=getHeader(); if(!actions)return;
+    var btn=q('.v20-utility-btn',actions); if(!btn)return;
+    btn.id='v22MoreButton';
+    btn.className='btn-light v22-header-btn v22-more-btn';
+    btn.textContent='⋯ More';
+    btn.type='button';
+    btn.setAttribute('aria-haspopup','menu');
+    btn.setAttribute('aria-expanded','false');
+    btn.onclick=function(e){
+      e.preventDefault();e.stopPropagation();
+      var menu=ensureMoreMenu();
+      var willOpen=menu.hidden;
+      closeMore();
+      if(willOpen){
+        menu.hidden=false;
+        requestAnimationFrame(function(){positionMore(menu,btn);});
+        btn.setAttribute('aria-expanded','true');
+      }
+    };
+  }
+
+  function styleQuickAdd(){
+    var actions=getHeader();if(!actions)return;
+    var b=Array.from(actions.querySelectorAll('button')).find(function(x){return /Quick Add/i.test(x.textContent||'');});
+    if(b)b.classList.add('v22-header-btn');
+  }
+
+  function refreshTopBar(){
+    hideLegacyTopBlocks();
+    ensureInstallButton();
+    wireMoreButton();
+    styleQuickAdd();
+  }
+
+  document.addEventListener('click',function(e){
+    var menu=q('#v22MoreMenu');if(!menu||menu.hidden)return;
+    if(!e.target.closest('#v22MoreMenu') && !e.target.closest('#v22MoreButton')) closeMore();
+  },true);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMore();});
+  window.addEventListener('resize',closeMore);
+  window.addEventListener('scroll',closeMore,true);
+
+  var observer=new MutationObserver(function(){refreshTopBar();});
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+
+  refreshTopBar();
+  setTimeout(refreshTopBar,250);
+  setTimeout(refreshTopBar,800);
+})();
+</script>
 </body>
 </html>
