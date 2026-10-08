@@ -1,11 +1,10 @@
 {
-  "name": "Expense Calendar",
-  "short_name": "Expense Calendar",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#f4f7fb",
-  "theme_color": "#2563eb",
-  "description": "Personal finance manager",
-  "orientation": "portrait-primary",
-  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "name":"Expense Calendar",
+  "short_name":"Expense Calendar",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f7f9fc",
+  "theme_color":"#2563eb",
+  "description":"Personal finance manager",
+  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
 }
