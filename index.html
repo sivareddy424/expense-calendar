@@ -7,7 +7,7 @@
 <meta content="#2563eb" name="theme-color"/>
 <meta content="Personal Finance Manager" name="description"/>
 <link href="manifest.json" rel="manifest"/>
-<title>Expense Calendar · Personal Finance · V25</title>
+<title>Expense Calendar · Personal Finance · V27</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 </script>
 <style>
@@ -658,7 +658,7 @@ header{backdrop-filter:saturate(140%);}
 .v14-source-record button{padding:3px 6px;font-size:10px}
 .v14-record-action{cursor:pointer}
 </style>
-<meta content="V25 UI Refresh" name="expense-calendar-version"/>
+<meta content="V27 Sample-Tested UI/Feature Consolidation" name="expense-calendar-version"/>
 <style id="v17-unified-groups-css">
 .v17-unified-groups #v15UnifiedLedger .v3-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
 .v17-unified-groups .v16-overview-actions{display:flex;gap:7px;flex-wrap:wrap}
@@ -774,9 +774,7 @@ header{backdrop-filter:saturate(140%);}
   window.addEventListener('resize',closeMore);
   window.addEventListener('scroll',closeMore,true);
 
-  /* Re-wire after V20 dynamically builds its header. */
-  var observer=new MutationObserver(function(){wireMoreButton();});
-  observer.observe(document.documentElement,{childList:true,subtree:true});
+  /* One-time wiring is sufficient; V23 owns the final More button. */
   setTimeout(wireMoreButton,0);
   setTimeout(wireMoreButton,500);
 
@@ -4778,6 +4776,20 @@ function renderV10Everything(){
     renderCommandCenterV10();renderEmergencyAndSinking();renderGlobalSearch();renderRecurringDetection();renderRules();renderMilestones();renderMonthlyReview();renderReminderPlan();renderGoalPriority();renderDebtSimulator();renderRenewals();renderHouseholdBills();renderVehicles();renderDocuments();renderShared();renderLifeEvents();renderQuickRecent();
 }
 
+function openOneTimeExpenseModal(){
+    const modal=document.getElementById('oneTimeExpenseModal');
+    if(!modal)return;
+    document.getElementById('oneTimeExpenseId').value='';
+    document.getElementById('oneTimeExpenseName').value='';
+    document.getElementById('oneTimeExpenseAmount').value='';
+    document.getElementById('oneTimeExpenseDate').value=dateKey(new Date());
+    document.getElementById('oneTimeExpenseCategory').value='Other';
+    document.getElementById('oneTimeExpenseNote').value='';
+    const title=document.getElementById('oneTimeExpenseModalTitle');
+    if(title)title.textContent='Add One-time Expense';
+    modal.style.display='flex';
+}
+
 function openOneTimeExpenseEdit(id){
     const x=oneTimeExpenses.find(e=>e.id===id);
     if(!x)return;
@@ -7078,9 +7090,6 @@ header{
   window.addEventListener('resize',closeMore);
   window.addEventListener('scroll',closeMore,true);
 
-  var observer=new MutationObserver(function(){refreshTopBar();});
-  observer.observe(document.documentElement,{childList:true,subtree:true});
-
   refreshTopBar();
   setTimeout(refreshTopBar,250);
   setTimeout(refreshTopBar,800);
@@ -7824,10 +7833,10 @@ header h1{font-size:20px !important;letter-spacing:-.3px}
       menu=document.createElement('div');menu.id='v23MoreMenu';menu.className='v23-more-menu';menu.hidden=true;menu.setAttribute('role','menu');
       menu.innerHTML=`
         <div class="v23-more-title">Account & App</div>
-        <div class="v23-more-status" id="v23MoreStatus">All controls are here. No file imports or uploads.</div>
+        <div class="v23-more-status" id="v23MoreStatus">Backup and Restore are here. Restore merges a JSON backup without deleting existing data.</div>
         <button type="button" class="v23-more-item" data-v23-more="account">⚙️ <span>Account & Security</span></button>
         <button type="button" class="v23-more-item" data-v23-more="privacy">👁️ <span>Privacy</span></button>
-        <button type="button" class="v23-more-item" data-v23-more="alerts">🔔 <span>Alerts</span></button>
+        <button type="button" class="v23-more-item" data-v26-restore="1">↥ <span>Restore backup</span></button>
         <div class="v23-more-divider"></div>
         <button type="button" class="v23-more-item" data-v23-more="backup">⬇️ <span>Backup</span></button>
         <button type="button" class="v23-more-item" data-v23-more="refresh">↻ <span>Refresh Data</span></button>
@@ -7899,9 +7908,6 @@ header h1{font-size:20px !important;letter-spacing:-.3px}
     applyCalendarFilter();
   }
 
-  const obs=new MutationObserver(()=>{upgradeTopBar();});
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-
   function boot(){
     upgradeTopBar();
     setTimeout(renderV23,200);
@@ -7922,7 +7928,7 @@ header h1{font-size:20px !important;letter-spacing:-.3px}
 </script>
 <div id="v10Documents" style="display:none!important"></div>
 <style id="v24-design-system-css">
-/* ============================== V25 UI / UX REFRESH ==============================
+/* ============================== V26 UI / UX REFRESH ==============================
    Visual-only refinement layer. Existing V3→V23 data/rendering logic remains intact.
 */
 :root{
@@ -8497,7 +8503,7 @@ input,select,textarea{min-height:42px!important}
 <script id="v25-experience-runtime">
 (function(){
 'use strict';
-const V25='expense-calendar-v25';
+const V25='expense-calendar-v27';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const moneySafe=v=>typeof money==='function'?money(Number(v||0)):'₹'+Number(v||0).toLocaleString('en-IN');
 const dateK=v=>typeof dateKey==='function'?dateKey(new Date(v)):new Date(v).toISOString().slice(0,10);
@@ -8589,7 +8595,7 @@ function ensureMobileNav(){
 }
 function syncMobileNav(){ const g=(typeof currentGroup!=='undefined'?currentGroup:''); $$('[data-v25-mobile]').forEach(b=>b.classList.toggle('active',b.dataset.v25Mobile===g)); }
 
-function removeFileUI(){ $$('input[type="hidden" data-v25-disabled-file="1"],#importFile,#documentFile,#documentModal').forEach(el=>{try{el.remove()}catch(_){} }); }
+function removeFileUI(){ $$('input[type="hidden"][data-v25-disabled-file="1"],#importFile,#documentFile,#documentModal').forEach(el=>{try{el.remove()}catch(_){} }); }
 
 function openV25Alerts(){
  let p=$('#v25Alerts');if(!p){p=document.createElement('div');p.id='v25Alerts';p.className='v25-popover';document.body.appendChild(p)}
@@ -8690,6 +8696,261 @@ setTimeout(()=>{
  wrapRender('renderMoney',()=>{});wrapRender('renderAll',refreshAllV25);wrapRender('renderCalendar',()=>renderCalendarTimeline());wrapRender('renderCreditCards',()=>{});wrapRender('renderNetWorth',()=>{});
 },50);
 
+})();
+</script>
+
+
+<style id="v26-cleanup-css">
+/* ===================== V26 CLEAN NAV + DEDUPLICATION ===================== */
+/* Home owns the dashboard; legacy overview and V23 overview enhancement stay available to old renderers but never display. */
+#v20-home > .v20-group-content > #v3-overview,
+#v23HomeEnhancements{display:none !important;}
+/* Loan payoff/goal intelligence lives under Planning; remove duplicate copies from Financial Health. */
+#v20-insights #v3-smart .section:has(h2){ }
+#v20-insights #v3-smart .section.v26-duplicate-intel{display:none !important;}
+/* Tools is for unique utilities only; duplicate navigation/analysis cards are hidden by V26 runtime. */
+#v20-insights #v3-more .v26-tool-duplicate{display:none !important;}
+#v20-insights #v3-more .v26-tool-group-title{
+  margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--v25-muted);font-weight:950
+}
+.v26-tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.v26-tools-card{border:1px solid var(--v25-border);background:var(--v25-surface);border-radius:16px;box-shadow:var(--v25-shadow);padding:15px}
+.v26-tools-card h3{margin:0 0 4px;font-size:14px}
+.v26-tools-card p{margin:0 0 10px;font-size:10px;color:var(--v25-muted);line-height:1.45}
+.v26-tools-card .v26-tools-action-row{display:flex;gap:7px;flex-wrap:wrap}
+.v26-restore-note{font-size:10px;color:var(--v25-muted);line-height:1.5;margin-top:6px}
+/* Canonical loan payoff intelligence */
+.v26-loan-intel{border:1px solid var(--v25-border);background:var(--v25-surface);border-radius:16px;box-shadow:var(--v25-shadow);padding:16px;margin-bottom:12px}
+.v26-loan-intel-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
+.v26-loan-intel-title{font-size:15px;font-weight:950}
+.v26-loan-intel-sub{font-size:10px;color:var(--v25-muted);margin-top:3px;max-width:720px;line-height:1.5}
+.v26-loan-extra{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.v26-loan-extra label{font-size:10px;color:var(--v25-muted);font-weight:850}
+.v26-loan-extra input{width:150px;min-height:38px!important;padding:8px 10px!important}
+.v26-loan-grid{display:grid;gap:8px}
+.v26-loan-row{display:grid;grid-template-columns:minmax(180px,1.5fr) repeat(5,minmax(85px,1fr));gap:8px;align-items:center;padding:10px 11px;border:1px solid var(--v25-border);border-radius:12px;background:var(--v25-surface-2)}
+.v26-loan-row.head{background:transparent;border:0;padding:4px 11px;color:var(--v25-muted);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.v26-loan-cell{font-size:10px}.v26-loan-cell b{font-size:11px}.v26-loan-main{min-width:0}.v26-loan-main b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v26-loan-meta{font-size:9px;color:var(--v25-muted);margin-top:3px}
+.v26-saved{color:var(--v25-green);font-weight:950}.v26-forever{color:var(--v25-orange);font-weight:950}
+.v26-restore-input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+@media(max-width:900px){.v26-tools-grid{grid-template-columns:1fr}.v26-loan-row{grid-template-columns:minmax(150px,1.4fr) repeat(3,minmax(90px,1fr))}.v26-loan-row .v26-extra-col{display:none}}
+@media(max-width:700px){
+  .v26-loan-row.head{display:none}
+  .v26-loan-row{grid-template-columns:1fr 1fr;gap:8px}
+  .v26-loan-main{grid-column:1/-1}
+  .v26-loan-cell{padding-top:4px}
+  .v26-loan-extra input{width:130px}
+}
+</style>
+
+
+<script id="v26-clean-runtime">
+(function(){
+'use strict';
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const $=(s,r=document)=>r.querySelector(s);
+const moneyV26=v=>typeof money==='function'?money(Number(v||0)):'₹'+Number(v||0).toLocaleString('en-IN');
+const monthNameV26=d=>typeof monthName==='function'?monthName(d):new Date(d).toLocaleDateString('en-IN',{month:'short',year:'numeric'});
+const escapeV26=v=>typeof escapeHtml==='function'?escapeHtml(v??''):String(v??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#039;'}[m]));
+
+function markDuplicateSmartSections(){
+  const smart=$('#v3-smart'); if(!smart)return;
+  $$('.section',smart).forEach(sec=>{
+    const text=(sec.innerText||'').replace(/\s+/g,' ').trim().toLowerCase();
+    if(text.includes('loan payoff intelligence')||text.includes('savings goal intelligence'))sec.classList.add('v26-duplicate-intel');
+  });
+}
+
+function removeToolDuplicateByText(texts){
+  const tools=$('#v3-more'); if(!tools)return;
+  $$('.v10-panel,.v10-banner',tools).forEach(node=>{
+    const text=(node.innerText||'').replace(/\s+/g,' ').trim().toLowerCase();
+    if(texts.some(t=>text.includes(t)))node.classList.add('v26-tool-duplicate');
+  });
+  // Do not hide an entire shell merely because one child is a duplicate; preserve useful sibling tools.
+  $$('.v10-shell',tools).forEach(shell=>{
+    const functional=[...shell.querySelectorAll(':scope > .v10-panel, :scope > .v10-banner')];
+    if(functional.length && functional.every(x=>x.classList.contains('v26-tool-duplicate')))shell.classList.add('v26-tool-duplicate');
+  });
+}
+function cleanupHome(){
+  const old=$('#v3-overview');if(old)old.style.display='none';
+  const enh=$('#v23HomeEnhancements');if(enh)enh.style.display='none';
+  // Prevent legacy overview controls from appearing if a renderer toggles display later.
+  if(old)old.classList.add('v26-home-legacy-hidden');
+}
+
+function hideToolDuplicates(){
+  removeToolDuplicateByText([
+    'financial command center','today at a glance','quick add','search everything',
+    'debt-free simulator','monthly review','adaptive reminders','goal priority','planning notes'
+  ]);
+}
+
+function ensureRestoreInput(){
+  let input=$('#v26RestoreInput');
+  if(!input){
+    input=document.createElement('input');
+    input.type='file';input.accept='.json,application/json';input.id='v26RestoreInput';
+    input.className='v26-restore-input';input.tabIndex=-1;input.setAttribute('aria-hidden','true');
+    document.body.appendChild(input);
+    input.addEventListener('change',async e=>{
+      const file=e.target.files?.[0]; if(!file)return;
+      try{
+        if(typeof importBackup==='function'){
+          await importBackup(e);
+        }else if(typeof importBackupV8==='function'){
+          await importBackupV8(e);
+        }else{
+          alert('Restore is unavailable in this build.');
+        }
+      }catch(err){
+        console.error('V26 restore failed',err);
+        alert('Restore failed: '+(err?.message||err));
+      }finally{input.value='';}
+    });
+  }
+  return input;
+}
+
+function addRestoreToMore(){
+  const more=$('#v23MoreMenu'); if(!more)return;
+  more.querySelectorAll('[data-v23-more="alerts"]').forEach(x=>x.remove());
+  let btn=more.querySelector('[data-v26-restore]');
+  if(!btn){
+    btn=document.createElement('button');btn.type='button';btn.className='v23-more-item';btn.dataset.v26Restore='1';
+    btn.innerHTML='↥ <span>Restore backup</span>';
+    const refresh=more.querySelector('[data-v23-more="refresh"]');
+    if(refresh)refresh.insertAdjacentElement('beforebegin',btn); else more.appendChild(btn);
+    btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();closeMore?.();ensureRestoreInput().click();});
+  }
+  const status=$('#v23MoreStatus');
+  if(status)status.textContent='Backup and restore are available here. Restore merges a backup into this account; it does not delete existing data.';
+}
+
+function canonicalLoanMonths(loan,extra){
+  const p=Math.max(0,Number(loan?.outstanding_amount||0));
+  const emi=Math.max(0,Number(loan?.emi_amount||0)+Number(extra||0));
+  const annual=Math.max(0,Number(loan?.interest_rate||0));
+  if(p<=0)return {months:0,total:0,interest:0};
+  if(emi<=0)return {months:Infinity,total:Infinity,interest:Infinity};
+  const r=annual/100/12;
+  let months;
+  if(r===0)months=Math.ceil(p/emi);
+  else if(emi<=p*r)months=Infinity;
+  else months=Math.ceil(-Math.log(1-(p*r/emi))/Math.log(1+r));
+  months=Number.isFinite(months)?Math.min(months,600):Infinity;
+  const total=Number.isFinite(months)?months*emi:Infinity;
+  const interest=Number.isFinite(total)?Math.max(0,total-p):Infinity;
+  return {months,total,interest};
+}
+function finishMonth(months){
+  if(!Number.isFinite(months))return '—';
+  const base=new Date();base.setDate(1);base.setMonth(base.getMonth()+months);
+  return monthNameV26(base);
+}
+function renderCanonicalLoanIntel(){
+  const host=$('#v3-loans'); if(!host)return;
+  let panel=$('#v26LoanIntel');
+  if(!panel){panel=document.createElement('section');panel.id='v26LoanIntel';panel.className='v26-loan-intel';host.insertBefore(panel,host.firstChild);}
+  const extra=Math.max(0,Number($('#v26LoanExtra')?.value||0));
+  const rows=Array.isArray(loans)?loans:[];
+  const sig=JSON.stringify(rows.map(l=>[l.id,l.name,l.outstanding_amount,l.emi_amount,l.interest_rate]))+'|'+extra;
+  if(panel.dataset.v26Sig===sig){
+    const input=$('#v26LoanExtra',panel);if(input&&!input.dataset.bound){input.dataset.bound='1';input.oninput=renderCanonicalLoanIntel;}
+    return;
+  }
+  panel.dataset.v26Sig=sig;
+  panel.innerHTML=`
+    <div class="v26-loan-intel-head">
+      <div><div class="v26-loan-intel-title">🏦 Loan Payoff Intelligence</div><div class="v26-loan-intel-sub">One place for payoff estimates. Choose an extra monthly payment to see how much time and interest you could save. This is the canonical payoff tool; duplicate copies elsewhere are hidden.</div></div>
+      <div class="v26-loan-extra"><label for="v26LoanExtra">Extra / month</label><input id="v26LoanExtra" type="number" min="0" step="500" value="${extra}"></div>
+    </div>
+    ${rows.length?`<div class="v26-loan-grid"><div class="v26-loan-row head"><div>Loan</div><div>Outstanding</div><div>EMI</div><div>Current finish</div><div>New finish</div><div>Months saved</div></div>${rows.map(l=>{
+      const base=canonicalLoanMonths(l,0),next=canonicalLoanMonths(l,extra);
+      const saved=(Number.isFinite(base.months)&&Number.isFinite(next.months))?Math.max(0,base.months-next.months):0;
+      const interestSaved=(Number.isFinite(base.interest)&&Number.isFinite(next.interest))?Math.max(0,base.interest-next.interest):0;
+      return `<div class="v26-loan-row"><div class="v26-loan-main"><b>${escapeV26(l.name||'Loan')}</b><div class="v26-loan-meta">${Number(l.interest_rate||0).toFixed(2)}% interest · ${moneyV26(l.emi_amount)} EMI</div></div><div class="v26-loan-cell"><span class="v26-loan-meta">Outstanding</span><br><b>${moneyV26(l.outstanding_amount)}</b></div><div class="v26-loan-cell"><span class="v26-loan-meta">Monthly EMI</span><br><b>${moneyV26(l.emi_amount)}</b></div><div class="v26-loan-cell"><span class="v26-loan-meta">Current</span><br><b>${finishMonth(base.months)}</b></div><div class="v26-loan-cell"><span class="v26-loan-meta">With extra</span><br><b>${finishMonth(next.months)}</b></div><div class="v26-loan-cell"><span class="v26-loan-meta">Saved</span><br><b class="${saved>0?'v26-saved':''}">${Number.isFinite(base.months)&&Number.isFinite(next.months)?saved+' mo':'—'}</b><div class="v26-loan-meta">${interestSaved?moneyV26(interestSaved)+' interest saved':''}</div></div></div>`
+    }).join('')}</div>`:'<div class="v25-card-sub">No loans yet. Add a loan to use payoff intelligence.</div>'}
+  `;
+  const input=$('#v26LoanExtra',panel); if(input){input.dataset.bound='1';input.oninput=renderCanonicalLoanIntel;}
+}
+
+function buildCleanTools(){
+  const tools=$('#v3-more'); if(!tools)return;
+  let intro=$('#v26ToolsIntro');
+  if(!intro){
+    intro=document.createElement('div');intro.id='v26ToolsIntro';intro.className='v26-tools-card';tools.insertBefore(intro,tools.firstChild);
+  }
+  if(intro.dataset.v26Built!=='1'){
+    intro.innerHTML='<h3>🧰 Tools & Utilities</h3><p>Only utilities that do not belong to Home, Money, Planning, Reports or Financial Health live here. Backup and Restore are available once from More.</p>';
+    intro.dataset.v26Built='1';
+  }
+  if(intro.nextElementSibling && intro.nextElementSibling.id==='v26ToolsRestoreCard')intro.nextElementSibling.remove();
+}
+function patchMobileNavActive(){
+  $$('.v25-mobile-nav button').forEach(b=>{
+    b.onclick=()=>{
+      const g=b.dataset.group||b.getAttribute('data-v25-group');
+      if(typeof openGroup==='function'&&g)openGroup(g);
+    };
+    b.classList.toggle('active',b.dataset.group===window.__v26Group);
+  });
+}
+
+function patchMoreMenuWatcher(){
+  addRestoreToMore();
+  const m=$('#v23MoreMenu');if(!m)return;
+  if(m.dataset.v26RestoreReady)return;
+  m.dataset.v26RestoreReady='1';
+}
+
+function refresh(){
+  cleanupHome();
+  markDuplicateSmartSections();
+  hideToolDuplicates();
+  buildCleanTools();
+  ensureRestoreInput();
+  patchMoreMenuWatcher();
+  renderCanonicalLoanIntel();
+  // Calendar should be the calendar, without the Home-style weekly preview; Home owns the 7-day attention timeline.
+  $('#v25CalendarTimeline')?.remove();
+  // Remove duplicate quick/search/debt panels created again by old renderers.
+  hideToolDuplicates();
+}
+
+// Re-apply cleanup after legacy V20/V23/V25 renderers rebuild sections.
+let v26RefreshTimer=null;
+let v26RefreshQueued=false;
+function queueV26Refresh(delay=30){
+  if(v26RefreshQueued)return;
+  v26RefreshQueued=true;
+  clearTimeout(v26RefreshTimer);
+  v26RefreshTimer=setTimeout(()=>{
+    v26RefreshQueued=false;
+    try{refresh()}catch(e){console.warn('V26 refresh',e)}
+  },delay);
+}
+
+document.addEventListener('click',e=>{
+  const rb=e.target.closest('[data-v26-restore]');
+  if(rb){
+    e.preventDefault();e.stopPropagation();
+    try{closeMore?.();ensureRestoreInput().click();}catch(err){console.error('V26 restore launch failed',err)}
+    return;
+  }
+  const tab=e.target.closest('.v20-tab');
+
+  if(tab){window.__v26Group=tab.dataset.v20Tab;queueV26Refresh(25);}
+  const sub=e.target.closest('.v20-subtab');
+  if(sub)queueV26Refresh(25);
+  const more=e.target.closest('#v23MoreButton');
+  if(more)queueV26Refresh(60);
+},{capture:true});
+window.addEventListener('load',()=>queueV26Refresh(120));
+document.addEventListener('DOMContentLoaded',()=>{queueV26Refresh(60);setTimeout(()=>queueV26Refresh(400),0);setTimeout(()=>queueV26Refresh(900),0)});
+queueV26Refresh(350);
 })();
 </script>
 
