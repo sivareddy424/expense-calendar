@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v14-production-1";
+const CACHE_NAME = "expense-calendar-v16-production-1";
 
 const APP_SHELL = [
     "./",
@@ -33,34 +33,52 @@ self.addEventListener("fetch", event => {
 
     const url = new URL(event.request.url);
 
+    // Only handle requests belonging to this site.
     if (url.origin !== self.location.origin) return;
 
+    // Navigation requests:
+    // Try the network first so GitHub Pages updates appear immediately.
     if (event.request.mode === "navigate") {
         event.respondWith(
             fetch(event.request)
                 .then(response => {
                     const copy = response.clone();
+
                     caches.open(CACHE_NAME)
-                        .then(cache => cache.put("./index.html", copy))
+                        .then(cache => {
+                            cache.put("./index.html", copy);
+                        })
                         .catch(() => {});
+
                     return response;
                 })
-                .catch(() => caches.match("./index.html"))
+                .catch(() => {
+                    return caches.match("./index.html");
+                })
         );
+
         return;
     }
 
+    // Other files:
+    // Use cache first, then fetch and store a fresh copy.
     event.respondWith(
         caches.match(event.request)
             .then(cachedResponse => {
-                if (cachedResponse) return cachedResponse;
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
 
                 return fetch(event.request)
                     .then(response => {
                         const copy = response.clone();
+
                         caches.open(CACHE_NAME)
-                            .then(cache => cache.put(event.request, copy))
+                            .then(cache => {
+                                cache.put(event.request, copy);
+                            })
                             .catch(() => {});
+
                         return response;
                     });
             })
