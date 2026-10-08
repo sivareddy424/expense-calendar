@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v17-production-1";
+const CACHE_NAME = "expense-calendar-v18-production-1";
 
 const APP_SHELL = [
     "./",
@@ -26,7 +26,6 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
     if (event.request.method !== "GET") return;
-
     const url = new URL(event.request.url);
     if (url.origin !== self.location.origin) return;
 
