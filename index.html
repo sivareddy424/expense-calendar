@@ -711,16 +711,18 @@ header{backdrop-filter:saturate(140%);}
 <div class="header-inner">
 <h1>💰 Expense Calendar</h1>
 <div class="header-actions">
-<button class="btn-light" onclick="openCommonEntryModal()">＋ Add Entry</button>
-<button class="btn-light" onclick="openGoalModal()">+ Goal</button>
+<button class="btn-light v20-primary" onclick="openCommonEntryModal()">＋ Add Entry</button>
 <button class="btn-light" onclick="openQuickAddModal()">⚡ Quick Add</button>
-<button class="btn-light" onclick="togglePrivacyMode()">👁 Privacy</button>
 <button class="btn-light" onclick="requestNotifications()">🔔 Alerts</button>
-<button class="btn-light" onclick="exportBackup()">Backup</button>
-<button class="btn-light" onclick="document.getElementById('importFile').click()">Restore</button>
-<button class="btn-light" onclick="openAccountModal()">⚙ Account</button>
+<button class="btn-light v20-utility-btn" onclick="toggleV20Utilities()">⋯ More</button>
 <button class="btn-danger" onclick="logout()">Logout</button>
 <input accept=".json" id="importFile" onchange="importBackup(event)" style="display:none" type="file"/>
+<div id="v20UtilityMenu" class="v20-utility-menu" style="display:none">
+  <button type="button" onclick="togglePrivacyMode();toggleV20Utilities()">👁 Privacy</button>
+  <button type="button" onclick="exportBackup();toggleV20Utilities()">⬇ Backup</button>
+  <button type="button" onclick="document.getElementById('importFile').click();toggleV20Utilities()">⬆ Restore</button>
+  <button type="button" onclick="openAccountModal();toggleV20Utilities()">⚙ Account</button>
+</div>
 </div>
 </div>
 </header>
@@ -745,23 +747,7 @@ header{backdrop-filter:saturate(140%);}
     You can install Expense Calendar on your phone or computer for quick access.
     <button class="btn" onclick="installApp()">Install</button>
 </div>
-<div aria-label="Finance sections" class="v3-tabs" role="tablist">
-<button class="v3-tab active" onclick="showV3('overview',this)" role="tab">🏠 Overview</button>
-<button class="v3-tab" onclick="showV3('calendar',this)" role="tab">📅 Calendar</button>
-<button class="v3-tab" onclick="showV3('loans',this)" role="tab">🏦 Loans</button>
-<button class="v3-tab" onclick="showV3('goals',this)" role="tab">🎯 Goals</button>
-<button class="v3-tab" onclick="showV3('forecast',this)" role="tab">🔮 Forecast</button>
-<button class="v3-tab" onclick="showV3('budgets',this)" role="tab">💸 Budgets</button>
-<button class="v3-tab" onclick="showV3('smart',this)" role="tab">🧠 Smart</button>
-<button class="v3-tab" onclick="showV3('yearly',this)" role="tab">📊 Yearly</button>
-<button class="v3-tab" onclick="showV3('annual',this)" role="tab">🗓 Annual</button>
-<button class="v3-tab" onclick="showV3('assistant',this)" role="tab">🤖 Assistant</button>
-<button class="v3-tab" onclick="showV3('whatif',this)" role="tab">🧮 What-If</button>
-<button class="v3-tab" onclick="showV3('cards',this)" role="tab">💳 Cards</button>
-<button class="v3-tab" onclick="showV3('networth',this)" role="tab">🏠 Net Worth</button>
-<button class="v3-tab" onclick="showV3('investments',this)" role="tab">📈 Investments</button>
-<button class="v3-tab" onclick="showV3('more',this)" role="tab">✨ More</button>
-</div>
+<div id="v20NavHost" aria-label="Finance sections"></div>
 <div class="v3-view active" id="v3-overview">
 <div class="section overview-hero">
 <h2>Financial Overview</h2>
@@ -6275,5 +6261,517 @@ setTimeout(v18ApplyUnifiedUI,1200);
     setTimeout(v19RenderAll,50);
 })();
 </script>
+
+<style id="v20-ui-css">
+:root{
+  --v20-primary:#2563eb;
+  --v20-primary-2:#1d4ed8;
+  --v20-bg:#f5f7fb;
+  --v20-card:#ffffff;
+  --v20-line:#e5e7eb;
+  --v20-muted:#64748b;
+  --v20-text:#0f172a;
+  --v20-green:#16a34a;
+  --v20-red:#dc2626;
+}
+body{background:linear-gradient(180deg,#eef4ff 0,#f7f9fc 300px,#f7f9fc 100%);}
+header{position:sticky;top:0;z-index:900;box-shadow:0 6px 24px rgba(15,23,42,.14);}
+.header-inner{gap:18px}
+.header-actions{position:relative}
+.v20-primary{font-weight:800;box-shadow:0 2px 8px rgba(37,99,235,.18)}
+.v20-utility-menu{
+  position:absolute;right:0;top:calc(100% + 8px);min-width:180px;padding:7px;
+  background:#fff;border:1px solid #dfe5ee;border-radius:12px;
+  box-shadow:0 18px 45px rgba(15,23,42,.18);z-index:1200;
+}
+.v20-utility-menu button{
+  display:block;width:100%;padding:9px 10px;border:0;background:transparent;
+  border-radius:8px;text-align:left;cursor:pointer;font-size:13px;
+}
+.v20-utility-menu button:hover{background:#f1f5f9}
+
+#v20NavHost{position:sticky;top:72px;z-index:850;margin:0 0 18px;}
+.v20-nav{
+  display:flex;gap:7px;align-items:center;overflow:auto;
+  padding:7px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);
+  border:1px solid rgba(226,232,240,.95);border-radius:15px;
+  box-shadow:0 8px 24px rgba(15,23,42,.07);scrollbar-width:thin;
+}
+.v20-tab{
+  flex:0 0 auto;border:0;background:transparent;color:#334155;cursor:pointer;
+  border-radius:10px;padding:10px 13px;font-size:13px;font-weight:800;white-space:nowrap;
+}
+.v20-tab:hover{background:#eff6ff;color:#1d4ed8}
+.v20-tab.active{background:var(--v20-primary);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.22)}
+.v20-view{display:none}
+.v20-view.active{display:block}
+.v20-subnav{
+  display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;
+}
+.v20-subtab{
+  border:1px solid #dbe3ee;background:#fff;color:#475569;padding:7px 10px;
+  border-radius:9px;font-weight:750;font-size:12px;cursor:pointer;
+}
+.v20-subtab.active{background:#eaf2ff;border-color:#b8d2ff;color:#1d4ed8}
+.v20-group-content{min-width:0}
+.v20-money-hero{
+  background:linear-gradient(135deg,#ffffff,#f8fbff);border:1px solid #e4eaf3;
+  border-radius:18px;padding:20px;box-shadow:0 10px 30px rgba(15,23,42,.05);margin-bottom:14px;
+}
+.v20-money-title{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.v20-money-sub{color:var(--v20-muted);font-size:13px;margin-top:3px}
+.v20-money-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:15px}
+.v20-money-toolbar input{flex:1;min-width:220px}
+.v20-chiprow{display:flex;gap:6px;flex-wrap:wrap}
+.v20-chip{
+  border:1px solid #dbe3ee;background:#fff;color:#475569;border-radius:999px;
+  padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer;
+}
+.v20-chip.active{background:#eaf2ff;color:#1d4ed8;border-color:#b9d3ff}
+.v20-money-kpis{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;
+}
+.v20-money-kpi{background:#fff;border:1px solid #e7edf5;border-radius:13px;padding:12px 13px}
+.v20-money-kpi .label{font-size:11px;color:#64748b}
+.v20-money-kpi .value{font-size:19px;font-weight:900;margin-top:3px}
+.v20-money-kpi.income .value{color:#16a34a}
+.v20-money-kpi.expense .value{color:#dc2626}
+.v20-money-kpi.paid .value{color:#0f766e}
+.v20-money-kpi.pending .value{color:#ea580c}
+.v20-ledger-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.v20-ledger-section{
+  background:#fff;border:1px solid #e4eaf3;border-radius:16px;padding:15px;
+}
+.v20-ledger-section h3{margin:0 0 10px;font-size:17px}
+.v20-entry-row{
+  border:1px solid #e8edf4;border-radius:12px;padding:12px;margin-bottom:8px;
+  display:flex;gap:12px;justify-content:space-between;align-items:flex-start;
+  background:#fbfdff;
+}
+.v20-entry-main{min-width:0}
+.v20-entry-name{font-weight:850;font-size:14px}
+.v20-entry-meta{font-size:11px;color:#64748b;margin-top:3px}
+.v20-entry-amount{font-weight:900;white-space:nowrap}
+.v20-entry-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.v20-entry-actions button{font-size:11px;padding:6px 9px}
+.v20-empty{padding:24px;text-align:center;color:#64748b;border:1px dashed #cdd7e5;border-radius:12px;background:#f8fafc}
+.v20-section-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.v20-month-tools{display:flex;align-items:center;gap:7px}
+.v20-month-tools button{min-width:40px}
+.v20-pill{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;
+  font-size:10px;font-weight:800;background:#eef2f7;color:#475569;
+}
+.v20-pill.income{background:#dcfce7;color:#166534}
+.v20-pill.expense{background:#fee2e2;color:#991b1b}
+.v20-note{
+  border:1px solid #dbeafe;background:#eff6ff;color:#1e3a8a;border-radius:11px;
+  padding:10px 11px;font-size:12px;margin-top:10px;
+}
+.v20-planning-header,.v20-report-header,.v20-insights-header{
+  background:#fff;border:1px solid #e4eaf3;border-radius:16px;padding:17px;margin-bottom:12px;
+}
+.v20-planning-header h2,.v20-report-header h2,.v20-insights-header h2{margin:0;font-size:20px}
+.v20-planning-header p,.v20-report-header p,.v20-insights-header p{margin:4px 0 0;color:#64748b;font-size:13px}
+.v20-tools-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.v20-tool-card{
+  background:#fff;border:1px solid #e4eaf3;border-radius:14px;padding:15px;cursor:pointer;
+  transition:.15s ease;
+}
+.v20-tool-card:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(15,23,42,.07)}
+.v20-tool-card h3{margin:0 0 4px;font-size:14px}.v20-tool-card p{margin:0;color:#64748b;font-size:11px}
+@media(max-width:900px){
+  .v20-money-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .v20-ledger-grid{grid-template-columns:1fr}
+  .v20-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  #v20NavHost{top:57px}
+  .v20-nav{border-radius:12px}
+  .v20-tab{padding:8px 10px;font-size:11px}
+  .v20-money-kpis{grid-template-columns:1fr 1fr}
+  .v20-entry-row{padding:10px}
+  .v20-entry-amount{font-size:13px}
+  .v20-tools-grid{grid-template-columns:1fr}
+  .v20-primary{padding-left:10px!important;padding-right:10px!important}
+}
+</style>
+
+<script id="v20-simplified-app">
+(function(){
+  "use strict";
+
+  const legacyViews = [
+    "v3-overview","v3-calendar","v3-loans","v3-goals","v3-forecast","v3-budgets",
+    "v3-yearly","v3-annual","v3-smart","v3-assistant","v3-whatif","v3-cards",
+    "v3-networth","v3-investments","v3-more"
+  ];
+
+  const groups = {
+    home: {
+      label:"🏠 Home", title:"Home",
+      views:["v3-overview"]
+    },
+    calendar: {
+      label:"📅 Calendar", title:"Calendar",
+      views:["v3-calendar"]
+    },
+    money: {
+      label:"💰 Money", title:"Money",
+      views:["__money__","v3-cards","v3-investments","v3-networth"]
+    },
+    planning: {
+      label:"🎯 Planning", title:"Planning",
+      views:["v3-loans","v3-goals","v3-forecast","v3-budgets","v3-whatif"]
+    },
+    reports: {
+      label:"📊 Reports", title:"Reports",
+      views:["v3-yearly","v3-annual"]
+    },
+    insights: {
+      label:"🧠 Insights", title:"Insights",
+      views:["v3-smart","v3-assistant","v3-more"]
+    }
+  };
+
+  const subLabels = {
+    "v3-loans":"Loans",
+    "v3-goals":"Goals",
+    "v3-forecast":"Forecast",
+    "v3-budgets":"Budgets",
+    "v3-whatif":"What-If",
+    "v3-yearly":"12-Month",
+    "v3-annual":"Annual",
+    "v3-smart":"Financial Health",
+    "v3-assistant":"Assistant",
+    "v3-more":"Tools",
+    "v3-cards":"Cards",
+    "v3-investments":"Investments",
+    "v3-networth":"Net Worth"
+  };
+
+  let currentGroup = "home";
+  let currentSubview = {};
+  let moneyFilter = "all";
+  let moneySearch = "";
+
+  function esc(v){ return escapeHtml(v==null?"":String(v)); }
+  function amt(v){ return Number(v)||0; }
+  function fmt(v){ return money(amt(v)); }
+  function prettyDate(v){
+    try{return new Date(v).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});}
+    catch(e){return String(v||"");}
+  }
+
+  function buildShell(){
+    const app=document.getElementById("app");
+    const container=app && app.querySelector(".container");
+    const navHost=document.getElementById("v20NavHost");
+    if(!container || !navHost) return false;
+
+    if(!document.getElementById("v20AppRoot")){
+      const root=document.createElement("div");
+      root.id="v20AppRoot";
+      root.className="v20-root";
+      navHost.insertAdjacentElement("afterend",root);
+
+      Object.keys(groups).forEach(g=>{
+        const box=document.createElement("section");
+        box.className="v20-view";
+        box.id="v20-"+g;
+        box.innerHTML=`<div class="v20-group-content"></div>`;
+        root.appendChild(box);
+      });
+
+      // Move existing content views into their new group containers.
+      Object.keys(groups).forEach(g=>{
+        const target=root.querySelector("#v20-"+g+" .v20-group-content");
+        groups[g].views.forEach(id=>{
+          if(id==="__money__") return;
+          const node=document.getElementById(id);
+          if(node){ node.classList.remove("active"); node.style.display="none"; target.appendChild(node); }
+        });
+      });
+
+      const money=document.createElement("div");
+      money.id="v20MoneyView";
+      money.className="v20-money-view";
+      target(root,"money").appendChild(money);
+
+      makeSubnav("planning");
+      makeSubnav("reports");
+      makeSubnav("insights");
+      makeSubnav("money");
+      buildMoneyView();
+
+      // Existing grouped views use their own display styles; V20 controls them.
+      injectHomeHeader();
+    }
+
+    if(!navHost.querySelector(".v20-nav")){
+      const nav=document.createElement("div");
+      nav.className="v20-nav";
+      Object.entries(groups).forEach(([key,g])=>{
+        const b=document.createElement("button");
+        b.type="button";b.className="v20-tab";
+        b.dataset.v20Tab=key;b.textContent=g.label;
+        b.onclick=()=>openGroup(key);
+        nav.appendChild(b);
+      });
+      navHost.appendChild(nav);
+    }
+
+    openGroup(currentGroup);
+    return true;
+  }
+
+  function target(root,group){ return root.querySelector("#v20-"+group+" .v20-group-content"); }
+
+  function makeSubnav(group){
+    const box=document.querySelector("#v20-"+group+" .v20-group-content");
+    if(!box)return;
+    const views=groups[group].views.filter(x=>x!=="__money__");
+    if(!views.length && group!=="money")return;
+    const sub=document.createElement("div");
+    sub.className="v20-subnav";
+    sub.id="v20-subnav-"+group;
+    if(group==="money"){
+      const b=document.createElement("button");
+      b.type="button";b.className="v20-subtab active";b.dataset.sub="__money__";
+      b.textContent="Ledger";b.onclick=()=>activateMoneyTab("__money__");
+      sub.appendChild(b);
+    }
+    views.forEach(id=>{
+      const b=document.createElement("button");
+      b.type="button";b.className="v20-subtab";
+      b.dataset.sub=id;b.textContent=subLabels[id]||id;
+      b.onclick=()=>group==="money"?activateMoneyTab(id):activateSubview(group,id);
+      sub.appendChild(b);
+    });
+    box.insertBefore(sub,box.firstChild);
+  }
+
+  function injectHomeHeader(){
+    const host=document.querySelector("#v20-home .v20-group-content");
+    if(!host || document.getElementById("v20HomeIntro"))return;
+    const intro=document.createElement("div");
+    intro.id="v20HomeIntro";
+    intro.className="v20-planning-header";
+    intro.innerHTML=`<h2>Good to see you 👋</h2><p>Your financial snapshot, important payments and current month position in one place.</p>`;
+    host.insertBefore(intro,host.firstChild);
+  }
+  function simplifyHome(){
+    const host=document.querySelector("#v20-home .v20-group-content");
+    if(!host)return;
+    [...host.querySelectorAll(".section")].forEach(sec=>{
+      const h=sec.querySelector("h2");
+      if(!h)return;
+      const t=(h.textContent||"").replace(/\s+/g," ").trim().toLowerCase();
+      if(
+        t.includes("recurring income") ||
+        t.includes("savings goals") ||
+        t.includes("all entries") ||
+        t.includes("unified monthly ledger")
+      ){
+        sec.style.display="none";
+      }
+    });
+  }
+
+  function activateSubview(group,id){
+    currentSubview[group]=id;
+    const root=document.getElementById("v20AppRoot");
+    const host=root.querySelector("#v20-"+group+" .v20-group-content");
+    if(!host)return;
+    groups[group].views.filter(x=>x!=="__money__").forEach(viewId=>{
+      const node=document.getElementById(viewId);
+      if(node){node.style.display=viewId===id?"block":"none";node.classList.toggle("active",viewId===id);}
+    });
+    host.querySelectorAll(".v20-subtab").forEach(b=>b.classList.toggle("active",b.dataset.sub===id));
+    if(group==="planning" && id==="v3-loans"){} // explicit for readability
+  }
+
+  function openGroup(group){
+    if(!groups[group])group="home";
+    currentGroup=group;
+    const root=document.getElementById("v20AppRoot");
+    if(!root)return;
+    Object.keys(groups).forEach(g=>root.querySelector("#v20-"+g).classList.toggle("active",g===group));
+    document.querySelectorAll(".v20-tab").forEach(b=>b.classList.toggle("active",b.dataset.v20Tab===group));
+    document.body.classList.toggle("calendar-mode",group==="calendar");
+
+    if(group==="money"){
+      const sub=currentSubview.money || "__money__";
+      activateMoneySubview(sub);
+      renderMoney();
+    }else{
+      const views=groups[group].views.filter(x=>x!=="__money__");
+      const id=currentSubview[group] || views[0];
+      activateSubview(group,id);
+    }
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  function activateMoneySubview(id){
+    groups.money.views.filter(x=>x!=="__money__").forEach(v=>{
+      const node=document.getElementById(v);
+      if(node)node.style.display=(v===id?"block":"none");
+    });
+    const money=document.getElementById("v20MoneyView");
+    if(money)money.style.display=id==="__money__"?"block":"none";
+    const sub=document.getElementById("v20-subnav-money");
+    if(sub)sub.querySelectorAll(".v20-subtab").forEach(b=>b.classList.toggle("active",b.dataset.sub===id));
+  }
+
+  function activateMoneyTab(id){
+    currentSubview.money=id;
+    activateMoneySubview(id);
+    renderMoney();
+  }
+
+  function currentMonth(){return new Date(currentDate.getFullYear(),currentDate.getMonth(),1);}
+
+  function buildMoneyView(){
+    const host=document.getElementById("v20MoneyView"); if(!host)return;
+    host.innerHTML=`
+      <div class="v20-money-hero">
+        <div class="v20-section-head">
+          <div><div class="v20-money-title">Money</div><div class="v20-money-sub">Every cash-flow entry in one place. Income is Income; everything that goes out is Expense.</div></div>
+          <div class="v20-month-tools"><button class="btn-gray" type="button" id="v20MoneyPrev">◀</button><button class="btn" type="button" id="v20MoneyToday">Today</button><button class="btn-gray" type="button" id="v20MoneyNext">▶</button></div>
+        </div>
+        <div class="v20-money-toolbar">
+          <input id="v20MoneySearch" placeholder="Search entries..." />
+          <div class="v20-chiprow">
+            <button class="v20-chip active" data-money-filter="all">All</button>
+            <button class="v20-chip" data-money-filter="income">Income</button>
+            <button class="v20-chip" data-money-filter="expense">Expense</button>
+          </div>
+        </div>
+        <div class="v20-money-kpis" id="v20MoneyKpis"></div>
+      </div>
+      <div class="v20-ledger-grid">
+        <div class="v20-ledger-section"><h3>🟢 Income</h3><div id="v20IncomeList"></div></div>
+        <div class="v20-ledger-section"><h3>🔴 Expense</h3><div id="v20ExpenseList"></div></div>
+      </div>
+      <div class="v20-note">Recurring income, salary, regular expenses, loan EMI, bills, investments, savings contributions and other cash-flow records are grouped here by their main purpose. Detailed type remains visible on each entry.</div>
+    `;
+    document.getElementById("v20MoneyPrev").onclick=()=>{currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()-1,1);renderAll();};
+    document.getElementById("v20MoneyNext").onclick=()=>{currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()+1,1);renderAll();};
+    document.getElementById("v20MoneyToday").onclick=()=>{currentDate=new Date();selectedDate=new Date();renderAll();};
+    document.getElementById("v20MoneySearch").oninput=e=>{moneySearch=e.target.value.toLowerCase();renderMoney();};
+    host.querySelectorAll("[data-money-filter]").forEach(b=>b.onclick=()=>{moneyFilter=b.dataset.moneyFilter;host.querySelectorAll("[data-money-filter]").forEach(x=>x.classList.toggle("active",x===b));renderMoney();});
+  }
+
+  function renderMoney(){
+    if(currentGroup!=="money")return;
+    const host=document.getElementById("v20MoneyView");
+    if(!host)return;
+    const ev=(typeof v15MonthEvents==="function"?v15MonthEvents(currentMonth()):[]);
+    let filtered=ev.filter(e=>e.type!=="life");
+    if(moneyFilter!=="all")filtered=filtered.filter(e=>moneyFilter===(e.type==="income"?"income":"expense"));
+    if(moneySearch)filtered=filtered.filter(e=>(String(e.name||"")+" "+String(e.source||"")+" "+String(v15Subtype(e)||"")).toLowerCase().includes(moneySearch));
+    filtered.sort((a,b)=>a.date-b.date || String(a.name).localeCompare(String(b.name)));
+
+    const income=filtered.filter(e=>e.type==="income");
+    const expense=filtered.filter(e=>e.type!=="income");
+    // KPIs should always represent the whole month, not the search-filtered list.
+    const allMonth=(typeof v15MonthEvents==="function"?v15MonthEvents(currentMonth()):[]).filter(e=>e.type!=="life");
+    const inTotal=allMonth.filter(e=>e.type==="income").reduce((s,e)=>s+amt(e.amount),0);
+    const exTotal=allMonth.filter(e=>e.type!=="income").reduce((s,e)=>s+amt(e.amount),0);
+    const paid=allMonth.filter(e=>v15IsExpenseLike(e)&&v15GetPaid(e)).reduce((s,e)=>s+amt(e.amount),0);
+    const pending=Math.max(0,exTotal-paid);
+    document.getElementById("v20MoneyKpis").innerHTML=`
+      <div class="v20-money-kpi income"><div class="label">Income · ${monthName(currentMonth())}</div><div class="value">${fmt(inTotal)}</div></div>
+      <div class="v20-money-kpi expense"><div class="label">Expense</div><div class="value">${fmt(exTotal)}</div></div>
+      <div class="v20-money-kpi paid"><div class="label">Paid</div><div class="value">${fmt(paid)}</div></div>
+      <div class="v20-money-kpi pending"><div class="label">Pending</div><div class="value">${fmt(pending)}</div></div>
+    `;
+
+    document.getElementById("v20IncomeList").innerHTML=renderMoneyEntries(income,true) || `<div class="v20-empty">No income entries for this month.</div>`;
+    document.getElementById("v20ExpenseList").innerHTML=renderMoneyEntries(expense,false) || `<div class="v20-empty">No expense entries for this month.</div>`;
+    v15BindActions(host);
+  }
+
+  function renderMoneyEntries(list,isIncome){
+    return list.map(e=>{
+      const sub=typeof v15Subtype==="function"?v15Subtype(e):"";
+      const paid=!isIncome&&v15IsExpenseLike(e)?v15GetPaid(e):null;
+      const group=isIncome?"Income":"Expense";
+      const actions=typeof v15ActionHtml==="function"?v15ActionHtml(e,true):"";
+      return `<div class="v20-entry-row">
+        <div class="v20-entry-main">
+          <div class="v20-entry-name">${esc(e.name||"Entry")}</div>
+          <div class="v20-entry-meta"><span class="v20-pill ${isIncome?"income":"expense"}">${group}</span> ${sub?esc(sub)+" · ":""}${esc(e.source||"")} · ${prettyDate(e.date)}${paid!==null?' · '+(paid?'Paid':'Pending'):''}</div>
+          <div class="v20-entry-actions">${actions}</div>
+        </div>
+        <div class="v20-entry-amount ${isIncome?"green":"red"}">${isIncome?"+":"−"}${fmt(e.amount)}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // Unified entry picker: only one common Add Entry command.
+  window.openCommonEntryModal=function(){
+    let m=document.getElementById("v20EntryChooser");
+    if(!m){
+      m=document.createElement("div");
+      m.id="v20EntryChooser";m.className="modal";
+      m.innerHTML=`<div class="modal-box">
+        <h2>＋ Add Entry</h2>
+        <div class="small" style="margin-bottom:12px">Choose the kind of entry. It will automatically appear under the correct Income or Expense group.</div>
+        <div class="v20-tools-grid">
+          <div class="v20-tool-card" onclick="openIncomeModal();closeV20EntryChooser()"><h3>🟢 Income</h3><p>One-time income</p></div>
+          <div class="v20-tool-card" onclick="openRecurringIncomeModal();closeV20EntryChooser()"><h3>💼 Salary / Recurring Income</h3><p>Salary and other repeating income</p></div>
+          <div class="v20-tool-card" onclick="openExpenseModal();closeV20EntryChooser()"><h3>🔴 Expense</h3><p>Regular recurring expense</p></div>
+          <div class="v20-tool-card" onclick="openOneTimeExpenseModal();closeV20EntryChooser()"><h3>🧾 One-time Expense</h3><p>Single expense on a specific date</p></div>
+          <div class="v20-tool-card" onclick="openLoanModal();closeV20EntryChooser()"><h3>🏦 Loan / EMI</h3><p>Loan details and recurring EMI</p></div>
+          <div class="v20-tool-card" onclick="closeV20EntryChooser();openGoalModal()"><h3>🎯 Goal</h3><p>Planning target</p></div>
+        </div>
+        <div class="modal-actions"><button class="btn-gray" onclick="closeV20EntryChooser()">Cancel</button></div>
+      </div>`;
+      document.body.appendChild(m);
+    }
+    m.style.display="flex";
+  };
+  window.closeV20EntryChooser=function(){const m=document.getElementById("v20EntryChooser");if(m)m.style.display="none";};
+
+  window.toggleV20Utilities=function(){
+    const m=document.getElementById("v20UtilityMenu");
+    if(m)m.style.display=m.style.display==="none"?"block":"none";
+  };
+
+  // Compatibility: old buttons and inline calls now route to the six-group UI.
+  const legacyShow=window.showV3;
+  window.showV3=function(id,button){
+    const map={
+      overview:"home",calendar:"calendar",loans:"planning",goals:"planning",forecast:"planning",budgets:"planning",
+      yearly:"reports",annual:"reports",smart:"insights",assistant:"insights",whatif:"planning",
+      cards:"money",networth:"money",investments:"money",more:"insights"
+    };
+    const g=map[id]||"home";
+    currentSubview[g]="v3-"+id;
+    if(g==="money" && id==="money")currentSubview.money="__money__";
+    if(g==="money" && id==="cards")currentSubview.money="v3-cards";
+    if(g==="money" && id==="investments")currentSubview.money="v3-investments";
+    if(g==="money" && id==="networth")currentSubview.money="v3-networth";
+    openGroup(g);
+  };
+
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    try{ if(typeof oldRenderAll==="function") oldRenderAll(); }catch(e){ console.warn("legacy render",e); }
+    try{ buildShell(); simplifyHome(); renderMoney(); }catch(e){ console.warn("V20 render",e); }
+  };
+
+  // Prevent navigation actions elsewhere from scrolling to hidden legacy sections.
+  window.v20OpenGroup=openGroup;
+  window.v20OpenMoney=()=>{openGroup("money");activateMoneyTab("__money__");};
+
+  // Initial shell and active state.
+  setTimeout(()=>{try{buildShell(); if(currentGroup==="money")renderMoney();}catch(e){console.error("V20 init",e);}},0);
+  setTimeout(()=>{try{buildShell(); simplifyHome();}catch(e){}},500);
+
+})();
+</script>
+
 </body>
 </html>
