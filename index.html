@@ -8,7 +8,9 @@
 <meta content="Personal Finance Manager" name="description"/>
 <link href="manifest.json" rel="manifest"/>
 <title>Expense Calendar · Personal Finance</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+
+</script>
 <style>
 *{
     box-sizing:border-box;
@@ -642,6 +644,20 @@ header{backdrop-filter:saturate(140%);}
 .calendar-action-row .btn,.calendar-action-row .btn-danger,.calendar-action-row .btn-gray{padding:7px 11px;font-size:12px;}
 .calendar-event-card{position:relative;}
 .one-time-edit-note{font-size:12px;color:#6b7280;margin-top:6px;}
+
+/* V12 consistency/event styles */
+.day-expense{border-left:3px solid transparent;}
+.v12-event-bill{background:#e0f2fe!important;color:#075985!important;border-left-color:#0284c7!important;}
+.v12-event-renewal{background:#fef3c7!important;color:#92400e!important;border-left-color:#d97706!important;}
+.v12-event-shared{background:#ecfdf5!important;color:#166534!important;border-left-color:#16a34a!important;}
+.v12-event-vehicle{background:#f3f4f6!important;color:#374151!important;border-left-color:#4b5563!important;}
+.v12-audit{margin:10px 0;padding:10px 12px;border:1px solid #dbeafe;border-radius:10px;background:#eff6ff;color:#1e3a8a;font-size:12px;}
+
+/* V14 universal edit/delete affordances */
+.v14-source-record{display:inline-flex;align-items:center;gap:4px;margin:2px 0 3px 0;flex-wrap:wrap;padding:3px 5px;border:1px solid #e5e7eb;border-radius:8px;background:#fff}
+.v14-source-record > span{margin-right:2px}
+.v14-source-record button{padding:3px 6px;font-size:10px}
+.v14-record-action{cursor:pointer}
 </style>
 <meta content="V11 Production Clean" name="expense-calendar-version"/></head>
 <body>
@@ -778,7 +794,7 @@ header{backdrop-filter:saturate(140%);}
             This forecast is automatic. It uses your recurring income, one-time income already entered,
             recurring expenses and active loan EMIs. Loan EMI is added only when it is not already represented
             by a <b>Loan / EMI</b> recurring expense, helping avoid double-counting.
-            Savings-goal contributions are shown as recommendations and are <b>not</b> deducted from the cash-flow forecast.
+            Savings-goal contributions are included as savings outflow in the cash-flow forecast so Overview, Calendar, Reports and Forecast stay aligned.
         </div>
 <div class="dashboard" style="margin-bottom:12px">
 <div class="card"><div class="stat-title">Average Monthly Income</div><div class="stat-value green" id="forecastAvgIncome">₹0</div></div>
@@ -803,6 +819,8 @@ header{backdrop-filter:saturate(140%);}
 <th>Surplus / Deficit</th>
 <th>Status</th>
 <th>Cumulative Change</th>
+<th>Income Sources</th>
+<th>Outflow Sources</th>
 </tr>
 </thead>
 <tbody id="forecastTable"></tbody>
@@ -2028,7 +2046,6 @@ async function loadData(){
         loadOfflineSnapshot();
         return;
     }
-
     const specs=[
         ['expenses','expenses'],['payment_status','payments'],['income','income'],
         ['recurring_income','recurringIncome'],['loans','loans'],['savings_goals','savingsGoals'],
@@ -2042,31 +2059,50 @@ async function loadData(){
     const results=await Promise.all(specs.map(async ([table,key])=>{
         try{
             let q=supabaseClient.from(table).select('*').eq('user_id',currentUser.id);
-            if(table==='expenses') q=q.order('created_at',{ascending:true});
-            if(table==='income') q=q.order('income_date',{ascending:false});
-            if(table==='budgets') q=q.order('category',{ascending:true});
-            if(table==='credit_cards'||table==='assets'||table==='vehicles') q=q.order('name',{ascending:true});
-            if(table==='investments') q=q.order('investment_date',{ascending:false});
-            if(table==='one_time_expenses'||table==='vehicle_logs'||table==='finance_documents') q=q.order(table==='vehicle_logs'?'log_date':table==='finance_documents'?'created_at':'expense_date',{ascending:false});
-            if(table==='renewals'||table==='life_events') q=q.order(table==='renewals'?'due_date':'target_date',{ascending:true});
+            if(table==='expenses')q=q.order('created_at',{ascending:true});
+            if(table==='income')q=q.order('income_date',{ascending:false});
+            if(table==='budgets')q=q.order('category',{ascending:true});
+            if(['credit_cards','assets','vehicles'].includes(table))q=q.order('name',{ascending:true});
+            if(table==='investments')q=q.order('investment_date',{ascending:false});
+            if(['one_time_expenses','vehicle_logs','finance_documents'].includes(table)){
+                q=q.order(table==='vehicle_logs'?'log_date':table==='finance_documents'?'created_at':'expense_date',{ascending:false});
+            }
+            if(['renewals','life_events'].includes(table)){
+                q=q.order(table==='renewals'?'due_date':'target_date',{ascending:true});
+            }
             const {data,error}=await q;
-            if(error) throw error;
-            return [key,data||null,null];
-        }catch(error){
-            return [key,null,error];
-        }
+            if(error)throw error;
+            return [key,data||[],null];
+        }catch(error){return [key,null,error];}
     }));
-
     results.forEach(([key,data,error])=>{
-        if(data!==null) window[key]=data;
-        else failures.push(key+': '+(error?.message||'load failed'));
+        if(error){failures.push(key+': '+(error?.message||'load failed'));return;}
+        switch(key){
+            case 'expenses':expenses=data;break;
+            case 'payments':payments=data;break;
+            case 'income':income=data;break;
+            case 'recurringIncome':recurringIncome=data;break;
+            case 'loans':loans=data;break;
+            case 'savingsGoals':savingsGoals=data;break;
+            case 'savingsTransactions':savingsTransactions=data;break;
+            case 'budgets':budgets=data;break;
+            case 'creditCards':creditCards=data;break;
+            case 'assets':assets=data;break;
+            case 'investments':investments=data;break;
+            case 'oneTimeExpenses':oneTimeExpenses=data;break;
+            case 'financeRules':financeRules=data;break;
+            case 'renewals':renewals=data;break;
+            case 'vehicles':vehicles=data;break;
+            case 'vehicleLogs':vehicleLogs=data;break;
+            case 'householdBills':householdBills=data;break;
+            case 'lifeEvents':lifeEvents=data;break;
+            case 'documents':documents=data;break;
+        }
     });
-
     try{await loadSharedDataV10();}
     catch(error){console.warn('Shared household data unavailable',error);sharedHouseholds=[];sharedMembers=[];sharedExpenses=[];}
-
     saveOfflineSnapshot();
-    if(failures.length) console.warn('Some optional data could not be loaded:',failures);
+    if(failures.length)console.warn('Some optional data could not be loaded:',failures);
 }
 
 
@@ -2074,7 +2110,7 @@ function saveOfflineSnapshot(){
     if(!currentUser) return;
     try{
         localStorage.setItem('expense-calendar-production-snapshot-'+currentUser.id,JSON.stringify({
-            version:11,savedAt:new Date().toISOString(),
+            version:14,savedAt:new Date().toISOString(),
             expenses,payments,income,recurringIncome,loans,savingsGoals,savingsTransactions,budgets,
             creditCards,assets,investments,oneTimeExpenses,financeRules,renewals,vehicles,vehicleLogs,
             householdBills,lifeEvents,documents,sharedHouseholds,sharedMembers,sharedExpenses
@@ -3152,19 +3188,158 @@ async function saveRecurringIncome(){
  closeV3Modal('recurringIncomeModal');renderAll();showV101Toast(id?'Recurring income updated ✓':'Recurring income saved ✓');
 }
 async function deleteRecurringIncome(id){if(!confirm('Delete this recurring income?'))return;const {error}=await supabaseClient.from('recurring_income').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);recurringIncome=recurringIncome.filter(x=>x.id!==id);renderAll()}
-function recurringIncomeForMonth(d){let total=0;recurringIncome.forEach(x=>{let st=new Date(x.start_date+'T00:00:00'),end=x.end_date?new Date(x.end_date+'T23:59:59'):null;if(d<new Date(st.getFullYear(),st.getMonth(),1)|| (end&&d>end))return;let diff=(d.getFullYear()-st.getFullYear())*12+d.getMonth()-st.getMonth();let step=x.frequency==='Monthly'?1:x.frequency==='Quarterly'?3:12;if(diff%step===0)total+=Number(x.amount)});return total}
-function openLoanModal(){document.getElementById('loanModal').style.display='flex';['loanName','loanLender','loanOriginal','loanOutstanding','loanRate','loanEmi','loanTenure'].forEach(id=>document.getElementById(id).value='');document.getElementById('loanStart').value=dateKey(new Date())}
-async function saveLoan(){const row={user_id:currentUser.id,name:document.getElementById('loanName').value.trim(),lender:document.getElementById('loanLender').value,original_amount:Number(document.getElementById('loanOriginal').value),outstanding_amount:Number(document.getElementById('loanOutstanding').value),interest_rate:Number(document.getElementById('loanRate').value||0),emi_amount:Number(document.getElementById('loanEmi').value),start_date:document.getElementById('loanStart').value,tenure_months:Number(document.getElementById('loanTenure').value)};if(!row.name||!row.original_amount||!row.emi_amount||!row.start_date||!row.tenure_months)return alert('Please fill required loan fields.');const {data,error}=await supabaseClient.from('loans').insert(row).select().single();if(error)return alert(error.message);loans.push(data);closeV3Modal('loanModal');renderAll()
-    showV101Toast('Loan saved ✓');}
+function recurringIncomeForMonth(d){
+    let total=0;
+    recurringIncome.forEach(x=>{
+        const st=dateV10(x.start_date),end=x.end_date?dateV10(x.end_date):null;
+        const monthStart=new Date(d.getFullYear(),d.getMonth(),1);
+        if(!st||monthStart<new Date(st.getFullYear(),st.getMonth(),1)||(end&&monthStart>new Date(end.getFullYear(),end.getMonth(),1)))return;
+        const diff=monthDifference(new Date(st.getFullYear(),st.getMonth(),1),monthStart);
+        const step=x.frequency==='Quarterly'?3:x.frequency==='Half-Yearly'?6:x.frequency==='Yearly'?12:1;
+        if(diff>=0&&diff%step===0)total+=num(x.amount);
+    });
+    return total;
+}
+function openLoanModal(id=null){
+    const el=document.getElementById('loanModal');
+    const loan=id?loans.find(x=>x.id===id):null;
+    if(!el)return;
+    el.dataset.recordId=loan?.id||'';
+    el.style.display='flex';
+    el.querySelector('.modal-box h2').textContent=loan?'Edit Loan / EMI':'Add Loan / EMI';
+    document.getElementById('loanName').value=loan?.name||'';
+    document.getElementById('loanLender').value=loan?.lender||'';
+    document.getElementById('loanOriginal').value=loan?.original_amount??'';
+    document.getElementById('loanOutstanding').value=loan?.outstanding_amount??'';
+    document.getElementById('loanRate').value=loan?.interest_rate??'';
+    document.getElementById('loanEmi').value=loan?.emi_amount??'';
+    document.getElementById('loanStart').value=loan?.start_date||dateKey(new Date());
+    document.getElementById('loanTenure').value=loan?.tenure_months??'';
+}
+async function saveLoan(){
+    const id=document.getElementById('loanModal')?.dataset.recordId||'';
+    const row={
+        name:document.getElementById('loanName').value.trim(),
+        lender:document.getElementById('loanLender').value.trim(),
+        original_amount:num(document.getElementById('loanOriginal').value),
+        outstanding_amount:num(document.getElementById('loanOutstanding').value),
+        interest_rate:num(document.getElementById('loanRate').value),
+        emi_amount:num(document.getElementById('loanEmi').value),
+        start_date:document.getElementById('loanStart').value,
+        tenure_months:Math.floor(num(document.getElementById('loanTenure').value))
+    };
+    if(!row.name||row.original_amount<=0||row.outstanding_amount<0||row.emi_amount<=0||!row.start_date||row.tenure_months<=0){
+        alert('Please enter valid loan details.');
+        return;
+    }
+    if(row.outstanding_amount>row.original_amount) row.outstanding_amount=row.original_amount;
+    const q=id
+        ? supabaseClient.from('loans').update(row).eq('id',id).eq('user_id',currentUser.id).select().single()
+        : supabaseClient.from('loans').insert({user_id:currentUser.id,...row}).select().single();
+    const {data,error}=await q;
+    if(error){alert(error.message);return;}
+    if(id){
+        const i=loans.findIndex(x=>x.id===id);
+        if(i>=0)loans[i]=data;
+    }else loans.push(data);
+    closeV3Modal('loanModal');
+    delete document.getElementById('loanModal').dataset.recordId;
+    renderAll();
+    showV101Toast(id?'Loan updated ✓':'Loan saved ✓');
+}
 async function deleteLoan(id){if(!confirm('Delete this loan?'))return;const {error}=await supabaseClient.from('loans').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);loans=loans.filter(x=>x.id!==id);renderAll()}
 async function updateLoanBalance(id){const loan=loans.find(x=>x.id===id);if(!loan)return;const value=prompt('Enter current outstanding balance:',loan.outstanding_amount);if(value===null)return;const amount=Number(value);if(!Number.isFinite(amount)||amount<0)return alert('Enter a valid non-negative amount.');const {data,error}=await supabaseClient.from('loans').update({outstanding_amount:amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(error)return alert(error.message);Object.assign(loan,data);renderAll()
     showV101Toast('Loan balance saved ✓');}
-function openGoalModal(){document.getElementById('goalModal').style.display='flex';document.getElementById('goalName').value='';document.getElementById('goalTarget').value='';document.getElementById('goalCurrent').value='0';document.getElementById('goalDate').value=''}
-async function saveGoal(){const row={user_id:currentUser.id,name:document.getElementById('goalName').value.trim(),target_amount:Number(document.getElementById('goalTarget').value),current_amount:Number(document.getElementById('goalCurrent').value||0),target_date:document.getElementById('goalDate').value||null};if(!row.name||!row.target_amount)return alert('Please fill goal fields.');const {data,error}=await supabaseClient.from('savings_goals').insert(row).select().single();if(error)return alert(error.message);savingsGoals.push(data);closeV3Modal('goalModal');renderAll()
-    showV101Toast('Savings goal saved ✓');}
+function openGoalModal(id=null){
+    const el=document.getElementById('goalModal');
+    const g=id?savingsGoals.find(x=>x.id===id):null;
+    if(!el)return;
+    el.dataset.recordId=g?.id||'';
+    el.style.display='flex';
+    el.querySelector('.modal-box h2').textContent=g?'Edit Savings Goal':'Add Savings Goal';
+    document.getElementById('goalName').value=g?.name||'';
+    document.getElementById('goalTarget').value=g?.target_amount??'';
+    document.getElementById('goalCurrent').value=g?.current_amount??0;
+    document.getElementById('goalDate').value=g?.target_date||'';
+}
+async function saveGoal(){
+    const id=document.getElementById('goalModal')?.dataset.recordId||'';
+    const row={
+        name:document.getElementById('goalName').value.trim(),
+        target_amount:num(document.getElementById('goalTarget').value),
+        current_amount:num(document.getElementById('goalCurrent').value),
+        target_date:document.getElementById('goalDate').value||null
+    };
+    if(!row.name||row.target_amount<=0||row.current_amount<0){alert('Please enter valid goal details.');return;}
+    if(row.current_amount>row.target_amount)row.current_amount=row.target_amount;
+    const q=id
+        ? supabaseClient.from('savings_goals').update(row).eq('id',id).eq('user_id',currentUser.id).select().single()
+        : supabaseClient.from('savings_goals').insert({user_id:currentUser.id,...row}).select().single();
+    const {data,error}=await q;
+    if(error){alert(error.message);return;}
+    if(id){
+        const i=savingsGoals.findIndex(x=>x.id===id);
+        if(i>=0)savingsGoals[i]=data;
+    }else savingsGoals.push(data);
+    closeV3Modal('goalModal');
+    delete document.getElementById('goalModal').dataset.recordId;
+    renderAll();
+    showV101Toast(id?'Savings goal updated ✓':'Savings goal saved ✓');
+}
 async function deleteGoal(id){if(!confirm('Delete this savings goal?'))return;const {error}=await supabaseClient.from('savings_goals').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);savingsGoals=savingsGoals.filter(x=>x.id!==id);savingsTransactions=savingsTransactions.filter(x=>x.goal_id!==id);renderAll()}
-async function addGoalSaving(id){const amount=Number(prompt('Amount to add to this goal:'));if(!amount||amount<=0)return;const {data,error}=await supabaseClient.from('savings_transactions').insert({user_id:currentUser.id,goal_id:id,amount,transaction_date:dateKey(new Date()),note:'Goal contribution'}).select().single();if(error)return alert(error.message);savingsTransactions.push(data);const g=savingsGoals.find(x=>x.id===id);const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:Number(g.current_amount)+amount}).eq('id',id).eq('user_id',currentUser.id).select().single();if(ue)return alert(ue.message);Object.assign(g,updated);renderAll()
-    showV101Toast('Savings contribution saved ✓');}
+async function addGoalSaving(id){
+    const g=savingsGoals.find(x=>x.id===id);
+    if(!g)return;
+    const amount=Number(prompt(`Add savings to "${g.name}":`,'')); 
+    if(!Number.isFinite(amount)||amount<=0)return;
+    const tx={user_id:currentUser.id,goal_id:id,amount,transaction_date:dateKey(new Date()),note:'Goal contribution'};
+    const {data,error}=await supabaseClient.from('savings_transactions').insert(tx).select().single();
+    if(error){alert(error.message);return;}
+    savingsTransactions.unshift(data);
+    const updatedAmount=Math.min(num(g.target_amount),num(g.current_amount)+amount);
+    const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:updatedAmount}).eq('id',id).eq('user_id',currentUser.id).select().single();
+    if(ue){alert(ue.message);return;}
+    Object.assign(g,updated);
+    renderAll();
+    showV101Toast('Savings contribution saved ✓');
+}
+async function editGoalSaving(id){
+    const tx=savingsTransactions.find(x=>x.id===id); if(!tx)return;
+    const g=savingsGoals.find(x=>x.id===tx.goal_id);
+    const amount=Number(prompt('Edit contribution amount:',tx.amount));
+    if(!Number.isFinite(amount)||amount<=0)return;
+    const date=prompt('Edit contribution date (YYYY-MM-DD):',String(tx.transaction_date||dateKey(new Date())).slice(0,10));
+    if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date))return alert('Enter a valid date.');
+    const note=prompt('Edit contribution note:',tx.note||'Goal contribution');
+    const {data,error}=await supabaseClient.from('savings_transactions').update({amount,transaction_date:date,note:note||null}).eq('id',id).eq('user_id',currentUser.id).select().single();
+    if(error){alert(error.message);return;}
+    const delta=amount-num(tx.amount);
+    if(g){
+        const newCurrent=Math.max(0,Math.min(num(g.target_amount),num(g.current_amount)+delta));
+        const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:newCurrent}).eq('id',g.id).eq('user_id',currentUser.id).select().single();
+        if(ue){alert(ue.message);return;}
+        Object.assign(g,updated);
+    }
+    Object.assign(tx,data);
+    renderAll();
+    showV101Toast('Savings contribution updated ✓');
+}
+async function deleteGoalSaving(id){
+    if(!confirm('Delete this savings contribution?'))return;
+    const tx=savingsTransactions.find(x=>x.id===id); if(!tx)return;
+    const {error}=await supabaseClient.from('savings_transactions').delete().eq('id',id).eq('user_id',currentUser.id);
+    if(error){alert(error.message);return;}
+    savingsTransactions=savingsTransactions.filter(x=>x.id!==id);
+    const g=savingsGoals.find(x=>x.id===tx.goal_id);
+    if(g){
+        const newCurrent=Math.max(0,num(g.current_amount)-num(tx.amount));
+        const {data:updated,error:ue}=await supabaseClient.from('savings_goals').update({current_amount:newCurrent}).eq('id',g.id).eq('user_id',currentUser.id).select().single();
+        if(ue){alert(ue.message);return;}
+        Object.assign(g,updated);
+    }
+    renderAll();
+    showV101Toast('Savings contribution deleted ✓');
+}
 
 function monthDifference(fromDate,toDate){
  const a=new Date(fromDate.getFullYear(),fromDate.getMonth(),1);
@@ -3190,16 +3365,31 @@ function activeLoanEmiForMonth(d){
 }
 
 function getForecastMonthData(d){
- const monthItems=getMonthExpenses(d);
- const incomeTotal=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount||0),0);
- const plannedExpenses=monthItems.reduce((s,x)=>s+Number(x.expense.amount||0),0);
- const loanEmi=activeLoanEmiForMonth(d);
- const alreadyIncludedEmi=monthItems
-   .filter(x=>x.expense.category==='Loan / EMI')
-   .reduce((s,x)=>s+Number(x.expense.amount||0),0);
- const extraEmi=Math.max(0,loanEmi-alreadyIncludedEmi);
- const outflow=plannedExpenses+extraEmi;
- return {date:d,income:incomeTotal,expenses:plannedExpenses,extraEmi,outflow,surplus:incomeTotal-outflow};
+    const events=monthEventsV11(d);
+    const income=events.filter(e=>e.type==='income').reduce((s,e)=>s+num(e.amount),0);
+    const expenses=events.filter(e=>['expense','bill','renewal','shared','vehicle'].includes(e.type)).reduce((s,e)=>s+num(e.amount),0);
+    const loanEmi=events.filter(e=>e.type==='loan').reduce((s,e)=>s+num(e.amount),0);
+    const savings=events.filter(e=>e.type==='saving').reduce((s,e)=>s+num(e.amount),0);
+    const outflow=expenses+loanEmi+savings;
+    return {date:d,income,expenses,extraEmi:loanEmi,savings,outflow,surplus:income-outflow};
+}
+
+
+function v14ForecastSourceEvents(events){
+    const seen=new Set(),out=[];
+    for(const e of events){
+        if(!e || e.type==='life') continue;
+        const info=v14RecordInfo(e); if(!info) continue;
+        const key=info.kind+'|'+info.id;
+        if(seen.has(key))continue;
+        seen.add(key);out.push(e);
+    }
+    return out;
+}
+function v14ForecastSources(events){
+    const list=v14ForecastSourceEvents(events);
+    if(!list.length)return '<span class="small">—</span>';
+    return list.map(e=>`<span class="v14-source-record"><span>${escapeHtml(e.name||e.source||'Record')}</span><button type="button" class="btn-light" data-v14-edit="${escapeHtml(v14RecordInfo(e).id)}" data-v14-kind="${escapeHtml(v14RecordInfo(e).kind)}" data-v14-vehicle="${escapeHtml(v14RecordInfo(e).vehicleId||'')}">Edit</button><button type="button" class="btn-danger" data-v14-delete="${escapeHtml(v14RecordInfo(e).id)}" data-v14-kind="${escapeHtml(v14RecordInfo(e).kind)}">Delete</button></span>`).join('');
 }
 
 function renderForecast(){
@@ -3208,6 +3398,9 @@ function renderForecast(){
  for(let i=0;i<12;i++){
    const d=new Date(currentDate.getFullYear(),currentDate.getMonth()+i,1);
    const row=getForecastMonthData(d);
+   const events=monthEventsV11(d);
+   row.incomeSourceEvents=v14ForecastSourceEvents(events.filter(e=>e.type==='income'));
+   row.outflowSourceEvents=v14ForecastSourceEvents(events.filter(e=>e.type!=='income'&&e.type!=='life'));
    cumulative+=row.surplus;
    rows.push({...row,cumulative});
  }
@@ -3242,6 +3435,8 @@ function renderForecast(){
       <td class="${surplusClass}">${money(r.surplus)}</td>
       <td><span class="forecast-status ${status}">${statusText}</span></td>
       <td class="${cumClass}">${money(r.cumulative)}</td>
+      <td class="small">${v14ForecastSources(r.incomeSourceEvents||[])}</td>
+      <td class="small">${v14ForecastSources(r.outflowSourceEvents||[])}</td>
    </tr>`;
  }).join('');
 
@@ -3284,53 +3479,64 @@ function renderForecast(){
      </div>`;
    }).join('');
  }
+   v14BindRecordActions(document.getElementById('forecastTable'));
 }
 
 function renderV3(){
- const overviewMonthLabel=document.getElementById("overviewMonthLabel");
- if(overviewMonthLabel) overviewMonthLabel.textContent=monthName(currentDate);
- renderForecast();
- const ri=recurringIncomeForMonth(currentDate),oneTime=getMonthIncome(currentDate).reduce((s,x)=>s+Number(x.amount),0),totalIncome=ri+oneTime,debt=loans.reduce((s,x)=>s+Number(x.outstanding_amount),0),emi=loans.reduce((s,x)=>s+Number(x.emi_amount),0),goaltarget=savingsGoals.reduce((s,x)=>s+Number(x.target_amount),0),goalsaved=savingsGoals.reduce((s,x)=>s+Number(x.current_amount),0),goalpct=goaltarget?goalsaved/goaltarget*100:0;
- const planned=getMonthExpenses(currentDate).reduce((s,x)=>s+Number(x.expense.amount),0);document.getElementById('v3RecurringIncome').textContent=money(totalIncome);document.getElementById('v3Debt').textContent=money(debt);document.getElementById('v3Emi').textContent=money(emi);document.getElementById('v3Savings').textContent=money(totalIncome-planned);document.getElementById('v3GoalTotal').textContent=money(goalsaved);document.getElementById('v3GoalProgress').textContent=goalpct.toFixed(1)+'%';
- document.getElementById('v3RecurringIncomeList').innerHTML=recurringIncome.length?recurringIncome.map(x=>`<div class="v3-item"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">From ${x.start_date}${x.end_date?' to '+x.end_date:''}</div><div class="v3-actions"><button class="btn-light" onclick="openRecurringIncomeModal('${x.id}')">Edit</button><button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring income yet.</div>';
- document.getElementById('v3GoalMini').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div></div>`}).join(''):'<div class="empty">No savings goals yet.</div>';
- document.getElementById('v3LoanList').innerHTML=loans.length?loans.map(l=>{let paid=Math.max(0,Number(l.original_amount)-Number(l.outstanding_amount)),p=Math.min(100,paid/Number(l.original_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.lender||'')} · ${Number(l.interest_rate||0)}% · ${l.tenure_months} months</div><div>Original: ${money(l.original_amount)} · Outstanding: <b>${money(l.outstanding_amount)}</b></div><div>EMI: <b>${money(l.emi_amount)}</b></div><div class="small" style="margin-top:7px">Loan progress ${p.toFixed(1)}%</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v3-actions"><button class="btn-light" onclick="openLoanModal('${l.id}')">Edit</button><button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No loans added yet.</div>';
- document.getElementById('v3GoalList').innerHTML=savingsGoals.length?savingsGoals.map(g=>{let p=Math.min(100,Number(g.current_amount)/Number(g.target_amount)*100||0);return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}%${g.target_date?' · Target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-light" onclick="openGoalModal('${g.id}')">Edit</button><button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`}).join(''):'<div class="empty">No savings goals added yet.</div>';
- let html='';for(let i=11;i>=0;i--){let d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount),0),ex=getMonthExpenses(d).reduce((s,x)=>s+Number(x.expense.amount),0),paid=getMonthExpenses(d).filter(x=>x.payment?.paid).reduce((s,x)=>s+Number(x.expense.amount),0);html+=`<div class="v3-item"><b>${monthName(d)}</b><div>Income: <span class="green">${money(inc)}</span> · Planned: ${money(ex)} · Paid: ${money(paid)} · Balance: <b>${money(inc-ex)}</b></div></div>`} document.getElementById('v3YearlyReport').innerHTML=html;
+    renderForecast();
+    const label=document.getElementById('overviewMonthLabel'); if(label)label.textContent=monthName(currentDate);
+    const cf=cashflowStatsV11(currentDate);
+    const debt=loans.reduce((s,l)=>s+num(l.outstanding_amount),0);
+    const emi=activeLoanEmiForMonth(currentDate);
+    const goalTarget=savingsGoals.reduce((s,g)=>s+num(g.target_amount),0);
+    const goalSaved=savingsGoals.reduce((s,g)=>s+num(g.current_amount),0);
+    const goalPct=goalTarget?Math.min(100,goalSaved/goalTarget*100):0;
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    set('v3RecurringIncome',money(cf.income));set('v3Debt',money(debt));set('v3Emi',money(emi));set('v3Savings',money(cf.net));set('v3GoalTotal',money(goalSaved));set('v3GoalProgress',goalPct.toFixed(1)+'%');
 
- const overviewUpcoming=document.getElementById('overviewUpcoming');
- if(overviewUpcoming){
-     const next=getUpcoming(5);
-     overviewUpcoming.innerHTML=next.length ? next.map(x=>{
-         const d=Math.max(0,Math.ceil((x.date-new Date())/86400000));
-         const when=d===0?'Today':(d===1?'Tomorrow':`In ${d} days`);
-         const k=dateKey(x.date);
-         return `<div class="overview-payment" onclick="showV3('calendar',document.querySelectorAll('.v3-tab')[1]); setTimeout(()=>{currentDate=new Date('${k}T00:00:00');selectedDate=new Date('${k}T00:00:00');renderAll();},0)">
-             <div><b>${escapeHtml(x.expense.name)}</b><div class="small">${escapeHtml(x.expense.category)} · ${formatDateNice(k)}</div></div>
-             <div class="overview-payment-right"><b>${money(x.expense.amount)}</b><span class="tiny-pill">${when}</span></div>
-         </div>`;
-     }).join('') : '<div class="empty">No upcoming payments.</div>';
- }
+    const ril=document.getElementById('v3RecurringIncomeList');
+    if(ril)ril.innerHTML=recurringIncome.length?recurringIncome.map(x=>`<div class="v3-item"><b>${escapeHtml(x.name)}</b><div class="green">${money(x.amount)} / ${escapeHtml(x.frequency)}</div><div class="small">From ${x.start_date}${x.end_date?' to '+x.end_date:''}</div><div class="v3-actions"><button class="btn-light" onclick="openRecurringIncomeModal('${x.id}')">Edit</button><button class="btn-danger" onclick="deleteRecurringIncome('${x.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring income yet.</div>';
 
- const snapshot=document.getElementById('overviewMonthSnapshot');
- if(snapshot){
-     const items=getMonthExpenses(currentDate);
-     const inc=ri+oneTime;
-     const planned2=items.reduce((s,x)=>s+Number(x.expense.amount||0),0);
-     const paid2=items.filter(x=>x.payment && x.payment.paid).reduce((s,x)=>s+Number(x.expense.amount||0),0);
-     const pct=planned2>0?Math.min(100,paid2/planned2*100):0;
-     snapshot.innerHTML=`
-         <div class="snapshot-grid">
-             <div><span>Income</span><b class="green">${money(inc)}</b></div>
-             <div><span>Planned</span><b>${money(planned2)}</b></div>
-             <div><span>Paid</span><b class="green">${money(paid2)}</b></div>
-             <div><span>Pending</span><b class="red">${money(Math.max(0,planned2-paid2))}</b></div>
-         </div>
-         <div class="snapshot-progress-head"><span>Payment progress</span><b>${pct.toFixed(0)}%</b></div>
-         <div class="v3-progress snapshot-progress"><div class="v3-bar" style="width:${pct}%"></div></div>
-         <div class="small" style="margin-top:8px">${monthName(currentDate)} · ${planned2 ? `${items.length} scheduled item(s)` : 'No planned recurring expenses'}</div>
-     `;
- }
+    const mini=document.getElementById('v3GoalMini');
+    if(mini)mini.innerHTML=savingsGoals.length?savingsGoals.slice(0,6).map(g=>{const p=num(g.target_amount)?Math.min(100,num(g.current_amount)/num(g.target_amount)*100):0;return `<div class="v3-item"><div class="v3-item-title"><span><b>${escapeHtml(g.name)}</b></span><b>${money(g.current_amount)}</b></div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}% of ${money(g.target_amount)}${g.target_date?' · target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-light" onclick="openGoalModal('${g.id}')">Edit</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div></div>`;}).join(''):'<div class="empty">No savings goals yet.</div>';
+
+    const ll=document.getElementById('v3LoanList');
+    if(ll)ll.innerHTML=loans.length?loans.map(l=>{const paid=Math.max(0,num(l.original_amount)-num(l.outstanding_amount)),p=num(l.original_amount)?Math.min(100,paid/num(l.original_amount)*100):0;return `<div class="v3-item"><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.lender||'')} · ${num(l.interest_rate)}% · ${l.tenure_months} months</div><div>Original: ${money(l.original_amount)} · Outstanding: <b>${money(l.outstanding_amount)}</b></div><div>EMI: <b>${money(l.emi_amount)}</b></div><div class="small" style="margin-top:7px">Loan progress ${p.toFixed(1)}%</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="v3-actions"><button class="btn-light" onclick="openLoanModal('${l.id}')">Edit</button><button class="btn-orange" onclick="updateLoanBalance('${l.id}')">Update Balance</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`;}).join(''):'<div class="empty">No loans added yet.</div>';
+
+    const gl=document.getElementById('v3GoalList');
+    if(gl)gl.innerHTML=savingsGoals.length?savingsGoals.map(g=>{
+        const p=num(g.target_amount)?Math.min(100,num(g.current_amount)/num(g.target_amount)*100):0;
+        const tx=savingsTransactions.filter(t=>t.goal_id===g.id).sort((a,b)=>String(b.transaction_date).localeCompare(String(a.transaction_date))).slice(0,5);
+        return `<div class="v3-item"><b>${escapeHtml(g.name)}</b><div>${money(g.current_amount)} / ${money(g.target_amount)}</div><div class="v3-progress"><div class="v3-bar" style="width:${p}%"></div></div><div class="small">${p.toFixed(1)}%${g.target_date?' · Target '+g.target_date:''}</div><div class="v3-actions"><button class="btn-light" onclick="openGoalModal('${g.id}')">Edit</button><button class="btn-green" onclick="addGoalSaving('${g.id}')">+ Add Savings</button><button class="btn-danger" onclick="deleteGoal('${g.id}')">Delete</button></div>
+            ${tx.length?`<div class="small" style="margin-top:10px"><b>Recent contributions</b></div>${tx.map(t=>`<div class="small" style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:5px"><span>${t.transaction_date} · ${escapeHtml(t.note||'Contribution')} · <b>${money(t.amount)}</b></span><span><button class="btn-light" style="padding:4px 7px;font-size:11px" onclick="editGoalSaving('${t.id}')">Edit</button><button class="btn-danger" style="padding:4px 7px;font-size:11px" onclick="deleteGoalSaving('${t.id}')">Delete</button></span></div>`).join('')}`:''}
+        </div>`;
+    }).join(''):'<div class="empty">No savings goals added yet.</div>';
+
+    const yr=document.getElementById('v3YearlyReport');
+    if(yr){
+        let h='';for(let i=11;i>=0;i--){const d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),x=cashflowStatsV11(d);h+=`<div class="v3-item"><b>${monthName(d)}</b><div>Income: <span class="green">${money(x.income)}</span> · Outflow: ${money(x.outflow)} · Savings: ${money(x.savings)} · Net: <b class="${x.net>=0?'green':'red'}">${money(x.net)}</b></div></div>`;}
+        yr.innerHTML=h;
+    }
+
+    const overviewUpcoming=document.getElementById('overviewUpcoming');
+    if(overviewUpcoming){
+        const next=getUnifiedUpcomingV12(5);
+        overviewUpcoming.innerHTML=next.length?next.map((x,i)=>{
+            const k=dateKey(x.date);const days=Math.max(0,Math.ceil((x.date-new Date())/86400000));
+            const when=days===0?'Today':days===1?'Tomorrow':`In ${days} days`;
+            const canEdit=['expense','loan','bill','renewal'].includes(x.type);
+            return `<div class="overview-payment"><div data-calendar-event="${escapeHtml(k)}" style="cursor:pointer;flex:1"><b>${escapeHtml(x.name)}</b><div class="small">${escapeHtml(x.category||x.source||'')} · ${formatDateNice(k)}</div></div><div class="overview-payment-right"><b>${money(x.amount)}</b><span class="tiny-pill">${when}</span>${canEdit?`<div class="v3-actions" style="margin-top:5px"><button class="btn-light" data-overview-edit="${i}">Edit</button><button class="btn-danger" data-overview-delete="${i}">Delete</button></div>`:''}</div></div>`;
+        }).join(''):'<div class="empty">No upcoming payments.</div>';
+        overviewUpcoming.querySelectorAll('[data-calendar-event]').forEach((el,i)=>el.onclick=()=>{const x=next[i];if(x)openCalendarForEventV12(x);});
+        overviewUpcoming.querySelectorAll('[data-overview-edit]').forEach(el=>el.onclick=(ev)=>{ev.stopPropagation();const x=next[Number(el.dataset.overviewEdit)];if(!x?.raw)return;if(x.type==='expense')openExpenseModal(x.raw.id);else if(x.type==='loan')openLoanModal(x.raw.id);else if(x.type==='bill')openHouseholdBillModal(x.raw.id);else if(x.type==='renewal')openRenewalModal(x.raw.id);});
+        overviewUpcoming.querySelectorAll('[data-overview-delete]').forEach(el=>el.onclick=(ev)=>{ev.stopPropagation();const x=next[Number(el.dataset.overviewDelete)];if(!x?.raw)return;if(x.type==='expense')deleteExpense(x.raw.id);else if(x.type==='loan')deleteLoan(x.raw.id);else if(x.type==='bill')deleteHouseholdBill(x.raw.id);else if(x.type==='renewal')deleteRenewal(x.raw.id);});
+    }
+
+    const snapshot=document.getElementById('overviewMonthSnapshot');
+    if(snapshot){
+        const pct=cf.outflow>0?Math.min(100,cf.paid/cf.outflow*100):0;
+        snapshot.innerHTML=`<div class="snapshot-grid"><div><span>Income</span><b class="green">${money(cf.income)}</b></div><div><span>Outflow</span><b>${money(cf.outflow)}</b></div><div><span>Tracked Paid</span><b class="green">${money(cf.paid)}</b></div><div><span>Pending</span><b class="red">${money(cf.pending)}</b></div></div><div class="snapshot-progress-head"><span>Tracked payment progress</span><b>${pct.toFixed(0)}%</b></div><div class="v3-progress snapshot-progress"><div class="v3-bar" style="width:${pct}%"></div></div><div class="small" style="margin-top:8px">${monthName(currentDate)} · ${monthEventsV11(currentDate).length} recorded/scheduled event(s)</div>`;
+    }
 }
 
 
@@ -3346,17 +3552,22 @@ function formatDateNice(value){
     return d.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
 }
 
-function getPlannedCategoryTotal(date, category){
-    return getMonthExpenses(date)
-        .filter(x=>x.expense.category===category)
-        .reduce((s,x)=>s+Number(x.expense.amount||0),0);
+function getPlannedCategoryTotal(date,category){
+    return monthEventsV11(date)
+        .filter(e=>e.type!=='income'&&e.type!=='life'&&e.category===category)
+        .reduce((s,e)=>s+Number(e.amount||0),0);
 }
 
-function openBudgetModal(category=""){
-    document.getElementById("budgetModal").style.display="flex";
-    document.getElementById("budgetCategory").value=category || "Food";
-    const existing=budgets.find(x=>x.category===document.getElementById("budgetCategory").value);
-    document.getElementById("budgetAmount").value=existing ? existing.monthly_limit : "";
+function openBudgetModal(idOrCategory=""){
+    const modal=document.getElementById("budgetModal");
+    if(!modal)return;
+    const existing=budgets.find(x=>x.id===idOrCategory) || budgets.find(x=>x.category===idOrCategory);
+    modal.dataset.recordId=existing?.id||"";
+    modal.dataset.originalCategory=existing?.category||"";
+    modal.style.display="flex";
+    document.getElementById("budgetCategory").value=existing?.category || idOrCategory || "Food";
+    const current=budgets.find(x=>x.category===document.getElementById("budgetCategory").value);
+    document.getElementById("budgetAmount").value=existing ? existing.monthly_limit : (current ? current.monthly_limit : "");
 }
 
 function closeBudgetModal(){
@@ -3371,27 +3582,30 @@ document.addEventListener("change",event=>{
 });
 
 async function saveBudget(){
+    const modal=document.getElementById("budgetModal");
+    const id=modal?.dataset.recordId||"";
+    const originalCategory=modal?.dataset.originalCategory||"";
     const category=document.getElementById("budgetCategory").value;
     const amount=Number(document.getElementById("budgetAmount").value);
     if(!category || !Number.isFinite(amount) || amount<0){
         alert("Enter a valid budget.");
         return;
     }
-    const {data,error}=await supabaseClient.from("budgets").upsert({
-        user_id:currentUser.id,
-        category,
-        monthly_limit:amount
-    },{onConflict:"user_id,category"}).select().single();
-    if(error){
-        alert(error.message);
-        return;
+    if(id && category!==originalCategory){
+        const conflict=budgets.find(x=>x.category===category && x.id!==id);
+        if(conflict){alert("That category already has a budget. Edit that budget instead.");return;}
     }
-    const idx=budgets.findIndex(x=>x.category===category);
-    if(idx>=0) budgets[idx]=data;
-    else budgets.push(data);
+    let result;
+    if(id) result=await supabaseClient.from("budgets").update({category,monthly_limit:amount}).eq('id',id).eq('user_id',currentUser.id).select().single();
+    else result=await supabaseClient.from("budgets").upsert({user_id:currentUser.id,category,monthly_limit:amount},{onConflict:"user_id,category"}).select().single();
+    if(result.error){alert(result.error.message);return;}
+    const idx=budgets.findIndex(x=>x.id===result.data.id);
+    if(idx>=0)budgets[idx]=result.data;
+    else {const oldIdx=budgets.findIndex(x=>x.category===category);if(oldIdx>=0)budgets[oldIdx]=result.data;else budgets.push(result.data);}
+    delete modal.dataset.recordId;delete modal.dataset.originalCategory;
     closeBudgetModal();
     renderAll();
-    showV101Toast('Budget saved ✓');
+    showV101Toast(id?'Budget updated ✓':'Budget saved ✓');
 }
 
 async function deleteBudget(id){
@@ -3450,7 +3664,7 @@ function renderBudgets(){
             <div class="v5-meter"><div style="width:${Math.min(100,pct)}%"></div></div>
             <div class="small" style="margin-top:6px">${pct.toFixed(1)}% used · ${status} · ${x.remaining>=0?money(x.remaining)+" remaining":money(Math.abs(x.remaining))+" over"}</div>
             <div class="v3-actions">
-                <button class="btn" onclick="openBudgetModal('${escapeJs(x.category)}')">Edit</button>
+                <button class="btn" onclick="openBudgetModal('${escapeJs(x.id)}')">Edit</button>
                 <button class="btn-danger" onclick="deleteBudget('${escapeJs(x.id)}')">Delete</button>
             </div>
         </div>`;
@@ -3569,173 +3783,73 @@ function estimateLoanPayoff(loan){
 }
 
 function renderSmartFinance(){
-    const now=new Date();
-    const currentMonth=new Date(now.getFullYear(),now.getMonth(),1);
-    const mi=getMonthIncome(currentMonth);
-    const oneTimeIncome=mi.reduce((s,x)=>s+Number(x.amount||0),0);
-    const recurring=recurringIncomeForMonth(currentMonth);
-    const totalIncome=oneTimeIncome+recurring;
-    const items=getMonthExpenses(currentMonth);
-    const planned=items.reduce((s,x)=>s+Number(x.expense.amount||0),0);
-    const paid=items.filter(x=>x.payment && x.payment.paid).reduce((s,x)=>s+Number(x.expense.amount||0),0);
-    const pending=Math.max(0,planned-paid);
-    const savings=Math.max(0,totalIncome-planned);
-    const savingsRate=totalIncome>0 ? savings/totalIncome*100 : 0;
-    const emi=loans.reduce((s,x)=>s+Number(x.emi_amount||0),0);
-    const debtRatio=totalIncome>0 ? emi/totalIncome*100 : 0;
-    const pendingRatio=planned>0 ? pending/planned*100 : 0;
-    const forecastRows=[];
-    for(let i=0;i<12;i++) forecastRows.push(getForecastMonthData(new Date(currentMonth.getFullYear(),currentMonth.getMonth()+i,1)));
+    const d=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
+    const cf=cashflowStatsV11(d);
+    const totalIncome=cf.income, planned=cf.outflow, paid=cf.paid, pending=cf.pending;
+    const savings=Math.max(0,totalIncome-planned), savingsRate=totalIncome>0?savings/totalIncome*100:0;
+    const emi=activeLoanEmiForMonth(d), debtRatio=totalIncome>0?emi/totalIncome*100:0;
+    const pendingRatio=planned>0?pending/planned*100:0;
+    const forecastRows=Array.from({length:12},(_,i)=>getForecastMonthData(new Date(d.getFullYear(),d.getMonth()+i,1)));
     const deficitCount=forecastRows.filter(x=>x.surplus<0).length;
-    const tightCount=forecastRows.filter(x=>x.surplus>=0 && x.surplus<Math.max(500,totalIncome*0.1)).length;
-    const goalPct=savingsGoals.length ? Math.min(100,savingsGoals.reduce((s,g)=>s+(Number(g.current_amount||0)/Number(g.target_amount||0)||0)*100,0)/savingsGoals.length) : 0;
-
+    const tightCount=forecastRows.filter(x=>x.surplus>=0&&x.surplus<Math.max(500,totalIncome*.1)).length;
+    const goalPct=savingsGoals.length?Math.min(100,savingsGoals.reduce((s,g)=>s+(num(g.target_amount)>0?num(g.current_amount)/num(g.target_amount):0)*100,0)/savingsGoals.length):0;
     let score=0;
-    score += savingsRate>=20?30:savingsRate>=10?22:savingsRate>0?14:savingsRate===0?6:0;
-    score += debtRatio<10?25:debtRatio<20?20:debtRatio<30?12:debtRatio<40?6:0;
-    score += deficitCount===0 ? (tightCount===0?20:12) : 0;
-    score += pendingRatio<=10?15:pendingRatio<=25?9:pendingRatio<=50?4:0;
-    score += savingsGoals.length===0 ? 5 : (goalPct>=50?10:goalPct>0?6:2);
+    score+=savingsRate>=20?30:savingsRate>=10?22:savingsRate>0?14:savingsRate===0?6:0;
+    score+=debtRatio<10?25:debtRatio<20?20:debtRatio<30?12:debtRatio<40?6:0;
+    score+=deficitCount===0?(tightCount===0?20:12):0;
+    score+=pendingRatio<=10?15:pendingRatio<=25?9:pendingRatio<=50?4:0;
+    score+=savingsGoals.length===0?5:(goalPct>=50?10:goalPct>0?6:2);
     score=Math.max(0,Math.min(100,Math.round(score)));
-
-    const scoreEl=document.getElementById("healthScore");
-    scoreEl.textContent=`${score} / 100`;
-    scoreEl.className="stat-value "+(score>=70?"green":score>=50?"orange":"red");
-    document.getElementById("healthSavingsRate").textContent=savingsRate.toFixed(1)+"%";
-    document.getElementById("healthDebtRatio").textContent=debtRatio.toFixed(1)+"%";
-    document.getElementById("healthPendingRatio").textContent=pendingRatio.toFixed(1)+"%";
-
-    document.getElementById("healthBreakdown").innerHTML=`
-        <div class="v5-metric"><b>Savings</b><div>${savingsRate.toFixed(1)}% of current-month income remains after planned recurring expenses.</div></div>
+    const scoreEl=document.getElementById('healthScore');
+    if(scoreEl){scoreEl.textContent=`${score} / 100`;scoreEl.className='stat-value '+(score>=70?'green':score>=50?'orange':'red');}
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    set('healthSavingsRate',savingsRate.toFixed(1)+'%');set('healthDebtRatio',debtRatio.toFixed(1)+'%');set('healthPendingRatio',pendingRatio.toFixed(1)+'%');
+    const breakdown=document.getElementById('healthBreakdown');
+    if(breakdown)breakdown.innerHTML=`
+        <div class="v5-metric"><b>Savings</b><div>${savingsRate.toFixed(1)}% of current-month income remains after all recorded outflows.</div></div>
         <div class="v5-metric"><b>Debt load</b><div>${money(emi)} monthly EMI compared with ${money(totalIncome)} income.</div></div>
         <div class="v5-metric"><b>Forecast</b><div>${deficitCount} deficit month(s) and ${tightCount} tight month(s) are currently projected.</div></div>
-        <div class="v5-metric"><b>Goal progress</b><div>${savingsGoals.length?goalPct.toFixed(1)+"% average goal completion":"No savings goals added yet."}</div></div>
-    `;
-
-    const alertBox=document.getElementById("smartAlerts");
-    const alerts=getSmartAlerts();
-    alertBox.innerHTML=alerts.length?alerts.map(a=>`<div class="v5-alert ${a.kind}"><b>${escapeHtml(a.title)}</b><div>${escapeHtml(a.body)}</div></div>`).join(''):'<div class="v5-alert good"><b>All clear</b><div>No critical alerts detected from your current data.</div></div>';
-
-    const prevMonth=new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1,1);
-    const prevIncome=recurringIncomeForMonth(prevMonth)+getMonthIncome(prevMonth).reduce((s,x)=>s+Number(x.amount||0),0);
-    const prevExpense=getMonthExpenses(prevMonth).reduce((s,x)=>s+Number(x.expense.amount||0),0);
-    const categories={};
-    items.forEach(x=>{categories[x.expense.category]=(categories[x.expense.category]||0)+Number(x.expense.amount||0)});
-    const largest=Object.entries(categories).sort((a,b)=>b[1]-a[1])[0];
-    const incomeDelta=prevIncome===0?null:(totalIncome-prevIncome)/prevIncome*100;
-    const expenseDelta=prevExpense===0?null:(planned-prevExpense)/prevExpense*100;
-    const forecastNet=forecastRows.reduce((s,x)=>s+x.surplus,0);
-
+        <div class="v5-metric"><b>Goal progress</b><div>${savingsGoals.length?goalPct.toFixed(1)+'% average goal completion':'No savings goals added yet.'}</div></div>`;
+    const alertBox=document.getElementById('smartAlerts');
+    if(alertBox){const alerts=getSmartAlerts();alertBox.innerHTML=alerts.length?alerts.map(a=>`<div class="v5-alert ${a.kind}"><b>${escapeHtml(a.title)}</b><div>${escapeHtml(a.body)}</div></div>`).join(''):'<div class="v5-alert good"><b>All clear</b><div>No critical alerts detected from your current data.</div></div>';}
+    const prev=new Date(d.getFullYear(),d.getMonth()-1,1),prevCf=cashflowStatsV11(prev);
+    const incomeDelta=prevCf.income===0?null:(totalIncome-prevCf.income)/prevCf.income*100;
+    const expenseDelta=prevCf.outflow===0?null:(planned-prevCf.outflow)/prevCf.outflow*100;
+    const cats={};
+    monthEventsV11(d).forEach(e=>{if(e.type!=='income'&&e.type!=='life'&&e.type!=='saving')cats[e.category]=(cats[e.category]||0)+num(e.amount);});
+    const largest=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
     const insights=[];
-    if(incomeDelta!==null) insights.push(`Income is ${Math.abs(incomeDelta).toFixed(1)}% ${incomeDelta>=0?"higher":"lower"} than last month.`);
-    if(expenseDelta!==null) insights.push(`Planned recurring expenses are ${Math.abs(expenseDelta).toFixed(1)}% ${expenseDelta>=0?"higher":"lower"} than last month.`);
-    if(largest) insights.push(`${largest[0]} is your largest planned category this month at ${money(largest[1])}.`);
-    insights.push(`Projected 12-month net change is ${money(forecastNet)}.`);
-    if(loans.length){
-        const debt=loans.reduce((s,x)=>s+Number(x.outstanding_amount||0),0);
-        insights.push(`Total outstanding loan balance is ${money(debt)} across ${loans.length} loan(s).`);
-    }
-    if(savingsGoals.length){
-        const needs=savingsGoals.filter(g=>Number(g.target_amount||0)>Number(g.current_amount||0)).length;
-        insights.push(`${needs} savings goal(s) still need contributions.`);
-    }
-    document.getElementById("smartInsights").innerHTML=insights.map(x=>`<div class="v5-metric">${escapeHtml(x)}</div>`).join('');
-
-    const li=document.getElementById("loanIntelligence");
-    li.innerHTML=loans.length?loans.map(l=>{
-        const e=estimateLoanPayoff(l);
-        const outstanding=Number(l.outstanding_amount||0);
-        const progress=Math.min(100,Number(l.original_amount||0)>0?Math.max(0,(Number(l.original_amount)-outstanding)/Number(l.original_amount)*100):0);
-        const payoff=Number.isFinite(e.months)?`${e.months} month${e.months===1?"":"s"} estimated`:"EMI is too low to amortize this balance";
-        return `<div class="v5-metric">
-            <div><b>${escapeHtml(l.name)}</b> <span class="small">${escapeHtml(l.lender||"")}</span></div>
-            <div>Outstanding: <b>${money(outstanding)}</b> · EMI: ${money(l.emi_amount)}</div>
-            <div>Estimated payoff: <b>${payoff}</b></div>
-            <div>Estimated remaining interest: <b>${Number.isFinite(e.interest)?money(e.interest):"Not calculable"}</b></div>
-            <div class="small">Paid-down progress: ${progress.toFixed(1)}%</div>
-            <div class="v3-progress"><div class="v3-bar" style="width:${progress}%"></div></div>
-        </div>`;
-    }).join(''):'<div class="empty">Add loans to see payoff intelligence.</div>';
-
-    const gi=document.getElementById("goalIntelligence");
-    gi.innerHTML=savingsGoals.length?savingsGoals.map(g=>{
-        const target=Number(g.target_amount||0), current=Number(g.current_amount||0), remaining=Math.max(0,target-current);
-        const pct=target?Math.min(100,current/target*100):0;
-        const pace=getGoalRecordedMonthlyPace(g.id);
-        let required=0, months="No target date";
-        if(g.target_date && remaining>0){
-            const td=new Date(g.target_date+"T00:00:00");
-            const m=Math.max(1,monthDifference(new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1),new Date(td.getFullYear(),td.getMonth(),1))+1);
-            months=`${m} month${m===1?"":"s"} remaining`;
-            required=remaining/m;
-        }
-        const onTrack=required===0 || pace>=required;
-        return `<div class="v5-metric">
-            <b>${escapeHtml(g.name)}</b>
-            <div>${money(current)} / ${money(target)} · ${pct.toFixed(1)}%</div>
-            <div class="v3-progress"><div class="v3-bar" style="width:${pct}%"></div></div>
-            <div class="small">${months}${g.target_date?" · Target "+formatDateNice(g.target_date):""}</div>
-            <div>Recorded contribution pace: <b>${money(pace)}/month</b>${required?` · Required: <b>${money(required)}/month</b>`:""}</div>
-            <div class="${onTrack?'budget-good':'budget-warn'}">${required?(onTrack?"ON TRACK":"BEHIND PACE"):"Set a target date for a required monthly amount."}</div>
-        </div>`;
-    }).join(''):'<div class="empty">Add savings goals to see goal intelligence.</div>';
+    if(incomeDelta!==null)insights.push(`Income is ${Math.abs(incomeDelta).toFixed(1)}% ${incomeDelta>=0?'higher':'lower'} than last month.`);
+    if(expenseDelta!==null)insights.push(`Total recorded outflow is ${Math.abs(expenseDelta).toFixed(1)}% ${expenseDelta>=0?'higher':'lower'} than last month.`);
+    if(largest)insights.push(`${largest[0]} is your largest current-month outflow category at ${money(largest[1])}.`);
+    insights.push(`Projected 12-month net change is ${money(forecastRows.reduce((s,x)=>s+x.surplus,0))}.`);
+    const ib=document.getElementById('smartInsights');if(ib)ib.innerHTML=insights.map(x=>`<div class="v5-metric">💡 ${escapeHtml(x)}</div>`).join('');
 }
 
 function renderAnnualPlanner(){
-    const select=document.getElementById("annualYear");
+    const select=document.getElementById('annualYear'); if(!select)return;
     const currentYear=new Date().getFullYear();
     if(select.options.length===0){
-        for(let y=currentYear-3;y<=currentYear+5;y++){
-            const opt=document.createElement("option");
-            opt.value=String(y);
-            opt.textContent=String(y);
-            select.appendChild(opt);
-        }
+        for(let y=currentYear-3;y<=currentYear+5;y++){const opt=document.createElement('option');opt.value=String(y);opt.textContent=String(y);select.appendChild(opt);}
         select.value=String(currentYear);
     }
-    const year=Number(select.value);
-    const rows=[];
-    let totalIncome=0,totalExpense=0,totalPaid=0;
-
+    const year=Number(select.value),rows=[];let totalIncome=0,totalExpense=0,totalPaid=0;
     for(let m=0;m<12;m++){
-        const d=new Date(year,m,1);
-        const inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+Number(x.amount||0),0);
-        const items=getMonthExpenses(d);
-        const planned=items.reduce((s,x)=>s+Number(x.expense.amount||0),0);
-        const paid=items.filter(x=>x.payment && x.payment.paid).reduce((s,x)=>s+Number(x.expense.amount||0),0);
-        const pending=Math.max(0,planned-paid);
-        const balance=inc-planned;
-        totalIncome+=inc; totalExpense+=planned; totalPaid+=paid;
-        rows.push({d,inc,planned,paid,pending,balance});
+        const d=new Date(year,m,1),cf=cashflowStatsV11(d);
+        totalIncome+=cf.income;totalExpense+=cf.outflow;totalPaid+=cf.paid;
+        rows.push({d,inc:cf.income,planned:cf.outflow,paid:cf.paid,pending:cf.pending,balance:cf.net});
     }
-
-    document.getElementById("annualIncomeTotal").textContent=money(totalIncome);
-    document.getElementById("annualExpenseTotal").textContent=money(totalExpense);
-    document.getElementById("annualPaidTotal").textContent=money(totalPaid);
-    const surplusEl=document.getElementById("annualSurplusTotal");
-    surplusEl.textContent=money(totalIncome-totalExpense);
-    surplusEl.className="stat-value "+(totalIncome-totalExpense>=0?"green":"red");
-
-    document.getElementById("annualPlannerTable").innerHTML=rows.map(r=>`
-        <tr>
-            <td><b>${monthName(r.d)}</b></td>
-            <td class="green">${money(r.inc)}</td>
-            <td>${money(r.planned)}</td>
-            <td class="green">${money(r.paid)}</td>
-            <td class="red">${money(r.pending)}</td>
-            <td class="${r.balance>=0?'green':'red'}">${money(r.balance)}</td>
-        </tr>`).join('')+
-        `<tr><th>TOTAL</th><th>${money(totalIncome)}</th><th>${money(totalExpense)}</th><th>${money(totalPaid)}</th><th>${money(totalExpense-totalPaid)}</th><th>${money(totalIncome-totalExpense)}</th></tr>`;
-
-    const maxAbs=Math.max(1,...rows.map(r=>Math.abs(r.balance)));
-    document.getElementById("annualChart").innerHTML=rows.map(r=>{
-        const cls=r.balance<0?"negative":(r.balance<Math.max(500,totalIncome/12*0.1)?"warning":"");
-        return `<div class="v5-bar-row">
-            <div>${monthLabelShort(r.d)}</div>
-            <div class="v5-bar ${cls}"><div style="width:${Math.min(100,Math.abs(r.balance)/maxAbs*100)}%"></div></div>
-            <div class="v5-right ${r.balance>=0?'green':'red'}">${money(r.balance)}</div>
-        </div>`;
-    }).join('');
+    const set=(id,v,cls)=>{const el=document.getElementById(id);if(el){el.textContent=v;if(cls)el.className='stat-value '+cls;}};
+    set('annualIncomeTotal',money(totalIncome));set('annualExpenseTotal',money(totalExpense));set('annualPaidTotal',money(totalPaid));
+    set('annualSurplusTotal',money(totalIncome-totalExpense),totalIncome-totalExpense>=0?'green':'red');
+    const table=document.getElementById('annualPlannerTable');
+    if(table)table.innerHTML=rows.map(r=>`<tr><td><b>${monthName(r.d)}</b></td><td class="green">${money(r.inc)}</td><td>${money(r.planned)}</td><td class="green">${money(r.paid)}</td><td class="red">${money(r.pending)}</td><td class="${r.balance>=0?'green':'red'}">${money(r.balance)}</td></tr>`).join('')+
+        `<tr><th>TOTAL</th><th>${money(totalIncome)}</th><th>${money(totalExpense)}</th><th>${money(totalPaid)}</th><th>${money(Math.max(0,totalExpense-totalPaid))}</th><th>${money(totalIncome-totalExpense)}</th></tr>`;
+    const chart=document.getElementById('annualChart');
+    if(chart){
+        const maxAbs=Math.max(1,...rows.map(r=>Math.abs(r.balance)));
+        chart.innerHTML=rows.map(r=>{const cls=r.balance<0?'negative':r.balance<Math.max(500,totalIncome/12*.1)?'warning':'';return `<div class="v5-bar-row"><div>${monthLabelShort(r.d)}</div><div class="v5-bar ${cls}"><div style="width:${Math.min(100,Math.abs(r.balance)/maxAbs*100)}%"></div></div><div class="v5-right ${r.balance>=0?'green':'red'}">${money(r.balance)}</div></div>`;}).join('');
+    }
 }
 
 function renderV5(){
@@ -3745,9 +3859,9 @@ function renderV5(){
 }
 
 async function exportBackup(){
-    const backup={version:11,exportedAt:new Date().toISOString(),expenses,payments,income,recurringIncome,loans,savingsGoals,savingsTransactions,budgets,creditCards,assets,investments,oneTimeExpenses,financeRules,renewals,vehicles,vehicleLogs,householdBills,lifeEvents,documents};
+    const backup={version:14,exportedAt:new Date().toISOString(),expenses,payments,income,recurringIncome,loans,savingsGoals,savingsTransactions,budgets,creditCards,assets,investments,oneTimeExpenses,financeRules,renewals,vehicles,vehicleLogs,householdBills,lifeEvents,documents};
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='expense-calendar-v11-backup-'+dateKey(new Date())+'.json';a.click();URL.revokeObjectURL(url);
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='expense-calendar-v14-backup-'+dateKey(new Date())+'.json';a.click();URL.revokeObjectURL(url);
 }
 
 
@@ -3938,65 +4052,57 @@ function renderRecurringIntelligence(){
     box.innerHTML=`
       <div class="v9-item"><div class="v9-muted">Annual recurring commitments</div><div class="v9-big">${money(annual)}</div><div class="v9-muted">Average monthly recurring commitment: ${money(annual/12)}</div></div>
       <div class="v9-item"><b>Largest categories</b>${cats.slice(0,4).map(([k,v])=>`<div class="v9-meter"><span style="width:110px">${escapeHtml(k)}</span><div class="v9-meter-bar"><div style="width:${Math.min(100,v/Math.max(1,annual)*100)}%"></div></div><b>${money(v)}/yr</b></div>`).join('')||'<div class="v9-muted">No recurring expenses yet.</div>'}</div>
-      <div class="v9-item"><b>Largest individual commitments</b>${big.map(e=>`<div style="margin-top:8px;display:flex;justify-content:space-between;gap:10px"><span>${escapeHtml(e.name)} <span class="v9-muted">(${escapeHtml(e.frequency)})</span></span><b>${money(e.amount)}</b></div>`).join('')||'<div class="v9-muted">No expenses yet.</div>'}</div>`;
+      <div class="v9-item"><b>Largest individual commitments</b>${big.map(e=>`<div style="margin-top:8px;display:flex;justify-content:space-between;gap:10px;align-items:center"><span>${escapeHtml(e.name)} <span class="v9-muted">(${escapeHtml(e.frequency)})</span></span><span style="display:flex;align-items:center;gap:8px"><b>${money(e.amount)}</b><button class="btn-light" type="button" data-v14-edit="${escapeHtml(e.id)}" data-v14-kind="expense">Edit</button><button class="btn-danger" type="button" data-v14-delete="${escapeHtml(e.id)}" data-v14-kind="expense">Delete</button></span></div>`).join('')||'<div class="v9-muted">No expenses yet.</div>'}</div>`;
+    v14BindRecordActions(box);
 }
+
 
 function buildAssistantData(){
     const d=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
-    const inc=recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+num(x.amount),0);
-    const exp=getMonthExpenses(d).reduce((s,x)=>s+num(x.expense.amount),0);
-    const emi=loans.reduce((s,l)=>s+num(l.emi_amount),0);
-    const surplus=inc-exp;
-    const pending=getMonthExpenses(d).filter(x=>!(x.payment&&x.payment.paid)).reduce((s,x)=>s+num(x.expense.amount),0);
+    const cf=cashflowStatsV11(d);
+    const emi=activeLoanEmiForMonth(d);
     const debt=loans.reduce((s,l)=>s+num(l.outstanding_amount),0);
     const cardUsed=creditCards.reduce((s,c)=>s+num(c.current_used),0);
     const cardLimit=creditCards.reduce((s,c)=>s+num(c.credit_limit),0);
     const netAssets=assets.reduce((s,a)=>s+num(a.current_value),0);
     const invValue=investments.reduce((s,i)=>s+num(i.current_value),0);
-    const liabilities=debt+creditCards.reduce((s,c)=>s+num(c.current_used),0);
-    const netWorth=netAssets+invValue-liabilities;
-    return {d,inc,exp,emi,surplus,pending,debt,cardUsed,cardLimit,netAssets,invValue,liabilities,netWorth};
+    const vehicleValue=vehicles.reduce((s,v)=>s+num(v.current_value),0);
+    const liabilities=debt+cardUsed;
+    const netWorth=netAssets+vehicleValue+invValue-liabilities;
+    return {
+        d,inc:cf.income,exp:cf.outflow,emi,surplus:cf.net,pending:cf.pending,
+        debt,cardUsed,cardLimit,netAssets,vehicleValue,invValue,liabilities,netWorth,
+        savings:cf.savings
+    };
 }
 
 function renderAssistant(){
-    const a=buildAssistantData();
-    const box=document.getElementById("assistantSummary"); if(!box) return;
+    const a=buildAssistantData(),box=document.getElementById('assistantSummary');if(!box)return;
     const savingsRate=a.inc>0?a.surplus/a.inc*100:0;
-    const forecastRows=[];
-    for(let i=0;i<12;i++) forecastRows.push(getForecastMonthData(new Date(a.d.getFullYear(),a.d.getMonth()+i,1)));
-    const deficit=forecastRows.filter(x=>x.surplus<0);
-    const tight=forecastRows.filter(x=>x.surplus>=0 && x.surplus<Math.max(500,a.inc*0.1));
-    document.getElementById("assistantState").textContent=deficit.length?"Action needed":tight.length?"Watch closely":"Looking healthy";
-    box.innerHTML=`
-      <div class="v9-card"><div class="v9-muted">Monthly surplus</div><div class="v9-big ${a.surplus>=0?'v9-positive':'v9-negative'}">${money(a.surplus)}</div><div class="v9-muted">${savingsRate.toFixed(1)}% of income</div></div>
-      <div class="v9-card"><div class="v9-muted">Upcoming pressure</div><div class="v9-big">${money(a.pending)}</div><div class="v9-muted">Pending this month</div></div>
-      <div class="v9-card"><div class="v9-muted">Net position</div><div class="v9-big ${a.netWorth>=0?'v9-positive':'v9-negative'}">${money(a.netWorth)}</div><div class="v9-muted">Recorded assets + investments − debt/cards</div></div>`;
-
-    const emergency=document.getElementById("assistantEmergency");
+    const forecastRows=Array.from({length:12},(_,i)=>getForecastMonthData(new Date(a.d.getFullYear(),a.d.getMonth()+i,1)));
+    const deficit=forecastRows.filter(x=>x.surplus<0),tight=forecastRows.filter(x=>x.surplus>=0&&x.surplus<Math.max(500,a.inc*.1));
+    const state=document.getElementById('assistantState');if(state)state.textContent=deficit.length?'Action needed':tight.length?'Watch closely':'Looking healthy';
+    box.innerHTML=`<div class="v9-card"><div class="v9-muted">Monthly surplus</div><div class="v9-big ${a.surplus>=0?'v9-positive':'v9-negative'}">${money(a.surplus)}</div><div class="v9-muted">${savingsRate.toFixed(1)}% of income</div></div><div class="v9-card"><div class="v9-muted">Upcoming pressure</div><div class="v9-big">${money(a.pending)}</div><div class="v9-muted">Pending recorded/scheduled outflow</div></div><div class="v9-card"><div class="v9-muted">Net position</div><div class="v9-big ${a.netWorth>=0?'v9-positive':'v9-negative'}">${money(a.netWorth)}</div><div class="v9-muted">Assets + investments + vehicle value − debt/cards</div></div>`;
+    const emergency=document.getElementById('assistantEmergency');
     const warnings=[];
-    if(deficit.length) warnings.push({c:"bad",t:`${deficit.length} deficit month(s) ahead`,b:`The forecast turns negative in ${monthName(deficit[0].date)}.`});
-    if(a.pending>0) warnings.push({c:"warn",t:"Pending payments exist",b:`${money(a.pending)} remains unpaid in ${monthName(a.d)}.`});
-    if(a.cardLimit>0 && a.cardUsed/a.cardLimit>=0.8) warnings.push({c:"warn",t:"High card utilization",b:`Credit cards are ${((a.cardUsed/a.cardLimit)*100).toFixed(1)}% used.`});
-    if(a.inc>0 && a.emi/a.inc>=0.4) warnings.push({c:"warn",t:"High EMI load",b:`EMIs use ${(a.emi/a.inc*100).toFixed(1)}% of current monthly income.`});
-    if(warnings.length===0) warnings.push({c:"good",t:"No immediate emergency detected",b:"Your current data does not show a critical cash-flow warning."});
-    emergency.innerHTML=warnings.map(w=>`<div class="v9-alert ${w.c}"><b>${escapeHtml(w.t)}</b><div>${escapeHtml(w.b)}</div></div>`).join('');
-
+    if(deficit.length)warnings.push({c:'bad',t:`${deficit.length} deficit month(s) ahead`,b:`The forecast turns negative in ${monthName(deficit[0].date)}.`});
+    if(a.pending>0)warnings.push({c:'warn',t:'Pending outflow exists',b:`${money(a.pending)} remains untracked as paid in ${monthName(a.d)}.`});
+    if(a.cardLimit>0&&a.cardUsed/a.cardLimit>=.8)warnings.push({c:'warn',t:'High card utilization',b:`Credit cards are ${((a.cardUsed/a.cardLimit)*100).toFixed(1)}% used.`});
+    if(a.inc>0&&a.emi/a.inc>=.4)warnings.push({c:'warn',t:'High EMI load',b:`EMIs use ${(a.emi/a.inc*100).toFixed(1)}% of current monthly income.`});
+    if(!warnings.length)warnings.push({c:'good',t:'No immediate emergency detected',b:'Your current data does not show a critical cash-flow warning.'});
+    if(emergency)emergency.innerHTML=warnings.map(w=>`<div class="v9-alert ${w.c}"><b>${escapeHtml(w.t)}</b><div>${escapeHtml(w.b)}</div></div>`).join('');
     const answers=[];
-    if(a.inc>0) answers.push(`You are keeping approximately ${savingsRate.toFixed(1)}% of this month's income after planned recurring expenses.`);
-    if(a.exp>0){ const cats={}; getMonthExpenses(a.d).forEach(x=>cats[x.expense.category]=(cats[x.expense.category]||0)+num(x.expense.amount)); const top=Object.entries(cats).sort((x,y)=>y[1]-x[1])[0]; if(top) answers.push(`${top[0]} is the largest planned category this month at ${money(top[1])}.`); }
-    if(a.debt>0) answers.push(`Your recorded outstanding loans total ${money(a.debt)}, with ${money(a.emi)} in monthly EMI.`);
-    if(a.cardLimit>0) answers.push(`Your recorded credit-card utilization is ${((a.cardUsed/a.cardLimit)*100).toFixed(1)}%.`);
-    const goalsBehind=savingsGoals.filter(g=>{const t=num(g.target_amount),c=num(g.current_amount); if(!g.target_date||c>=t)return false; const m=monthsBetweenDates(a.d,new Date(g.target_date+"T00:00:00")); return getGoalRecordedMonthlyPace(g.id)<(t-c)/m;}).length;
-    if(goalsBehind) answers.push(`${goalsBehind} savings goal(s) are behind their required contribution pace.`);
-    const forecastNet=forecastRows.reduce((s,x)=>s+x.surplus,0);
-    answers.push(`Your next 12 projected months have a net change of ${money(forecastNet)}.`);
-    document.getElementById("assistantAnswers").innerHTML=answers.map(x=>`<div class="v9-item">💡 ${escapeHtml(x)}</div>`).join('');
-
-    const trend=document.getElementById("assistantTrend");
-    const rows=[];
-    for(let i=5;i>=0;i--){ const md=new Date(a.d.getFullYear(),a.d.getMonth()-i,1); const inc=recurringIncomeForMonth(md)+getMonthIncome(md).reduce((s,x)=>s+num(x.amount),0); const ex=getMonthExpenses(md).reduce((s,x)=>s+num(x.expense.amount),0); rows.push({d:md,v:inc-ex}); }
-    const max=Math.max(1,...rows.map(r=>Math.abs(r.v)));
-    trend.innerHTML=rows.map(r=>`<div class="v9-chart-row"><div>${monthLabelShort(r.d)}</div><div class="v9-chart-track"><div class="v9-chart-bar ${r.v<0?'neg':''}" style="width:${Math.min(100,Math.abs(r.v)/max*100)}%"></div></div><div class="${r.v>=0?'v9-positive':'v9-negative'}" style="text-align:right">${money(r.v)}</div></div>`).join('');
+    if(a.inc>0)answers.push(`Current-month net after recorded outflows is ${money(a.surplus)} (${savingsRate.toFixed(1)}% of income).`);
+    const cats={};monthEventsV11(a.d).forEach(e=>{if(e.type!=='income'&&e.type!=='life'&&e.type!=='saving')cats[e.category]=(cats[e.category]||0)+num(e.amount);});
+    const top=Object.entries(cats).sort((x,y)=>y[1]-x[1])[0];if(top)answers.push(`${top[0]} is the largest current-month outflow category at ${money(top[1])}.`);
+    if(a.debt>0)answers.push(`Outstanding loans total ${money(a.debt)}, with ${money(a.emi)} of current monthly EMI.`);
+    if(a.cardLimit>0)answers.push(`Credit-card utilization is ${((a.cardUsed/a.cardLimit)*100).toFixed(1)}%.`);
+    const goalsBehind=savingsGoals.filter(g=>{const t=num(g.target_amount),c=num(g.current_amount);if(!g.target_date||c>=t)return false;const m=Math.max(1,monthDifference(a.d,new Date(g.target_date+'T00:00:00')));return getGoalRecordedMonthlyPace(g.id)<(t-c)/m;}).length;
+    if(goalsBehind)answers.push(`${goalsBehind} savings goal(s) are behind their required contribution pace.`);
+    answers.push(`The next 12 projected months have a net change of ${money(forecastRows.reduce((s,x)=>s+x.surplus,0))}.`);
+    const ab=document.getElementById('assistantAnswers');if(ab)ab.innerHTML=answers.map(x=>`<div class="v9-item">💡 ${escapeHtml(x)}</div>`).join('');
+    const trend=document.getElementById('assistantTrend');
+    if(trend){const rows=[];for(let i=5;i>=0;i--){const md=new Date(a.d.getFullYear(),a.d.getMonth()-i,1),cf=cashflowStatsV11(md);rows.push({d:md,v:cf.net});}const max=Math.max(1,...rows.map(r=>Math.abs(r.v)));trend.innerHTML=rows.map(r=>`<div class="v9-chart-row"><div>${monthLabelShort(r.d)}</div><div class="v9-chart-track"><div class="v9-chart-bar ${r.v<0?'neg':''}" style="width:${Math.min(100,Math.abs(r.v)/max*100)}%"></div></div><div class="${r.v>=0?'v9-positive':'v9-negative'}" style="text-align:right">${money(r.v)}</div></div>`).join('');}
     renderRecurringIntelligence();
 }
 
@@ -4031,12 +4137,23 @@ async function saveCreditCard(){
 async function deleteCreditCard(id){if(!confirm("Delete this credit card?"))return;const{error}=await supabaseClient.from("credit_cards").delete().eq("id",id).eq("user_id",currentUser.id);if(error){alert(error.message);return;}creditCards=creditCards.filter(x=>x.id!==id);saveOfflineSnapshot();renderAll();}
 
 function renderNetWorth(){
-    const debt=loans.reduce((s,l)=>s+num(l.outstanding_amount),0), cards=creditCards.reduce((s,c)=>s+num(c.current_used),0), av=assets.reduce((s,a)=>s+num(a.current_value),0), iv=investments.reduce((s,i)=>s+num(i.current_value),0), nw=av+iv-debt-cards;
-    document.getElementById("netAssets").textContent=money(av); document.getElementById("netInvestments").textContent=money(iv); document.getElementById("netLiabilities").textContent=money(debt+cards); document.getElementById("netWorthTotal").textContent=money(nw); document.getElementById("netWorthTotal").className="stat-value "+(nw>=0?"green":"red"); document.getElementById("netWorthStatus").textContent=nw>=0?"Positive":"Negative";
-    const ab=document.getElementById("assetList");
-    ab.innerHTML=assets.length?assets.map(a=>`<div class="v9-item"><div class="v9-item-title"><span>${escapeHtml(a.name)}</span><b>${money(a.current_value)}</b></div><div class="v9-muted">${escapeHtml(a.category)}${a.notes?' · '+escapeHtml(a.notes):''}</div><div class="v3-actions"><button class="btn" onclick="openAssetModal('${a.id}')">Edit</button><button class="btn-danger" onclick="deleteAsset('${a.id}')">Delete</button></div></div>`).join(''):'<div class="v9-empty">No assets added.</div>';
-    const lb=document.getElementById("netLiabilityList");
-    let rows=[]; loans.forEach(l=>rows.push(`<div class="v9-item"><div class="v9-item-title"><span>🏦 ${escapeHtml(l.name)}</span><b class="v9-negative">${money(l.outstanding_amount)}</b></div><div class="v9-muted">Loan / EMI · EMI ${money(l.emi_amount)}</div></div>`)); creditCards.forEach(c=>rows.push(`<div class="v9-item"><div class="v9-item-title"><span>💳 ${escapeHtml(c.name)}</span><b class="v9-negative">${money(c.current_used)}</b></div><div class="v9-muted">Credit card used</div></div>`)); lb.innerHTML=rows.join('')||'<div class="v9-empty">No liabilities recorded.</div>';
+    const debt=loans.reduce((s,l)=>s+num(l.outstanding_amount),0);
+    const cards=creditCards.reduce((s,c)=>s+num(c.current_used),0);
+    const av=assets.reduce((s,a)=>s+num(a.current_value),0);
+    const vehicleValue=vehicles.reduce((s,v)=>s+num(v.current_value),0);
+    const iv=investments.reduce((s,i)=>s+num(i.current_value),0);
+    const nw=av+vehicleValue+iv-debt-cards;
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    set('netAssets',money(av+vehicleValue));set('netInvestments',money(iv));set('netLiabilities',money(debt+cards));set('netWorthTotal',money(nw));set('netWorthStatus',nw>=0?'Positive':'Negative');
+    const total=document.getElementById('netWorthTotal');if(total)total.className='stat-value '+(nw>=0?'green':'red');
+    const ab=document.getElementById('assetList');
+    if(ab)ab.innerHTML=assets.length||vehicles.length||investments.length
+        ? assets.map(a=>`<div class="v9-item"><div class="v9-item-title"><span>🏠 ${escapeHtml(a.name)}</span><b>${money(a.current_value)}</b></div><div class="v9-muted">${escapeHtml(a.category||'Asset')}${a.notes?' · '+escapeHtml(a.notes):''}</div><div class="v3-actions"><button class="btn" onclick="openAssetModal('${a.id}')">Edit</button><button class="btn-danger" onclick="deleteAsset('${a.id}')">Delete</button></div></div>`).join('')+
+        vehicles.map(v=>`<div class="v9-item"><div class="v9-item-title"><span>🚗 ${escapeHtml(v.name)}</span><b>${money(v.current_value)}</b></div><div class="v9-muted">${escapeHtml(v.type||v.vehicle_type||'Vehicle')} · tracked as a net-worth asset</div><div class="v3-actions"><button class="btn" onclick="openVehicleModal('${v.id}')">Edit</button><button class="btn-danger" onclick="deleteVehicle('${v.id}')">Delete</button></div></div>`).join('')+
+        investments.map(i=>`<div class="v9-item"><div class="v9-item-title"><span>📈 ${escapeHtml(i.name)}</span><b>${money(i.current_value)}</b></div><div class="v9-muted">${escapeHtml(i.type||'Investment')} · current value included in net worth</div><div class="v3-actions"><button class="btn" onclick="openInvestmentModal('${i.id}')">Edit</button><button class="btn-danger" onclick="deleteInvestment('${i.id}')">Delete</button></div></div>`).join('')
+        :'<div class="v9-empty">No assets added.</div>';
+    const lb=document.getElementById('netLiabilityList');
+    if(lb){let rows=[];loans.forEach(l=>rows.push(`<div class="v9-item"><div class="v9-item-title"><span>🏦 ${escapeHtml(l.name)}</span><b class="v9-negative">${money(l.outstanding_amount)}</b></div><div class="v9-muted">Loan / EMI · EMI ${money(l.emi_amount)}</div><div class="v3-actions"><button class="btn" onclick="openLoanModal('${l.id}')">Edit</button><button class="btn-danger" onclick="deleteLoan('${l.id}')">Delete</button></div></div>`));creditCards.forEach(c=>rows.push(`<div class="v9-item"><div class="v9-item-title"><span>💳 ${escapeHtml(c.name)}</span><b class="v9-negative">${money(c.current_used)}</b></div><div class="v9-muted">Credit card used</div><div class="v3-actions"><button class="btn" onclick="openCreditCardModal('${c.id}')">Edit</button><button class="btn-danger" onclick="deleteCreditCard('${c.id}')">Delete</button></div></div>`));lb.innerHTML=rows.join('')||'<div class="v9-empty">No liabilities recorded.</div>';}
 }
 function openAssetModal(id=null){document.getElementById("assetId").value=id||"";if(id){const a=assets.find(x=>x.id===id);if(!a)return;document.getElementById("assetModalTitle").textContent="Edit Asset";document.getElementById("assetName").value=a.name||"";document.getElementById("assetCategory").value=a.category||"Other";document.getElementById("assetValue").value=a.current_value||"";document.getElementById("assetNotes").value=a.notes||"";}else{document.getElementById("assetModalTitle").textContent="Add Asset";document.getElementById("assetName").value="";document.getElementById("assetCategory").value="Property";document.getElementById("assetValue").value="";document.getElementById("assetNotes").value="";}document.getElementById("assetModal").style.display="flex";}
 async function saveAsset(){const id=document.getElementById("assetId").value;const row={user_id:currentUser.id,name:document.getElementById("assetName").value.trim(),category:document.getElementById("assetCategory").value,current_value:num(document.getElementById("assetValue").value),notes:document.getElementById("assetNotes").value.trim()};if(!row.name||row.current_value<0){alert("Please enter valid asset details.");return;}const q=id?supabaseClient.from("assets").update(row).eq("id",id).eq("user_id",currentUser.id).select().single():supabaseClient.from("assets").insert(row).select().single();const{data,error}=await q;if(error){alert(error.message);return;}if(id){const i=assets.findIndex(x=>x.id===id);if(i>=0)assets[i]=data;}else assets.push(data);closeV9Modal("assetModal");saveOfflineSnapshot();renderAll();
@@ -4154,6 +4271,8 @@ async function saveQuickAdd(){
         const goals=savingsGoals.filter(g=>numV10(g.target_amount)>numV10(g.current_amount));
         if(!goals.length)return alert('Add a savings goal first.');
         const goal=goals.slice().sort((a,b)=>numV10(a.target_amount)-numV10(b.target_amount))[0];
+        const remaining=Math.max(0,numV10(goal.target_amount)-numV10(goal.current_amount));
+        if(amount>remaining)return alert(`Maximum contribution for this goal is ${money(remaining)}.`);
         const {data,error}=await supabaseClient.from('savings_transactions').insert({user_id:currentUser.id,goal_id:goal.id,amount,transaction_date:date,note:note||'Quick Add contribution'}).select().single();
         if(error)return alert(error.message);
         savingsTransactions.push(data);
@@ -4168,13 +4287,17 @@ function oneTimeExpensesForMonthV10(d){
     const key=monthKey(d); return oneTimeExpenses.filter(x=>String(x.expense_date||'').slice(0,7)===key);
 }
 function householdBillsForMonthV10(d){
-    const list=[]; const month=d.getMonth(),year=d.getFullYear();
+    const list=[],year=d.getFullYear(),month=d.getMonth();
     householdBills.forEach(b=>{
-        const freq=b.frequency||'Monthly',start=new Date((b.start_month||`${year}-${String(month+1).padStart(2,'0')}`)+'-01T00:00:00');
+        const startMonth=String(b.start_month||`${year}-${String(month+1).padStart(2,'0')}`);
+        const start=new Date(startMonth+'-01T00:00:00');
         const diff=(year-start.getFullYear())*12+(month-start.getMonth());
-        const step=freq==='Quarterly'?3:freq==='Yearly'?12:1;
-        if(diff>=0&&diff%step===0){ const day=Math.min(numV10(b.due_day)||1,new Date(year,month+1,0).getDate()); list.push({bill:b,date:new Date(year,month,day)}); }
-    }); return list;
+        const step=b.frequency==='Quarterly'?3:b.frequency==='Half-Yearly'?6:b.frequency==='Yearly'?12:1;
+        if(diff<0||diff%step!==0)return;
+        const day=Math.min(numV10(b.due_day)||1,lastDay(d).getDate());
+        list.push({bill:b,date:new Date(year,month,day)});
+    });
+    return list;
 }
 function renewalsUpcomingV10(){
     const today=new Date();today.setHours(0,0,0,0);return renewals.filter(r=>r.due_date&&dateV10(r.due_date)>=today).sort((a,b)=>dateV10(a.due_date)-dateV10(b.due_date));
@@ -4187,12 +4310,8 @@ function essentialPlannedV10(d){
 }
 function monthlyIncomeV10(d){ return recurringIncomeForMonth(d)+getMonthIncome(d).reduce((s,x)=>s+numV10(x.amount),0); }
 function monthlyOutflowV10(d){
-    const recurring=getMonthExpenses(d).reduce((s,x)=>s+numV10(x.expense.amount),0);
-    const one=oneTimeExpensesForMonthV10(d).reduce((s,x)=>s+numV10(x.amount),0);
-    const bills=householdBillsForMonthV10(d).reduce((s,x)=>s+numV10(x.bill.amount),0);
-    const loanExtra=activeLoanEmiForMonth(d);
-    const included=getMonthExpenses(d).filter(x=>x.expense.category==='Loan / EMI').reduce((s,x)=>s+numV10(x.expense.amount),0);
-    return recurring+one+bills+Math.max(0,loanExtra-included);
+    return monthEventsV11(d).filter(e=>e.type!=='income'&&e.type!=='life')
+        .reduce((s,e)=>s+numV10(e.amount),0);
 }
 function safeToSpendV10(){
     const d=currentDate, incomeTotal=monthlyIncomeV10(d), outflow=monthlyOutflowV10(d), sinking=sinkingReserveV10(), goalReserve=goalRequiredReserveV10(), emergencyTarget=emergencyTargetV10();
@@ -4236,22 +4355,37 @@ function renderCommandCenterV10(){
 function refreshV10Insights(){ renderV10Everything(); }
 
 function renderGlobalSearch(){
-    const q=(document.getElementById('v10GlobalSearch').value||'').trim().toLowerCase(), type=document.getElementById('v10SearchType').value;
-    if(!q){document.getElementById('v10GlobalResults').innerHTML='<div class="v10-muted">Type something to search.</div>';return;}
+    const q=(document.getElementById('v10GlobalSearch').value||'').trim().toLowerCase();
+    const type=document.getElementById('v10SearchType').value;
     const rows=[];
-    const add=(kind,label,meta,amount)=>{if(type==='all'||type===kind)rows.push({kind,label,meta,amount});};
-    expenses.forEach(x=>{if((x.name+' '+x.category).toLowerCase().includes(q))add('expense',x.name,`${x.category} · ${x.frequency}`,x.amount);});
-    income.forEach(x=>{if((x.name).toLowerCase().includes(q))add('income',x.name,`Income · ${x.income_date}`,x.amount);});
-    loans.forEach(x=>{if((x.name+' '+(x.lender||'')).toLowerCase().includes(q))add('loan',x.name,`${x.lender||''} · outstanding`,x.outstanding_amount);});
-    savingsGoals.forEach(x=>{if(x.name.toLowerCase().includes(q))add('goal',x.name,'Savings goal',x.current_amount);});
-    creditCards.forEach(x=>{if((x.name+' '+(x.bank||'')).toLowerCase().includes(q))add('card',x.name,`${x.bank||''} · card`,x.used_amount);});
-    assets.forEach(x=>{if((x.name+' '+(x.category||'')).toLowerCase().includes(q))add('asset',x.name,x.category||'Asset',x.current_value);});
-    investments.forEach(x=>{if((x.name+' '+(x.type||'')).toLowerCase().includes(q))add('investment',x.name,x.type||'Investment',x.current_value);});
-    renewals.forEach(x=>{if((x.name+' '+(x.type||'')).toLowerCase().includes(q))add('renewal',x.name,`${x.type||'Renewal'} · ${x.due_date||''}`,x.amount);});
-    vehicles.forEach(x=>{if((x.name+' '+(x.type||'')).toLowerCase().includes(q))add('vehicle',x.name,x.type||'Vehicle',x.current_value);});
-    householdBills.forEach(x=>{if((x.name+' '+(x.category||'')).toLowerCase().includes(q))add('bill',x.name,`${x.category||''} · ${x.frequency||''}`,x.amount);});
-    lifeEvents.forEach(x=>{if(x.name.toLowerCase().includes(q))add('life',x.name,`${x.priority||''} · ${x.target_date||''}`,x.target_amount);});
-    document.getElementById('v10GlobalResults').innerHTML=rows.length?`<div class="v10-list">${rows.slice(0,80).map(r=>`<div class="v10-item"><div class="v10-item-head"><div><div class="v10-item-title">${escapeHtml(r.label)}</div><div class="v10-muted">${escapeHtml(r.meta)} · ${escapeHtml(r.kind)}</div></div><b>${r.amount!==undefined&&r.amount!==null&&r.amount!==''?money(r.amount):''}</b></div></div>`).join('')}</div>`:'<div class="v10-muted">No matches.</div>';
+    const add=(kind,row,label,meta,amount,actions)=>{
+        if((type==='all'||type===kind)&&((label||'')+' '+(meta||'')).toLowerCase().includes(q))
+            rows.push({kind,row,label,meta,amount,actions});
+    };
+    if(!q){document.getElementById('v10GlobalResults').innerHTML='<div class="v10-muted">Type something to search.</div>';return;}
+    expenses.forEach(x=>add('expense',x,x.name,`${x.category} · ${x.frequency}`,x.amount,[['Edit',()=>openExpenseModal(x.id)],['Delete',()=>deleteExpense(x.id)]]));
+    income.forEach(x=>add('income',x,x.name,`Income · ${x.income_date}`,x.amount,[['Edit',()=>openIncomeModal(x.id)],['Delete',()=>deleteIncome(x.id)]]));
+    recurringIncome.forEach(x=>add('recurringIncome',x,x.name,`Recurring income · ${x.frequency}`,x.amount,[['Edit',()=>openRecurringIncomeModal(x.id)],['Delete',()=>deleteRecurringIncome(x.id)]]));
+    oneTimeExpenses.forEach(x=>add('oneTimeExpense',x,x.name,`${x.category||'Other'} · ${x.expense_date}`,x.amount,[['Edit',()=>openOneTimeExpenseEdit(x.id)],['Delete',()=>deleteOneTimeExpense(x.id)]]));
+    loans.forEach(x=>add('loan',x,x.name,`${x.lender||''} · outstanding`,x.outstanding_amount,[['Edit',()=>openLoanModal(x.id)],['Delete',()=>deleteLoan(x.id)]]));
+    savingsGoals.forEach(x=>add('goal',x,x.name,'Savings goal',x.current_amount,[['Edit',()=>openGoalModal(x.id)],['Delete',()=>deleteGoal(x.id)]]));
+    budgets.forEach(x=>add('budget',x,x.category,`Budget · monthly limit`,x.monthly_limit,[['Edit',()=>openBudgetModal(x.id)],['Delete',()=>deleteBudget(x.id)]]));
+    creditCards.forEach(x=>add('card',x,x.name,`${x.bank||''} · card`,x.current_used,[['Edit',()=>openCreditCardModal(x.id)],['Delete',()=>deleteCreditCard(x.id)]]));
+    assets.forEach(x=>add('asset',x,x.name,x.category||'Asset',x.current_value,[['Edit',()=>openAssetModal(x.id)],['Delete',()=>deleteAsset(x.id)]]));
+    investments.forEach(x=>add('investment',x,x.name,x.type||'Investment',x.current_value,[['Edit',()=>openInvestmentModal(x.id)],['Delete',()=>deleteInvestment(x.id)]]));
+    financeRules.forEach(x=>add('rule',x,x.label||x.rule_type,`${x.category||''} · threshold ${x.threshold||0}`,x.threshold,[['Edit',()=>openRuleModal(x.id)],['Delete',()=>deleteRule(x.id)]]));
+    renewals.forEach(x=>add('renewal',x,x.name,`${x.type||'Renewal'} · ${x.due_date||''}`,x.amount,[['Edit',()=>openRenewalModal(x.id)],['Delete',()=>deleteRenewal(x.id)]]));
+    vehicles.forEach(x=>add('vehicle',x,x.name,x.type||'Vehicle',x.current_value,[['Edit',()=>openVehicleModal(x.id)],['Delete',()=>deleteVehicle(x.id)]]));
+    vehicleLogs.forEach(x=>add('vehicleLog',x,x.log_type,`${x.log_date||''} · vehicle`,x.amount,[['Edit',()=>openVehicleLogModal(x.vehicle_id,x.id)],['Delete',()=>deleteVehicleLog(x.id)]]));
+    householdBills.forEach(x=>add('bill',x,x.name,`${x.category||''} · ${x.frequency||''}`,x.amount,[['Edit',()=>openHouseholdBillModal(x.id)],['Delete',()=>deleteHouseholdBill(x.id)]]));
+    lifeEvents.forEach(x=>add('life',x,x.name,`${x.priority||''} · ${x.target_date||''}`,x.target_amount,[['Edit',()=>openLifeEventModal(x.id)],['Delete',()=>deleteLifeEvent(x.id)]]));
+    sharedExpenses.forEach(x=>add('shared',x,x.name,`Shared expense · ${x.expense_date||''}`,x.amount,[['Edit',()=>openSharedExpenseModal(x.household_id,x.id)],['Delete',()=>deleteSharedExpense(x.id)]]));
+    savingsTransactions.forEach(x=>add('saving',x,x.note||'Savings contribution',`Goal contribution · ${x.transaction_date||''}`,x.amount,[['Edit',()=>editGoalSaving(x.id)],['Delete',()=>deleteGoalSaving(x.id)]]));
+    document.getElementById('v10GlobalResults').innerHTML=rows.length?`<div class="v10-list">${rows.slice(0,80).map((r,i)=>`<div class="v10-item" data-search-index="${i}"><div class="v10-item-head"><div><div class="v10-item-title">${escapeHtml(r.label)}</div><div class="v10-muted">${escapeHtml(r.meta)} · ${escapeHtml(r.kind)}</div></div><b>${r.amount!==undefined?money(r.amount):''}</b></div><div class="v10-actions">${r.actions.map((a,j)=>`<button class="${a[0]==='Delete'?'btn-danger':'btn'}" data-search-action="${i}:${j}">${a[0]}</button>`).join('')}</div></div>`).join('')}</div>`:'<div class="v10-muted">No matches.</div>';
+    document.getElementById('v10GlobalResults').querySelectorAll('[data-search-action]').forEach(btn=>{
+        const [i,j]=btn.dataset.searchAction.split(':').map(Number);
+        const row=rows[i]; if(row?.actions?.[j])btn.onclick=row.actions[j][1];
+    });
 }
 
 function openDetectedRecurring(name,amount){
@@ -4288,7 +4422,11 @@ function ruleTriggeredV10(r){
     return false;
 }
 function renderRules(){
-    const box=document.getElementById('v10Rules');box.innerHTML=financeRules.length?financeRules.map(r=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.label||r.rule_type)}</b><div class="v10-muted">${escapeHtml(r.rule_type)} · ${r.threshold||0}</div></div>${statusPillV10(ruleTriggeredV10(r)?'TRIGGERED':'OK',ruleTriggeredV10(r)?'warn':'good')}</div><div class="v10-actions"><button class="btn-danger" onclick="deleteRule('${r.id}')">Delete</button></div></div>`).join(''):'<div class="v10-muted">No smart rules yet.</div>';
+    const box=document.getElementById('v10Rules');
+    box.innerHTML=financeRules.length?financeRules.map(r=>`<div class="v10-item">
+        <div class="v10-item-head"><div><b>${escapeHtml(r.label||r.rule_type)}</b><div class="v10-muted">${escapeHtml(r.rule_type)} · ${r.threshold||0}</div></div>${statusPillV10(ruleTriggeredV10(r)?'TRIGGERED':'OK',ruleTriggeredV10(r)?'warn':'good')}</div>
+        <div class="v10-actions"><button class="btn" onclick="openRuleModal('${r.id}')">Edit</button><button class="btn-danger" onclick="deleteRule('${r.id}')">Delete</button></div>
+    </div>`).join(''):'<div class="v10-muted">No smart rules yet.</div>';
 }
 function openRuleModal(id=null){document.getElementById('ruleModal').style.display='flex';document.getElementById('ruleId').value=id||'';if(id){const r=financeRules.find(x=>x.id===id);document.getElementById('ruleModalTitle').textContent='Edit Smart Rule';document.getElementById('ruleType').value=r.rule_type;document.getElementById('ruleCategory').value=r.category||'Food';document.getElementById('ruleThreshold').value=r.threshold||0;document.getElementById('ruleLabel').value=r.label||'';}else{document.getElementById('ruleModalTitle').textContent='Add Smart Rule';document.getElementById('ruleType').value='category_threshold';document.getElementById('ruleCategory').value='Food';document.getElementById('ruleThreshold').value=5000;document.getElementById('ruleLabel').value='';}}
 async function saveRule(){const id=document.getElementById('ruleId').value,row={user_id:currentUser.id,rule_type:document.getElementById('ruleType').value,category:document.getElementById('ruleCategory').value,threshold:numV10(document.getElementById('ruleThreshold').value),label:document.getElementById('ruleLabel').value.trim()||'Smart alert'};const q=id?supabaseClient.from('finance_rules').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('finance_rules').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=financeRules.findIndex(x=>x.id===id);if(i>=0)financeRules[i]=data;}else financeRules.push(data);closeV10Modal('ruleModal');saveOfflineSnapshot();renderAll();
@@ -4299,9 +4437,12 @@ function renderEmergencyAndSinking(){
     const target=emergencyTargetV10(), saved=savingsGoals.reduce((s,g)=>s+numV10(g.current_amount),0), pct=target?Math.min(100,saved/target*100):100, monthly=target/6;
     document.getElementById('v10EmergencyDetail').innerHTML=`<div class="v10-kpis"><div class="v10-kpi"><div class="label">Target</div><div class="value">${money(target)}</div></div><div class="v10-kpi"><div class="label">Saved</div><div class="value">${money(saved)}</div></div><div class="v10-kpi"><div class="label">Progress</div><div class="value">${pct.toFixed(0)}%</div></div><div class="v10-kpi"><div class="label">Essential / month</div><div class="value">${money(monthly)}</div></div></div><div class="v5-meter" style="margin-top:10px"><div style="width:${pct}%"></div></div><div class="v10-muted" style="margin-top:6px">6-month target based on essential planned expenses.</div>`;
     const reserve=sinkingReserveV10();
-    const rows=renewalsUpcomingV10().slice(0,8).map(r=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${escapeHtml(r.type||'Renewal')} · ${r.due_date||''}</div></div><b>${money(r.amount||0)}</b></div></div>`).join('');
-    document.getElementById('v10SinkingDetail').innerHTML=`<div class="v10-kpi"><div class="label">Recommended monthly reserve</div><div class="value">${money(reserve)}</div></div><div class="v10-muted" style="margin:8px 0">Includes non-monthly recurring commitments, renewals and future life-event funding estimates.</div>${rows||'<div class="v10-muted">No non-monthly renewals entered.</div>'}`;
+    const rows=renewalsUpcomingV10().slice(0,8).map(r=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${escapeHtml(r.type||'Renewal')} · ${r.due_date||''}</div></div><b>${money(r.amount||0)}</b></div><div class="v10-actions"><button type="button" class="btn-light" data-v14-edit="${escapeHtml(r.id)}" data-v14-kind="renewal">Edit</button><button type="button" class="btn-danger" data-v14-delete="${escapeHtml(r.id)}" data-v14-kind="renewal">Delete</button></div></div>`).join('');
+    const box=document.getElementById('v10SinkingDetail');
+    box.innerHTML=`<div class="v10-kpi"><div class="label">Recommended monthly reserve</div><div class="value">${money(reserve)}</div></div><div class="v10-muted" style="margin:8px 0">Includes non-monthly recurring commitments, renewals and future life-event funding estimates.</div>${rows||'<div class="v10-muted">No non-monthly renewals entered.</div>'}`;
+    v14BindRecordActions(box);
 }
+
 
 function renderMilestones(){
     const all=[]; const totalSaved=savingsGoals.reduce((s,g)=>s+numV10(g.current_amount),0); const debt=loans.reduce((s,l)=>s+numV10(l.outstanding_amount),0); const paid=payments.filter(p=>p.paid).length;
@@ -4318,19 +4459,28 @@ function renderMonthlyReview(){
 }
 function renderReminderPlan(){
     const items=getUpcoming(5), renew=renewalsUpcomingV10().slice(0,5), html=[];
-    items.forEach(x=>{const days=daysUntilV10(x.date);const lead=days<=1?1:days<=7?3:7;html.push(`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.expense.name)}</b><div class="v10-muted">Due ${x.date.toLocaleDateString('en-IN')}</div></div>${statusPillV10(`Recommend ${lead} day notice`,days<=1?'bad':days<=3?'warn':'info')}</div></div>`);});
-    renew.forEach(r=>{const days=daysUntilV10(dateV10(r.due_date));html.push(`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${r.due_date}</div></div>${statusPillV10(`${r.reminder_days||14} day notice`,days<=3?'warn':'info')}</div></div>`);});
-    document.getElementById('v10ReminderPlan').innerHTML=html.join('')||'<div class="v10-muted">No upcoming reminder items.</div>';
+    items.forEach(x=>{const days=daysUntilV10(x.date);const lead=days<=1?1:days<=7?3:7;html.push(`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.expense.name)}</b><div class="v10-muted">Due ${x.date.toLocaleDateString('en-IN')}</div></div>${statusPillV10(`Recommend ${lead} day notice`,days<=1?'bad':days<=3?'warn':'info')}</div><div class="v10-actions"><button type="button" class="btn-light" data-v14-edit="${escapeHtml(x.expense.id)}" data-v14-kind="expense">Edit</button><button type="button" class="btn-danger" data-v14-delete="${escapeHtml(x.expense.id)}" data-v14-kind="expense">Delete</button></div></div>`);});
+    renew.forEach(r=>{const days=daysUntilV10(dateV10(r.due_date));html.push(`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${r.due_date}</div></div>${statusPillV10(`${r.reminder_days||14} day notice`,days<=3?'warn':'info')}</div><div class="v10-actions"><button type="button" class="btn-light" data-v14-edit="${escapeHtml(r.id)}" data-v14-kind="renewal">Edit</button><button type="button" class="btn-danger" data-v14-delete="${escapeHtml(r.id)}" data-v14-kind="renewal">Delete</button></div></div>`);});
+    const box=document.getElementById('v10ReminderPlan');
+    box.innerHTML=html.join('')||'<div class="v10-muted">No upcoming reminder items.</div>';
+    v14BindRecordActions(box);
 }
+
 function renderGoalPriority(){
     const list=savingsGoals.slice().filter(g=>numV10(g.target_amount)>numV10(g.current_amount)).map(g=>{const rem=numV10(g.target_amount)-numV10(g.current_amount),m=g.target_date?Math.max(1,monthDifference(new Date(),dateV10(g.target_date))):24,req=rem/m;const days=g.target_date?daysUntilV10(dateV10(g.target_date)):99999;return {g,rem,req,days};}).sort((a,b)=>a.days-b.days||b.req-a.req);
-    document.getElementById('v10GoalPriority').innerHTML=list.length?list.slice(0,8).map((x,i)=>`<div class="v10-item"><div class="v10-item-head"><div><b>${i+1}. ${escapeHtml(x.g.name)}</b><div class="v10-muted">Remaining ${money(x.rem)} · target ${x.g.target_date||'not set'}</div></div><b>${money(x.req)}/mo</b></div></div>`).join(''):'<div class="v10-muted">No unfinished goals.</div>';
+    const box=document.getElementById('v10GoalPriority');
+    box.innerHTML=list.length?list.slice(0,8).map((x,i)=>`<div class="v10-item"><div class="v10-item-head"><div><b>${i+1}. ${escapeHtml(x.g.name)}</b><div class="v10-muted">Remaining ${money(x.rem)} · target ${x.g.target_date||'not set'}</div></div><b>${money(x.req)}/mo</b></div><div class="v10-actions"><button type="button" class="btn-light" data-v14-edit="${escapeHtml(x.g.id)}" data-v14-kind="goal">Edit</button><button type="button" class="btn-danger" data-v14-delete="${escapeHtml(x.g.id)}" data-v14-kind="goal">Delete</button></div></div>`).join(''):'<div class="v10-muted">No unfinished goals.</div>';
+    box.querySelectorAll('[data-v14-kind="goal"][data-v14-edit]').forEach(b=>b.onclick=(ev)=>{ev.stopPropagation();openGoalModal(b.dataset.v14Edit);});
+    box.querySelectorAll('[data-v14-kind="goal"][data-v14-delete]').forEach(b=>b.onclick=(ev)=>{ev.stopPropagation();deleteGoal(b.dataset.v14Delete);});
 }
+
 function renderDebtSimulator(){
     const extra=numV10(document.getElementById('v10ExtraEmi')?.value); const box=document.getElementById('v10DebtSimulator');
     if(!loans.length){box.innerHTML='<div class="v10-muted">Add a loan to use the simulator.</div>';return;}
-    box.innerHTML=`<div class="v10-table-wrap"><table class="v10-table"><thead><tr><th>Loan</th><th>Outstanding</th><th>Current EMI</th><th>Est. months</th><th>With +${money(extra)}</th><th>Months saved</th></tr></thead><tbody>${loans.map(l=>{const bal=numV10(l.outstanding_amount),emi=Math.max(numV10(l.emi_amount),0),rate=Math.max(0,numV10(l.interest_rate))/100/12;const months=rate>0? (emi>bal*rate?Math.ceil(-Math.log(1-bal*rate/emi)/Math.log(1+rate)):999):(emi>0?Math.ceil(bal/emi):999);const emi2=emi+extra;const months2=rate>0?(emi2>bal*rate?Math.ceil(-Math.log(1-bal*rate/emi2)/Math.log(1+rate)):999):(emi2>0?Math.ceil(bal/emi2):999);return `<tr><td>${escapeHtml(l.name)}</td><td>${money(bal)}</td><td>${money(emi)}</td><td>${months===999?'—':months}</td><td>${months2===999?'—':months2}</td><td class="${months2<months?'v10-good':''}">${months===999||months2===999?'—':Math.max(0,months-months2)}</td></tr>`;}).join('')}</tbody></table></div>`;
+    box.innerHTML=`<div class="v10-table-wrap"><table class="v10-table"><thead><tr><th>Loan</th><th>Outstanding</th><th>Current EMI</th><th>Est. months</th><th>With +${money(extra)}</th><th>Months saved</th><th>Actions</th></tr></thead><tbody>${loans.map(l=>{const bal=numV10(l.outstanding_amount),emi=Math.max(numV10(l.emi_amount),0),rate=Math.max(0,numV10(l.interest_rate))/100/12;const months=rate>0?(emi>bal*rate?Math.ceil(-Math.log(1-bal*rate/emi)/Math.log(1+rate)):999):(emi>0?Math.ceil(bal/emi):999);const emi2=emi+extra;const months2=rate>0?(emi2>bal*rate?Math.ceil(-Math.log(1-bal*rate/emi2)/Math.log(1+rate)):999):(emi2>0?Math.ceil(bal/emi2):999);return `<tr><td>${escapeHtml(l.name)}</td><td>${money(bal)}</td><td>${money(emi)}</td><td>${months===999?'—':months}</td><td>${months2===999?'—':months2}</td><td class="${months2<months?'v10-good':''}">${months===999||months2===999?'—':Math.max(0,months-months2)}</td><td><div class="v10-actions"><button type="button" class="btn-light" data-v14-edit="${escapeHtml(l.id)}" data-v14-kind="loan">Edit</button><button type="button" class="btn-danger" data-v14-delete="${escapeHtml(l.id)}" data-v14-kind="loan">Delete</button></div></td></tr>`;}).join('')}</tbody></table></div>`;
+    v14BindRecordActions(box);
 }
+
 
 function openRenewalModal(id=null){document.getElementById('renewalModal').style.display='flex';document.getElementById('renewalId').value=id||'';if(id){const r=renewals.find(x=>x.id===id);document.getElementById('renewalModalTitle').textContent='Edit Renewal / Warranty';document.getElementById('renewalName').value=r.name||'';document.getElementById('renewalType').value=r.type||'Other';document.getElementById('renewalDate').value=r.due_date||'';document.getElementById('renewalAmount').value=r.amount||'';document.getElementById('renewalReminder').value=r.reminder_days??14;document.getElementById('renewalNotes').value=r.notes||'';}else{document.getElementById('renewalModalTitle').textContent='Add Renewal / Warranty';document.getElementById('renewalName').value='';document.getElementById('renewalType').value='Insurance';document.getElementById('renewalDate').value=dateKey(new Date());document.getElementById('renewalAmount').value='';document.getElementById('renewalReminder').value=14;document.getElementById('renewalNotes').value='';}}
 async function saveRenewal(){const id=document.getElementById('renewalId').value,row={user_id:currentUser.id,name:document.getElementById('renewalName').value.trim(),type:document.getElementById('renewalType').value,due_date:document.getElementById('renewalDate').value,amount:numV10(document.getElementById('renewalAmount').value),reminder_days:numV10(document.getElementById('renewalReminder').value),notes:document.getElementById('renewalNotes').value.trim()};if(!row.name||!row.due_date)return alert('Enter name and date.');const q=id?supabaseClient.from('renewals').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('renewals').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=renewals.findIndex(x=>x.id===id);if(i>=0)renewals[i]=data;}else renewals.push(data);closeV10Modal('renewalModal');saveOfflineSnapshot();renderAll();
@@ -4338,25 +4488,125 @@ async function saveRenewal(){const id=document.getElementById('renewalId').value
 async function deleteRenewal(id){if(!confirm('Delete this renewal?'))return;const{error}=await supabaseClient.from('renewals').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);renewals=renewals.filter(x=>x.id!==id);renderAll();}
 function renderRenewals(){document.getElementById('v10Renewals').innerHTML=renewals.length?renewals.slice().sort((a,b)=>dateV10(a.due_date)-dateV10(b.due_date)).map(r=>{const days=daysUntilV10(dateV10(r.due_date));return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(r.name)}</b><div class="v10-muted">${escapeHtml(r.type||'Renewal')} · ${r.due_date}</div></div><div>${statusPillV10(days<0?'Overdue':days===0?'Today':days+' days',days<=0?'bad':days<=numV10(r.reminder_days||14)?'warn':'info')}</div></div>${numV10(r.amount)?'<div style="margin-top:5px">Amount: <b>'+money(r.amount)+'</b></div>':''}<div class="v10-actions"><button class="btn" onclick="openRenewalModal('${r.id}')">Edit</button><button class="btn-danger" onclick="deleteRenewal('${r.id}')">Delete</button></div></div>`}).join(''):'<div class="v10-muted">No renewals/warranties added.</div>';}
 
-function openVehicleModal(id=null){document.getElementById('vehicleModal').style.display='flex';document.getElementById('vehicleId').value=id||'';if(id){const v=vehicles.find(x=>x.id===id);document.getElementById('vehicleModalTitle').textContent='Edit Vehicle';document.getElementById('vehicleName').value=v.name||'';document.getElementById('vehicleType').value=v.type||'Other';document.getElementById('vehiclePurchaseDate').value=v.purchase_date||'';document.getElementById('vehicleValue').value=v.current_value||'';document.getElementById('vehicleInsuranceDate').value=v.insurance_date||'';document.getElementById('vehicleNotes').value=v.notes||'';}else{document.getElementById('vehicleModalTitle').textContent='Add Vehicle';document.getElementById('vehicleName').value='';document.getElementById('vehicleType').value='EV Scooter';document.getElementById('vehiclePurchaseDate').value=dateKey(new Date());document.getElementById('vehicleValue').value='';document.getElementById('vehicleInsuranceDate').value='';document.getElementById('vehicleNotes').value='';}}
+function openVehicleModal(id=null){document.getElementById('vehicleModal').style.display='flex';document.getElementById('vehicleId').value=id||'';if(id){const v=vehicles.find(x=>x.id===id);document.getElementById('vehicleModalTitle').textContent='Edit Vehicle';document.getElementById('vehicleName').value=v.name||'';document.getElementById('vehicleType').value=v.type||v.vehicle_type||'Other';document.getElementById('vehiclePurchaseDate').value=v.purchase_date||'';document.getElementById('vehicleValue').value=v.current_value||'';document.getElementById('vehicleInsuranceDate').value=v.insurance_date||'';document.getElementById('vehicleNotes').value=v.notes||'';}else{document.getElementById('vehicleModalTitle').textContent='Add Vehicle';document.getElementById('vehicleName').value='';document.getElementById('vehicleType').value='EV Scooter';document.getElementById('vehiclePurchaseDate').value=dateKey(new Date());document.getElementById('vehicleValue').value='';document.getElementById('vehicleInsuranceDate').value='';document.getElementById('vehicleNotes').value='';}}
 async function saveVehicle(){const id=document.getElementById('vehicleId').value,row={user_id:currentUser.id,name:document.getElementById('vehicleName').value.trim(),type:document.getElementById('vehicleType').value,purchase_date:document.getElementById('vehiclePurchaseDate').value||null,current_value:numV10(document.getElementById('vehicleValue').value),insurance_date:document.getElementById('vehicleInsuranceDate').value||null,notes:document.getElementById('vehicleNotes').value.trim()};if(!row.name)return alert('Enter vehicle name.');const q=id?supabaseClient.from('vehicles').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('vehicles').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=vehicles.findIndex(x=>x.id===id);if(i>=0)vehicles[i]=data;}else vehicles.push(data);closeV10Modal('vehicleModal');saveOfflineSnapshot();renderAll();
     showV101Toast('Vehicle saved ✓');}
 async function deleteVehicle(id){if(!confirm('Delete this vehicle and its logs?'))return;const{error}=await supabaseClient.from('vehicles').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);vehicles=vehicles.filter(x=>x.id!==id);vehicleLogs=vehicleLogs.filter(x=>x.vehicle_id!==id);renderAll();}
-function openVehicleLogModal(id){document.getElementById('vehicleLogModal').style.display='flex';document.getElementById('vehicleLogVehicleId').value=id;document.getElementById('vehicleLogAmount').value='';document.getElementById('vehicleLogDate').value=dateKey(new Date());document.getElementById('vehicleLogOdometer').value='';document.getElementById('vehicleLogNotes').value='';}
-async function saveVehicleLog(){const vehicle_id=document.getElementById('vehicleLogVehicleId').value,row={user_id:currentUser.id,vehicle_id,log_type:document.getElementById('vehicleLogType').value,amount:numV10(document.getElementById('vehicleLogAmount').value),log_date:document.getElementById('vehicleLogDate').value,odometer:numV10(document.getElementById('vehicleLogOdometer').value)||null,notes:document.getElementById('vehicleLogNotes').value.trim()};if(!vehicle_id||row.amount<=0||!row.log_date)return alert('Enter amount and date.');const{data,error}=await supabaseClient.from('vehicle_logs').insert(row).select().single();if(error)return alert(error.message);vehicleLogs.unshift(data);closeV10Modal('vehicleLogModal');saveOfflineSnapshot();renderAll();
-    showV101Toast('Vehicle log saved ✓');}
+function openVehicleLogModal(vehicleId,logId=null){
+    const el=document.getElementById('vehicleLogModal');
+    const log=logId?vehicleLogs.find(x=>x.id===logId):null;
+    if(!el)return;
+    el.dataset.recordId=log?.id||'';
+    el.dataset.vehicleId=vehicleId;
+    el.style.display='flex';
+    document.getElementById('vehicleLogVehicleId').value=vehicleId;
+    el.querySelector('.modal-box h2').textContent=log?'Edit Vehicle Expense':'Add Vehicle Expense';
+    document.getElementById('vehicleLogType').value=log?.log_type||'Fuel';
+    document.getElementById('vehicleLogAmount').value=log?.amount??'';
+    document.getElementById('vehicleLogDate').value=log?.log_date||dateKey(new Date());
+    document.getElementById('vehicleLogOdometer').value=log?.odometer??'';
+    document.getElementById('vehicleLogNotes').value=log?.notes||'';
+}
+async function saveVehicleLog(){
+    const modal=document.getElementById('vehicleLogModal');
+    const id=modal?.dataset.recordId||'';
+    const vehicle_id=document.getElementById('vehicleLogVehicleId').value;
+    const row={
+        vehicle_id,
+        log_type:document.getElementById('vehicleLogType').value,
+        amount:numV10(document.getElementById('vehicleLogAmount').value),
+        log_date:document.getElementById('vehicleLogDate').value,
+        odometer:numV10(document.getElementById('vehicleLogOdometer').value)||null,
+        notes:document.getElementById('vehicleLogNotes').value.trim()
+    };
+    if(!vehicle_id||row.amount<=0||!row.log_date){alert('Enter valid vehicle expense details.');return;}
+    const q=id
+        ? supabaseClient.from('vehicle_logs').update(row).eq('id',id).eq('user_id',currentUser.id).select().single()
+        : supabaseClient.from('vehicle_logs').insert({user_id:currentUser.id,...row}).select().single();
+    const {data,error}=await q;
+    if(error){alert(error.message);return;}
+    if(id){const i=vehicleLogs.findIndex(x=>x.id===id);if(i>=0)vehicleLogs[i]=data;}
+    else vehicleLogs.unshift(data);
+    closeV10Modal('vehicleLogModal');
+    delete modal.dataset.recordId; delete modal.dataset.vehicleId;
+    renderAll(); showV101Toast(id?'Vehicle expense updated ✓':'Vehicle expense saved ✓');
+}
 async function deleteVehicleLog(id){if(!confirm('Delete this vehicle expense?'))return;const{error}=await supabaseClient.from('vehicle_logs').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);vehicleLogs=vehicleLogs.filter(x=>x.id!==id);renderAll();}
-function renderVehicles(){document.getElementById('v10Vehicles').innerHTML=vehicles.length?vehicles.map(v=>{const logs=vehicleLogs.filter(x=>x.vehicle_id===v.id),spent=logs.reduce((s,x)=>s+numV10(x.amount),0);const insurance=v.insurance_date?daysUntilV10(dateV10(v.insurance_date)):null;return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(v.name)}</b><div class="v10-muted">${escapeHtml(v.type||'Vehicle')} · current value ${money(v.current_value)}</div></div>${insurance!==null?statusPillV10(insurance<0?'Insurance overdue':insurance+'d to renewal',insurance<=30?'warn':'good'):''}</div><div style="margin-top:6px">Total logged cost: <b>${money(spent)}</b></div><div class="v10-actions"><button class="btn" onclick="openVehicleLogModal('${v.id}')">+ Expense</button><button class="btn" onclick="openVehicleModal('${v.id}')">Edit</button><button class="btn-danger" onclick="deleteVehicle('${v.id}')">Delete</button></div>${logs.slice(0,3).map(l=>`<div class="v10-muted" style="margin-top:4px">${l.log_date} · ${escapeHtml(l.log_type)} · ${money(l.amount)} <button style="padding:2px 5px;font-size:10px" class="btn-danger" onclick="deleteVehicleLog('${l.id}')">x</button></div>`).join('')}</div>`}).join(''):'<div class="v10-muted">No vehicles added.</div>';}
+function renderVehicles(){
+    const box=document.getElementById('v10Vehicles');
+    box.innerHTML=vehicles.length?vehicles.map(v=>{
+        const logs=vehicleLogs.filter(x=>x.vehicle_id===v.id);
+        const spent=logs.reduce((s,x)=>s+numV10(x.amount),0);
+        const insurance=v.insurance_date?daysUntilV10(dateV10(v.insurance_date)):null;
+        return `<div class="v10-item">
+            <div class="v10-item-head"><div><b>${escapeHtml(v.name)}</b><div class="v10-muted">${escapeHtml(v.type||'Vehicle')} · current value ${money(v.current_value)}</div></div>${insurance!==null?statusPillV10(insurance<0?'Insurance overdue':insurance+'d to renewal',insurance<=30?'warn':'good'):''}</div>
+            <div style="margin-top:6px">Total logged cost: <b>${money(spent)}</b></div>
+            <div class="v10-actions"><button class="btn" onclick="openVehicleLogModal('${v.id}')">+ Expense</button><button class="btn" onclick="openVehicleModal('${v.id}')">Edit</button><button class="btn-danger" onclick="deleteVehicle('${v.id}')">Delete</button></div>
+            ${logs.slice(0,8).map(l=>`<div class="v10-item" style="margin-top:6px;padding:8px">
+                <div class="v10-item-head"><div><b>${escapeHtml(l.log_type||'Vehicle expense')}</b><div class="v10-muted">${l.log_date} · ${l.odometer?escapeHtml(String(l.odometer))+' km · ':''}${escapeHtml(l.notes||'')}</div></div><b>${money(l.amount)}</b></div>
+                <div class="v10-actions"><button class="btn" onclick="openVehicleLogModal('${v.id}','${l.id}')">Edit</button><button class="btn-danger" onclick="deleteVehicleLog('${l.id}')">Delete</button></div>
+            </div>`).join('')}
+        </div>`;
+    }).join(''):'<div class="v10-muted">No vehicles added.</div>';
+}
 
 async function loadDocumentsV10(){
     const q=await supabaseClient.from('finance_documents').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}); if(q.error)throw q.error;documents=q.data||[];
 }
-function openDocumentModal(){document.getElementById('documentModal').style.display='flex';document.getElementById('documentTitle').value='';document.getElementById('documentType').value='Receipt';document.getElementById('documentFile').value='';}
-async function saveDocument(){const title=document.getElementById('documentTitle').value.trim(),type=document.getElementById('documentType').value,file=document.getElementById('documentFile').files[0];if(!title||!file)return alert('Choose a title and file.');if(file.size>10*1024*1024)return alert('Maximum file size is 10 MB.');const ext=(file.name.split('.').pop()||'bin').toLowerCase();const path=currentUser.id+'/'+crypto.randomUUID()+'.'+ext;const up=await supabaseClient.storage.from('finance-documents').upload(path,file,{upsert:false});if(up.error)return alert(up.error.message);const{data,error}=await supabaseClient.from('finance_documents').insert({user_id:currentUser.id,title,type,file_name:file.name,storage_path:path,mime_type:file.type||null,size_bytes:file.size}).select().single();if(error){await supabaseClient.storage.from('finance-documents').remove([path]);return alert(error.message);}documents.unshift(data);closeV10Modal('documentModal');saveOfflineSnapshot();renderAll();
-    showV101Toast('Document saved ✓');}
+function openDocumentModal(id=null){
+    const el=document.getElementById('documentModal');
+    const d=id?documents.find(x=>x.id===id):null;
+    if(!el)return;
+    el.dataset.recordId=d?.id||'';
+    el.style.display='flex';
+    el.querySelector('.modal-box h2').textContent=d?'Edit Document':'Add Document';
+    document.getElementById('documentTitle').value=d?.title||'';
+    document.getElementById('documentType').value=d?.type||d?.document_type||'Receipt';
+    document.getElementById('documentFile').value='';
+}
+async function saveDocument(){
+    const modal=document.getElementById('documentModal');
+    const id=modal?.dataset.recordId||'';
+    const title=document.getElementById('documentTitle').value.trim();
+    const type=document.getElementById('documentType').value;
+    const file=document.getElementById('documentFile').files[0];
+    if(!title)return alert('Enter a document title.');
+    if(file && file.size>10*1024*1024)return alert('Maximum file size is 10 MB.');
+    if(id){
+        const current=documents.find(x=>x.id===id); if(!current)return;
+        let row={title,type};
+        let uploadedPath=null;
+        if(file){
+            const ext=(file.name.split('.').pop()||'bin').toLowerCase();
+            uploadedPath=currentUser.id+'/'+crypto.randomUUID()+'.'+ext;
+            const up=await supabaseClient.storage.from('finance-documents').upload(uploadedPath,file,{upsert:false});
+            if(up.error){alert(up.error.message);return;}
+            row={...row,file_name:file.name,storage_path:uploadedPath,mime_type:file.type||null,size_bytes:file.size};
+        }
+        const {data,error}=await supabaseClient.from('finance_documents').update(row).eq('id',id).eq('user_id',currentUser.id).select().single();
+        if(error){if(uploadedPath)await supabaseClient.storage.from('finance-documents').remove([uploadedPath]);alert(error.message);return;}
+        if(file && current?.storage_path)await supabaseClient.storage.from('finance-documents').remove([current.storage_path]);
+        const i=documents.findIndex(x=>x.id===id);if(i>=0)documents[i]=data;
+        closeV10Modal('documentModal');delete modal.dataset.recordId;renderAll();showV101Toast('Document updated ✓');return;
+    }
+    if(!file)return alert('Choose a file.');
+    const ext=(file.name.split('.').pop()||'bin').toLowerCase();
+    const path=currentUser.id+'/'+crypto.randomUUID()+'.'+ext;
+    const up=await supabaseClient.storage.from('finance-documents').upload(path,file,{upsert:false});
+    if(up.error)return alert(up.error.message);
+    const {data,error}=await supabaseClient.from('finance_documents').insert({user_id:currentUser.id,title,type,file_name:file.name,storage_path:path,mime_type:file.type||null,size_bytes:file.size}).select().single();
+    if(error){await supabaseClient.storage.from('finance-documents').remove([path]);alert(error.message);return;}
+    documents.unshift(data);closeV10Modal('documentModal');delete modal.dataset.recordId;renderAll();showV101Toast('Document saved ✓');
+}
 async function openDocument(id){const d=documents.find(x=>x.id===id);if(!d)return;const {data,error}=await supabaseClient.storage.from('finance-documents').createSignedUrl(d.storage_path,120);if(error)return alert(error.message);window.open(data.signedUrl,'_blank','noopener');}
 async function deleteDocument(id){if(!confirm('Delete this document?'))return;const d=documents.find(x=>x.id===id);if(!d)return;await supabaseClient.storage.from('finance-documents').remove([d.storage_path]);const{error}=await supabaseClient.from('finance_documents').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);documents=documents.filter(x=>x.id!==id);renderAll();}
-function renderDocuments(){document.getElementById('v10Documents').innerHTML=documents.length?documents.map(d=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(d.title)}</b><div class="v10-muted">${escapeHtml(d.type||'Document')} · ${escapeHtml(d.file_name||'')}</div></div>${d.size_bytes?'<span class="v10-muted">'+(d.size_bytes/1024/1024).toFixed(2)+' MB</span>':''}</div><div class="v10-actions"><button class="btn" onclick="openDocument('${d.id}')">Open</button><button class="btn-danger" onclick="deleteDocument('${d.id}')">Delete</button></div></div>`).join(''):'<div class="v10-muted">No documents yet.</div>';}
+function renderDocuments(){
+    const box=document.getElementById('v10Documents');
+    box.innerHTML=documents.length?documents.map(d=>`<div class="v10-item">
+        <div class="v10-item-head"><div><b>${escapeHtml(d.title)}</b><div class="v10-muted">${escapeHtml(d.type||'Document')} · ${escapeHtml(d.file_name||'')}</div></div>${d.size_bytes?'<span class="v10-muted">'+(d.size_bytes/1024/1024).toFixed(2)+' MB</span>':''}</div>
+        <div class="v10-actions"><button class="btn" onclick="openDocument('${d.id}')">Open</button><button class="btn" onclick="openDocumentModal('${d.id}')">Edit</button><button class="btn-danger" onclick="deleteDocument('${d.id}')">Delete</button></div>
+    </div>`).join(''):'<div class="v10-muted">No documents yet.</div>';
+}
 
 function openHouseholdBillModal(id=null){document.getElementById('householdBillModal').style.display='flex';document.getElementById('householdBillId').value=id||'';if(id){const b=householdBills.find(x=>x.id===id);document.getElementById('householdBillModalTitle').textContent='Edit Household Bill';document.getElementById('householdBillName').value=b.name||'';document.getElementById('householdBillCategory').value=b.category||'Other';document.getElementById('householdBillAmount').value=b.amount||'';document.getElementById('householdBillDay').value=b.due_day||1;document.getElementById('householdBillFrequency').value=b.frequency||'Monthly';document.getElementById('householdBillNotes').value=b.notes||'';}else{document.getElementById('householdBillModalTitle').textContent='Add Household Bill';document.getElementById('householdBillName').value='';document.getElementById('householdBillCategory').value='Electricity';document.getElementById('householdBillAmount').value='';document.getElementById('householdBillDay').value=1;document.getElementById('householdBillFrequency').value='Monthly';document.getElementById('householdBillNotes').value='';}}
 async function saveHouseholdBill(){const id=document.getElementById('householdBillId').value,row={user_id:currentUser.id,name:document.getElementById('householdBillName').value.trim(),category:document.getElementById('householdBillCategory').value,amount:numV10(document.getElementById('householdBillAmount').value),due_day:numV10(document.getElementById('householdBillDay').value),frequency:document.getElementById('householdBillFrequency').value,notes:document.getElementById('householdBillNotes').value.trim(),start_month:monthKey(new Date())};if(!row.name||row.amount<=0||row.due_day<1||row.due_day>31)return alert('Enter valid bill details.');const q=id?supabaseClient.from('household_bills').update(row).eq('id',id).eq('user_id',currentUser.id).select().single():supabaseClient.from('household_bills').insert(row).select().single();const{data,error}=await q;if(error)return alert(error.message);if(id){const i=householdBills.findIndex(x=>x.id===id);if(i>=0)householdBills[i]=data;}else householdBills.push(data);closeV10Modal('householdBillModal');saveOfflineSnapshot();renderAll();
@@ -4374,16 +4624,88 @@ function sharedOwnerHousehold(){ return sharedHouseholds.find(h=>h.owner_id===cu
 async function createSharedHousehold(){const name=prompt('Household name:','Family');if(!name)return;const{data,error}=await supabaseClient.rpc('create_shared_household',{p_name:name});if(error)return alert(error.message);await loadSharedDataV10();renderAll();}
 function openSharedInviteModal(){if(!sharedHouseholds.length)return alert('Create or access a shared household first.');document.getElementById('sharedInviteModal').style.display='flex';document.getElementById('sharedMemberEmail').value='';}
 async function inviteSharedMember(){const h=sharedOwnerHousehold(),email=document.getElementById('sharedMemberEmail').value.trim();if(!h||!email)return alert('Select a household and enter email.');const{error}=await supabaseClient.rpc('add_shared_member',{p_household_id:h.id,p_email:email});if(error)return alert(error.message);closeV10Modal('sharedInviteModal');await loadSharedDataV10();renderAll();alert('Member added.');}
-function openSharedExpenseModal(){if(!sharedHouseholds.length)return alert('Create or join a shared household first.');document.getElementById('sharedExpenseModal').style.display='flex';document.getElementById('sharedExpenseHousehold').innerHTML=sharedHouseholds.map(h=>`<option value="${h.id}">${escapeHtml(h.name)}</option>`).join('');document.getElementById('sharedExpenseName').value='';document.getElementById('sharedExpenseAmount').value='';document.getElementById('sharedExpenseDate').value=dateKey(new Date());}
-async function saveSharedExpense(){const household_id=document.getElementById('sharedExpenseHousehold').value,name=document.getElementById('sharedExpenseName').value.trim(),amount=numV10(document.getElementById('sharedExpenseAmount').value),expense_date=document.getElementById('sharedExpenseDate').value;if(!household_id||!name||amount<=0)return alert('Enter valid shared expense.');const{data,error}=await supabaseClient.from('shared_expenses').insert({household_id,user_id:currentUser.id,name,amount,expense_date}).select().single();if(error)return alert(error.message);sharedExpenses.unshift(data);closeV10Modal('sharedExpenseModal');saveOfflineSnapshot();renderAll();
-    showV101Toast('Shared expense saved ✓');}
+function openSharedExpenseModal(householdId=null,id=null){
+    const el=document.getElementById('sharedExpenseModal');
+    if(!sharedHouseholds.length)return alert('Create or join a shared household first.');
+    const x=id?sharedExpenses.find(e=>e.id===id):null;
+    const hId=x?.household_id||householdId||sharedHouseholds[0].id;
+    el.dataset.recordId=x?.id||'';
+    el.style.display='flex';
+    document.getElementById('sharedExpenseHousehold').innerHTML=sharedHouseholds.map(h=>`<option value="${h.id}" ${h.id===hId?'selected':''}>${escapeHtml(h.name)}</option>`).join('');
+    document.getElementById('sharedExpenseName').value=x?.name||'';
+    document.getElementById('sharedExpenseAmount').value=x?.amount??'';
+    document.getElementById('sharedExpenseDate').value=x?.expense_date||dateKey(new Date());
+    const title=el.querySelector('.modal-box h2'); if(title)title.textContent=x?'Edit Shared Expense':'Add Shared Expense';
+}
+async function saveSharedExpense(){
+    const modal=document.getElementById('sharedExpenseModal');
+    const id=modal?.dataset.recordId||'';
+    const row={
+        household_id:document.getElementById('sharedExpenseHousehold').value,
+        name:document.getElementById('sharedExpenseName').value.trim(),
+        amount:numV10(document.getElementById('sharedExpenseAmount').value),
+        expense_date:document.getElementById('sharedExpenseDate').value
+    };
+    if(!row.household_id||!row.name||row.amount<=0||!row.expense_date){alert('Enter valid shared expense details.');return;}
+    let result;
+    if(id) result=await supabaseClient.from('shared_expenses').update(row).eq('id',id).eq('user_id',currentUser.id).select().single();
+    else result=await supabaseClient.from('shared_expenses').insert({user_id:currentUser.id,...row}).select().single();
+    if(result.error){alert(result.error.message);return;}
+    if(id){const i=sharedExpenses.findIndex(x=>x.id===id);if(i>=0)sharedExpenses[i]=result.data;}
+    else sharedExpenses.unshift(result.data);
+    closeV10Modal('sharedExpenseModal');
+    delete modal.dataset.recordId;
+    renderAll(); showV101Toast(id?'Shared expense updated ✓':'Shared expense saved ✓');
+}
 async function loadSharedDataV10(){const h=await supabaseClient.from('shared_households').select('*');if(h.error)throw h.error;sharedHouseholds=h.data||[];if(sharedHouseholds.length){const ids=sharedHouseholds.map(x=>x.id);const m=await supabaseClient.from('shared_household_members').select('*').in('household_id',ids);if(m.error)throw m.error;sharedMembers=m.data||[];const e=await supabaseClient.from('shared_expenses').select('*').in('household_id',ids).order('expense_date',{ascending:false});if(e.error)throw e.error;sharedExpenses=e.data||[];}else{sharedMembers=[];sharedExpenses=[];}}
 async function deleteSharedExpense(id){if(!confirm('Delete this shared expense?'))return;const{error}=await supabaseClient.from('shared_expenses').delete().eq('id',id).eq('user_id',currentUser.id);if(error)return alert(error.message);sharedExpenses=sharedExpenses.filter(x=>x.id!==id);renderAll();}
-function renderShared(){document.getElementById('v10SharedHouseholds').innerHTML=sharedHouseholds.length?sharedHouseholds.map(h=>{const members=sharedMembers.filter(m=>m.household_id===h.id).length;return `<div class="v10-item"><b>${escapeHtml(h.name)}</b><div class="v10-muted">${members} member(s) · ${h.owner_id===currentUser.id?'Owner':'Member'}</div></div>`}).join(''):'<div class="v10-muted">No shared household yet.</div>';document.getElementById('v10SharedExpenses').innerHTML=sharedExpenses.length?'<div class="v10-list">'+sharedExpenses.slice(0,10).map(x=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.name)}</b><div class="v10-muted">${x.expense_date}</div></div><b>${money(x.amount)}</b></div>${x.user_id===currentUser.id?'<div class="v10-actions"><button class="btn-danger" onclick="deleteSharedExpense(\''+x.id+'\')">Delete</button></div>':''}</div>`).join('')+'</div>':'<div class="v10-muted">No shared expenses.</div>';}
+
+async function editSharedHousehold(id){
+    const h=sharedHouseholds.find(x=>x.id===id);if(!h||h.owner_id!==currentUser.id)return;
+    const name=prompt('Edit household name:',h.name||'');if(!name||name.trim()===h.name)return;
+    const {data,error}=await supabaseClient.from('shared_households').update({name:name.trim()}).eq('id',id).eq('owner_id',currentUser.id).select().single();
+    if(error){alert(error.message);return;}
+    const i=sharedHouseholds.findIndex(x=>x.id===id);if(i>=0)sharedHouseholds[i]=data;
+    renderAll();showV101Toast('Household updated ✓');
+}
+async function deleteSharedHousehold(id){
+    const h=sharedHouseholds.find(x=>x.id===id);if(!h||h.owner_id!==currentUser.id)return;
+    if(!confirm(`Delete shared household "${h.name}"? Its shared members/expenses may also be removed.`))return;
+    const {error}=await supabaseClient.from('shared_households').delete().eq('id',id).eq('owner_id',currentUser.id);
+    if(error){alert(error.message);return;}
+    sharedHouseholds=sharedHouseholds.filter(x=>x.id!==id);
+    sharedMembers=sharedMembers.filter(x=>x.household_id!==id);
+    sharedExpenses=sharedExpenses.filter(x=>x.household_id!==id);
+    renderAll();showV101Toast('Household deleted ✓');
+}
+
+function renderShared(){
+    const hb=document.getElementById('v10SharedHouseholds');
+    hb.innerHTML=sharedHouseholds.length?sharedHouseholds.map(h=>{
+        const members=sharedMembers.filter(m=>m.household_id===h.id).length;
+        const mine=h.owner_id===currentUser.id;
+        return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(h.name)}</b><div class="v10-muted">${members} member(s) · ${mine?'Owner':'Member'}</div></div></div>
+            ${mine?`<div class="v10-actions"><button class="btn" onclick="editSharedHousehold('${h.id}')">Edit</button><button class="btn-danger" onclick="deleteSharedHousehold('${h.id}')">Delete</button><button class="btn-light" onclick="openSharedInviteModal()">Invite</button></div>`:''}
+        </div>`;
+    }).join(''):'<div class="v10-muted">No shared household yet.</div>';
+    const eb=document.getElementById('v10SharedExpenses');
+    eb.innerHTML=sharedExpenses.length?'<div class="v10-list">'+sharedExpenses.slice(0,20).map(x=>{
+        const mine=x.user_id===currentUser.id;
+        return `<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.name)}</b><div class="v10-muted">${x.expense_date} · Shared expense</div></div><b>${money(x.amount)}</b></div>
+            ${mine?`<div class="v10-actions"><button class="btn" onclick="openSharedExpenseModal('${x.household_id}','${x.id}')">Edit</button><button class="btn-danger" onclick="deleteSharedExpense('${x.id}')">Delete</button></div>`:''}
+        </div>`;
+    }).join('')+'</div>':'<div class="v10-muted">No shared expenses.</div>';
+}
 
 function renderQuickRecent(){
-    const box=document.getElementById('v10RecentQuick'); const list=oneTimeExpenses.slice(0,5); box.innerHTML=list.length?`<div class="v10-list" style="margin-top:10px">${list.map(x=>`<div class="v10-item"><div class="v10-item-head"><div><b>${escapeHtml(x.name)}</b><div class="v10-muted">${x.expense_date} · ${escapeHtml(x.category||'Other')}</div></div><b>${money(x.amount)}</b></div></div>`).join('')}</div>`:'<div class="v10-muted" style="margin-top:10px">No quick expenses yet.</div>';
-    document.getElementById('v10CategoryTips').innerHTML=['Electricity / Airtel → Utilities','LIC / insurance → Insurance','Petrol / charging → Transport','Amazon / shopping → Shopping','Food / grocery → Food'].map(x=>`<div class="v10-item">${escapeHtml(x)}</div>`).join('');
+    const box=document.getElementById('v10RecentQuick');
+    const list=[...oneTimeExpenses].sort((a,b)=>String(b.expense_date).localeCompare(String(a.expense_date))).slice(0,10);
+    box.innerHTML=list.length?`<div class="v10-list" style="margin-top:10px">${list.map(x=>`<div class="v10-item">
+        <div class="v10-item-head"><div><b>${escapeHtml(x.name)}</b><div class="v10-muted">${x.expense_date} · ${escapeHtml(x.category||'Other')}</div></div><b>${money(x.amount)}</b></div>
+        <div class="v10-actions"><button class="btn" onclick="openOneTimeExpenseEdit('${x.id}')">Edit</button><button class="btn-danger" onclick="deleteOneTimeExpense('${x.id}')">Delete</button></div>
+    </div>`).join('')}</div>`:'<div class="v10-muted" style="margin-top:10px">No quick expenses yet.</div>';
+    const tips=document.getElementById('v10CategoryTips');
+    if(tips)tips.innerHTML=['Electricity / Airtel → Utilities','LIC / insurance → Insurance','Petrol / charging → Transport','Amazon / shopping → Shopping','Food / grocery → Food'].map(x=>`<div class="v10-item">${escapeHtml(x)}</div>`).join('');
 }
 function renderV10Everything(){
     renderCommandCenterV10();renderEmergencyAndSinking();renderGlobalSearch();renderRecurringDetection();renderRules();renderMilestones();renderMonthlyReview();renderReminderPlan();renderGoalPriority();renderDebtSimulator();renderRenewals();renderHouseholdBills();renderVehicles();renderDocuments();renderShared();renderLifeEvents();renderQuickRecent();
@@ -4721,7 +5043,7 @@ window.addEventListener("unhandledrejection",event=>{
         console.error("Unhandled display promise error",event.reason);
     }
 });
-/* ========================= V11 PRODUCTION EVENT ENGINE ========================= */
+/* ========================= V14 PRODUCTION EVENT ENGINE ========================= */
 function v11Num(v){const n=Number(v);return Number.isFinite(n)?n:0;}
 function v11Date(v){return v instanceof Date?new Date(v):new Date(String(v||'').slice(0,10)+'T00:00:00');}
 function v11Same(a,b){return dateKey(v11Date(a))===dateKey(v11Date(b));}
@@ -4763,6 +5085,15 @@ function loanEventsV11(date){
         if(diff<0||(tenure&&diff>=tenure))return;
         const dueDay=Math.min(start.getDate(),lastDay(date).getDate());
         if(date.getDate()!==dueDay)return;
+        const loanName=String(l.name||'').trim().toLowerCase();
+        const duplicate=expenses.some(e=>{
+            const sameName=String(e.name||'').trim().toLowerCase()===loanName;
+            const sameAmount=Math.abs(v11Num(e.amount)-v11Num(l.emi_amount))<0.01;
+            const isLoanCategory=String(e.category||'').toLowerCase()==='loan / emi';
+            const due=occurrenceForExpense(e,date);
+            return sameName&&sameAmount&&isLoanCategory&&due&&v11Same(due,date);
+        });
+        if(duplicate)return;
         out.push({type:'loan',name:l.name,amount:v11Num(l.emi_amount),category:'Loan / EMI',date:v11Date(date),source:'Loan EMI',raw:l,paid:false});
     });
     return out;
@@ -4789,7 +5120,39 @@ function lifeEventsV11(date){
     }));
 }
 function eventsForDayV11(date){
-    return [].concat(oneTimeIncomeEventsV11(date),recurringIncomeEventsV11(date),recurringExpenseEventsV11(date),oneTimeExpenseEventsV11(date),loanEventsV11(date),savingEventsV11(date),householdEventsV11(date),renewalEventsV11(date),lifeEventsV11(date));
+    const key=dateKey(date);
+    const events=[
+        ...oneTimeIncomeEventsV11(date),
+        ...recurringIncomeEventsV11(date),
+        ...recurringExpenseEventsV11(date),
+        ...oneTimeExpenseEventsV11(date),
+        ...loanEventsV11(date),
+        ...savingEventsV11(date),
+        ...householdEventsV11(date),
+        ...renewalEventsV11(date),
+        ...lifeEventsV11(date),
+        ...sharedExpenseEventsV12(date),
+        ...vehicleLogEventsV12(date)
+    ];
+    return events.sort((a,b)=>a.date-b.date||String(a.name).localeCompare(String(b.name)));
+}
+function sharedExpenseEventsV12(date){
+    const key=dateKey(date);
+    return v11Array(sharedExpenses).filter(x=>String(x.expense_date||'').slice(0,10)===key).map(x=>({
+        type:'shared',name:x.name,amount:v11Num(x.amount),category:'Shared Expense',
+        date:v11Date(x.expense_date),source:'Shared expense',raw:x,paid:true
+    }));
+}
+function vehicleLogEventsV12(date){
+    const key=dateKey(date);
+    return v11Array(vehicleLogs).filter(x=>String(x.log_date||'').slice(0,10)===key).map(x=>{
+        const v=vehicles.find(z=>z.id===x.vehicle_id);
+        return {
+            type:'vehicle',name:(v?.name? v.name+' · ':'')+(x.log_type||'Vehicle expense'),
+            amount:v11Num(x.amount),category:'Transport',date:v11Date(x.log_date),
+            source:'Vehicle expense',raw:x,paid:true
+        };
+    });
 }
 function monthEventsV11(date){
     const out=[];const last=lastDay(date).getDate();
@@ -4797,83 +5160,266 @@ function monthEventsV11(date){
     return out;
 }
 function cashflowStatsV11(date){
-    let incomeTotal=0,outflow=0,paid=0,savings=0;
+    let income=0,outflow=0,paid=0,savings=0;
     monthEventsV11(date).forEach(e=>{
-        if(e.type==='income')incomeTotal+=e.amount;
-        else if(e.type==='life')return;
-        else {outflow+=e.amount;if(e.type==='saving')savings+=e.amount;if(e.type==='expense'&&e.paid)paid+=e.amount;}
+        if(e.type==='income'){income+=e.amount;return;}
+        if(e.type==='life')return;
+        if(e.type==='saving'){savings+=e.amount;outflow+=e.amount;paid+=e.amount;return;}
+        outflow+=e.amount;
+        if(e.paid)paid+=e.amount;
     });
-    return {income:incomeTotal,outflow,paid,pending:Math.max(0,outflow-paid),savings,net:incomeTotal-outflow};
+    return {
+        income,outflow,paid,
+        pending:Math.max(0,outflow-paid),
+        savings,
+        net:income-outflow
+    };
 }
 
 function renderCalendar(){
-    const title=document.getElementById('calendarTitle'),calendar=document.getElementById('calendar');if(!calendar)return;
-    if(title)title.textContent=monthName(currentDate);calendar.innerHTML='';
+    const title=document.getElementById('calendarTitle'),calendar=document.getElementById('calendar');
+    if(!calendar)return;
+    if(title)title.textContent=monthName(currentDate);
+    calendar.innerHTML='';
     const first=firstDay(currentDate),last=lastDay(currentDate);
     for(let i=0;i<first.getDay();i++)calendar.appendChild(document.createElement('div'));
     for(let day=1;day<=last.getDate();day++){
-        const date=new Date(currentDate.getFullYear(),currentDate.getMonth(),day),events=eventsForDayV11(date),div=document.createElement('div');
+        const date=new Date(currentDate.getFullYear(),currentDate.getMonth(),day);
+        const events=eventsForDayV11(date);
+        const div=document.createElement('div');
         div.className='day'+(v11Same(date,new Date())?' today':'')+(events.length?' has-expense':'');
         div.innerHTML='<div class="day-number">'+day+'</div>';
         events.slice(0,5).forEach(e=>{
             const el=document.createElement('div');
-            el.className='day-expense '+(e.type==='income'?'v9-event-income':e.type==='saving'?'v9-event-saving':e.type==='loan'?'v9-event-loan':'');
+            const cls=e.type==='income'?'v9-event-income':e.type==='saving'?'v9-event-saving':e.type==='loan'?'v9-event-loan':e.type==='bill'?'v12-event-bill':e.type==='renewal'?'v12-event-renewal':e.type==='shared'?'v12-event-shared':e.type==='vehicle'?'v12-event-vehicle':'';
+            el.className='day-expense '+cls;
             const sign=e.type==='income'?'+':'−';
-            el.textContent=e.name+' '+sign+money(e.amount);el.title=e.source+' · '+e.name+' · '+money(e.amount);div.appendChild(el);
+            el.textContent=(e.name||e.source)+' '+sign+money(e.amount);
+            el.title=(e.source||'')+' · '+e.name+' · '+money(e.amount);
+            div.appendChild(el);
         });
-        if(events.length>5){const more=document.createElement('div');more.className='small';more.textContent='+'+(events.length-5)+' more';div.appendChild(more);}
-        div.onclick=()=>{selectedDate=v11Date(date);renderSelectedDay();};calendar.appendChild(div);
+        if(events.length>5){
+            const more=document.createElement('div');more.className='small';more.textContent='+'+(events.length-5)+' more';div.appendChild(more);
+        }
+        div.onclick=()=>{selectedDate=v11Date(date);renderSelectedDay();};
+        calendar.appendChild(div);
     }
 }
 
 function renderSelectedDay(){
-    const title=document.getElementById('selectedDateTitle'),box=document.getElementById('selectedDayDetails');if(!box)return;
+    const title=document.getElementById('selectedDateTitle'),box=document.getElementById('selectedDayDetails');
+    if(!box)return;
     if(title)title.textContent=selectedDate.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     const events=eventsForDayV11(selectedDate);
-    let inc=0,out=0,save=0;events.forEach(e=>{if(e.type==='income')inc+=e.amount;else if(e.type==='saving')save+=e.amount;else if(e.type!=='life')out+=e.amount;});
-    let html='<div class="card" style="margin-bottom:10px"><div><b>Income</b> <span class="green">'+money(inc)+'</span></div><div><b>Outflow</b> <span class="red">'+money(out)+'</span></div><div><b>Savings</b> '+money(save)+'</div><div><b>Net</b> <span class="'+(inc-out>=0?'green':'red')+'">'+money(inc-out)+'</span></div></div>';
+    let inc=0,out=0,save=0;
+    events.forEach(e=>{
+        if(e.type==='income')inc+=e.amount;
+        else if(e.type==='saving'){save+=e.amount;out+=e.amount;}
+        else if(e.type!=='life')out+=e.amount;
+    });
+    let html=`<div class="card" style="margin-bottom:10px">
+        <div><b>Income</b> <span class="green">${money(inc)}</span></div>
+        <div><b>Outflow</b> <span class="red">${money(out)}</span></div>
+        <div><b>Savings</b> ${money(save)}</div>
+        <div><b>Net</b> <span class="${inc-out>=0?'green':'red'}">${money(inc-out)}</span></div>
+    </div>`;
     if(!events.length){box.innerHTML=html+'<div class="empty">No events on this date.</div>';return;}
-    const icons={income:'💵',expense:'💸',saving:'🎯',loan:'🏦',bill:'🏠',renewal:'🔔',life:'📌'};
+    const icons={income:'💵',expense:'💸',saving:'🎯',loan:'🏦',bill:'🏠',renewal:'🔔',life:'📌',shared:'👨‍👩‍👧',vehicle:'🚗'};
     html+=events.map(e=>{
         const sign=e.type==='income'?'+':'−';
-        let action='';
-        if(e.type==='expense'&&e.source==='Recurring expense'&&e.raw?.id){action='<button class="btn '+(e.paid?'btn-gray':'btn-green')+'" data-v11-paid="'+escapeHtml(e.raw.id)+'" data-v11-date="'+dateKey(e.date)+'">'+(e.paid?'Mark Pending':'Mark Paid')+'</button>';}
-        if(e.type==='income'&&e.raw?.id)action+='<button class="btn-light" data-v11-edit-income="'+escapeHtml(e.raw.id)+'">Edit</button>';
-        if(e.type==='loan'&&e.raw?.id)action+='<button class="btn-light" data-v11-edit-loan="'+escapeHtml(e.raw.id)+'">Edit</button>';
-        if(e.type==='bill'&&e.raw?.id)action+='<button class="btn-light" data-v11-edit-bill="'+escapeHtml(e.raw.id)+'">Edit</button>';
-        if(e.type==='renewal'&&e.raw?.id)action+='<button class="btn-light" data-v11-edit-renewal="'+escapeHtml(e.raw.id)+'">Edit</button>';
-        if(e.type==='life'&&e.raw?.id)action+='<button class="btn-light" data-v11-edit-life="'+escapeHtml(e.raw.id)+'">Edit</button>';
-        return '<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:10px"><div><b>'+icons[e.type]+' '+escapeHtml(e.name)+'</b><div class="small">'+escapeHtml(e.source+' · '+(e.category||''))+'</div></div><b class="'+(e.type==='income'?'green':e.type==='saving'?'':'red')+'">'+sign+money(e.amount)+'</b></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+action+'</div></div>';
+        let action=[];
+        if(e.type==='expense'&&e.source==='Recurring expense'&&e.raw?.id){
+            action.push(`<button class="btn ${e.paid?'btn-gray':'btn-green'}" data-v12-paid="${escapeHtml(e.raw.id)}">${e.paid?'Mark Pending':'Mark Paid'}</button>`);
+            action.push(`<button class="btn-light" data-v12-edit-expense="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-expense="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.source==='One-time expense'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-onetime="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-onetime="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.type==='income'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-income="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-income="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.type==='loan'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-loan="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-loan="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.type==='bill'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-bill="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-bill="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.type==='renewal'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-renewal="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-renewal="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.type==='life'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-life="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-life="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.type==='saving'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-saving="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-saving="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.type==='shared'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-shared="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-shared="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }else if(e.type==='vehicle'&&e.raw?.id){
+            action.push(`<button class="btn-light" data-v12-edit-vehicle-log="${escapeHtml(e.raw.id)}">Edit</button>`);
+            action.push(`<button class="btn-danger" data-v12-delete-vehicle-log="${escapeHtml(e.raw.id)}">Delete</button>`);
+        }
+        return `<div class="card" style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;gap:10px">
+                <div><b>${icons[e.type]||'•'} ${escapeHtml(e.name)}</b><div class="small">${escapeHtml((e.source||'')+' · '+(e.category||''))}</div></div>
+                <b class="${e.type==='income'?'green':e.type==='saving'?'':'red'}">${sign}${money(e.amount)}</b>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${action.join('')}</div>
+        </div>`;
     }).join('');
     box.innerHTML=html;
-    box.querySelectorAll('[data-v11-paid]').forEach(btn=>btn.onclick=async()=>{const e=expenses.find(x=>x.id===btn.dataset.v11Paid);if(e)await setPaid(e,selectedDate,!btn.textContent.includes('Pending'));});
-    box.querySelectorAll('[data-v11-edit-income]').forEach(btn=>btn.onclick=()=>openIncomeModal(btn.dataset.v11EditIncome));
-    box.querySelectorAll('[data-v11-edit-loan]').forEach(btn=>btn.onclick=()=>openLoanModal(btn.dataset.v11EditLoan));
-    box.querySelectorAll('[data-v11-edit-bill]').forEach(btn=>btn.onclick=()=>openHouseholdBillModal(btn.dataset.v11EditBill));
-    box.querySelectorAll('[data-v11-edit-renewal]').forEach(btn=>btn.onclick=()=>openRenewalModal(btn.dataset.v11EditRenewal));
-    box.querySelectorAll('[data-v11-edit-life]').forEach(btn=>btn.onclick=()=>openLifeEventModal(btn.dataset.v11EditLife));
+
+    box.querySelectorAll('[data-v12-paid]').forEach(btn=>btn.onclick=async()=>{
+        const e=expenses.find(x=>x.id===btn.dataset.v12Paid);
+        if(e)await setPaid(e,selectedDate,!e || !btn.textContent.includes('Pending'));
+    });
+    box.querySelectorAll('[data-v12-edit-expense]').forEach(b=>b.onclick=()=>openExpenseModal(b.dataset.v12EditExpense));
+    box.querySelectorAll('[data-v12-delete-expense]').forEach(b=>b.onclick=()=>deleteExpense(b.dataset.v12DeleteExpense));
+    box.querySelectorAll('[data-v12-edit-onetime]').forEach(b=>b.onclick=()=>openOneTimeExpenseEdit(b.dataset.v12EditOnetime));
+    box.querySelectorAll('[data-v12-delete-onetime]').forEach(b=>b.onclick=()=>deleteOneTimeExpense(b.dataset.v12DeleteOnetime));
+    box.querySelectorAll('[data-v12-edit-income]').forEach(b=>b.onclick=()=>openIncomeModal(b.dataset.v12EditIncome));
+    box.querySelectorAll('[data-v12-delete-income]').forEach(b=>b.onclick=()=>deleteIncome(b.dataset.v12DeleteIncome));
+    box.querySelectorAll('[data-v12-edit-loan]').forEach(b=>b.onclick=()=>openLoanModal(b.dataset.v12EditLoan));
+    box.querySelectorAll('[data-v12-delete-loan]').forEach(b=>b.onclick=()=>deleteLoan(b.dataset.v12DeleteLoan));
+    box.querySelectorAll('[data-v12-edit-bill]').forEach(b=>b.onclick=()=>openHouseholdBillModal(b.dataset.v12EditBill));
+    box.querySelectorAll('[data-v12-delete-bill]').forEach(b=>b.onclick=()=>deleteHouseholdBill(b.dataset.v12DeleteBill));
+    box.querySelectorAll('[data-v12-edit-renewal]').forEach(b=>b.onclick=()=>openRenewalModal(b.dataset.v12EditRenewal));
+    box.querySelectorAll('[data-v12-delete-renewal]').forEach(b=>b.onclick=()=>deleteRenewal(b.dataset.v12DeleteRenewal));
+    box.querySelectorAll('[data-v12-edit-life]').forEach(b=>b.onclick=()=>openLifeEventModal(b.dataset.v12EditLife));
+    box.querySelectorAll('[data-v12-delete-life]').forEach(b=>b.onclick=()=>deleteLifeEvent(b.dataset.v12DeleteLife));
+    box.querySelectorAll('[data-v12-edit-saving]').forEach(b=>b.onclick=()=>editGoalSaving(b.dataset.v12EditSaving));
+    box.querySelectorAll('[data-v12-delete-saving]').forEach(b=>b.onclick=()=>deleteGoalSaving(b.dataset.v12DeleteSaving));
+    box.querySelectorAll('[data-v12-edit-shared]').forEach(b=>{const x=sharedExpenses.find(z=>z.id===b.dataset.v12EditShared);b.onclick=()=>x&&openSharedExpenseModal(x.household_id,x.id);});
+    box.querySelectorAll('[data-v12-delete-shared]').forEach(b=>b.onclick=()=>deleteSharedExpense(b.dataset.v12DeleteShared));
+    box.querySelectorAll('[data-v12-edit-vehicle-log]').forEach(b=>{const x=vehicleLogs.find(z=>z.id===b.dataset.v12EditVehicleLog);b.onclick=()=>x&&openVehicleLogModal(x.vehicle_id,x.id);});
+    box.querySelectorAll('[data-v12-delete-vehicle-log]').forEach(b=>b.onclick=()=>deleteVehicleLog(b.dataset.v12DeleteVehicleLog));
 }
 
-function renderUpcoming(){
-    const box=document.getElementById('upcomingPayments');if(!box)return;
-    const today=new Date();today.setHours(0,0,0,0);const items=[];
+function getUnifiedUpcomingV12(limit=10){
+    const today=new Date();today.setHours(0,0,0,0);
+    const items=[];
     for(let offset=0;offset<=365;offset++){
         const d=new Date(today);d.setDate(d.getDate()+offset);
         eventsForDayV11(d).filter(e=>['expense','loan','bill','renewal'].includes(e.type)&&!e.paid).forEach(e=>items.push(e));
     }
-    const unique=[];const seen=new Set();items.sort((a,b)=>a.date-b.date||a.name.localeCompare(b.name)).forEach(e=>{const k=dateKey(e.date)+'|'+e.source+'|'+e.name+'|'+e.amount;if(!seen.has(k)){seen.add(k);unique.push(e);}});
-    const final=unique.slice(0,10);
-    box.innerHTML=final.length?final.map(e=>'<div class="card" style="margin-bottom:8px;cursor:pointer"><b>'+escapeHtml(e.name)+'</b><div>'+money(e.amount)+'</div><div class="small">'+e.date.toLocaleDateString('en-IN')+' · '+escapeHtml(e.source)+' · '+escapeHtml(e.category||'Other')+'</div></div>').join(''):'<div class="empty">No upcoming payments.</div>';
-    box.querySelectorAll('.card').forEach((el,i)=>el.onclick=()=>{const d=final[i].date;currentDate=new Date(d.getFullYear(),d.getMonth(),1);selectedDate=new Date(d);renderAll();});
+    const seen=new Set(),out=[];
+    items.sort((a,b)=>a.date-b.date||String(a.name).localeCompare(String(b.name))).forEach(e=>{
+        const key=dateKey(e.date)+'|'+e.type+'|'+String(e.raw?.id||e.name)+'|'+e.amount;
+        if(!seen.has(key)){seen.add(key);out.push(e);}
+    });
+    return out.slice(0,limit);
+}
+function openCalendarForEventV12(e){
+    if(!e)return;
+    const d=new Date(e.date);
+    currentDate=new Date(d.getFullYear(),d.getMonth(),1);
+    selectedDate=new Date(d);
+    const tab=Array.from(document.querySelectorAll('.v3-tab')).find(b=>(b.getAttribute('onclick')||'').includes("'calendar'"));
+    showV3('calendar',tab);
+    renderAll();
 }
 
+/* ======================= V14 UNIVERSAL RECORD ACTIONS ======================= */
+function v14RecordInfo(e){
+    if(!e || !e.raw || !e.raw.id) return null;
+    const id=e.raw.id;
+    if(e.source==='One-time expense') return {kind:'oneTimeExpense',id};
+    if(e.type==='expense') return {kind:'expense',id};
+    if(e.type==='income') return {kind:e.source==='Recurring income'?'recurringIncome':'income',id};
+    if(e.type==='loan') return {kind:'loan',id};
+    if(e.type==='bill') return {kind:'householdBill',id};
+    if(e.type==='renewal') return {kind:'renewal',id};
+    if(e.type==='life') return {kind:'lifeEvent',id};
+    if(e.type==='saving') return {kind:'saving',id};
+    if(e.type==='shared') return {kind:'sharedExpense',id};
+    if(e.type==='vehicle') return {kind:'vehicleLog',id,vehicleId:e.raw.vehicle_id};
+    return null;
+}
+function v14RecordActions(e){
+    const info=v14RecordInfo(e); if(!info) return '';
+    return `<button type="button" class="btn-light v14-record-action" data-v14-edit="${escapeHtml(info.id)}" data-v14-kind="${escapeHtml(info.kind)}" data-v14-vehicle="${escapeHtml(info.vehicleId||'')}">Edit</button><button type="button" class="btn-danger v14-record-action" data-v14-delete="${escapeHtml(info.id)}" data-v14-kind="${escapeHtml(info.kind)}">Delete</button>`;
+}
+function v14OpenRecord(kind,id,vehicleId){
+    switch(kind){
+        case 'expense': return openExpenseModal(id);
+        case 'income': return openIncomeModal(id);
+        case 'recurringIncome': return openRecurringIncomeModal(id);
+        case 'loan': return openLoanModal(id);
+        case 'goal': return openGoalModal(id);
+        case 'householdBill': return openHouseholdBillModal(id);
+        case 'renewal': return openRenewalModal(id);
+        case 'lifeEvent': return openLifeEventModal(id);
+        case 'saving': return editGoalSaving(id);
+        case 'sharedExpense': { const x=sharedExpenses.find(z=>z.id===id); return x&&openSharedExpenseModal(x.household_id,id); }
+        case 'vehicleLog': { const x=vehicleLogs.find(z=>z.id===id); return x&&openVehicleLogModal(x.vehicle_id||vehicleId,id); }
+        case 'oneTimeExpense': return openOneTimeExpenseEdit(id);
+    }
+}
+function v14DeleteRecord(kind,id){
+    switch(kind){
+        case 'expense': return deleteExpense(id);
+        case 'income': return deleteIncome(id);
+        case 'recurringIncome': return deleteRecurringIncome(id);
+        case 'loan': return deleteLoan(id);
+        case 'goal': return deleteGoal(id);
+        case 'householdBill': return deleteHouseholdBill(id);
+        case 'renewal': return deleteRenewal(id);
+        case 'lifeEvent': return deleteLifeEvent(id);
+        case 'saving': return deleteGoalSaving(id);
+        case 'sharedExpense': return deleteSharedExpense(id);
+        case 'vehicleLog': return deleteVehicleLog(id);
+        case 'oneTimeExpense': return deleteOneTimeExpense(id);
+    }
+}
+function v14BindRecordActions(root=document){
+    root.querySelectorAll('[data-v14-edit]').forEach(btn=>{
+        btn.onclick=(ev)=>{ev.stopPropagation();v14OpenRecord(btn.dataset.v14Kind,btn.dataset.v14Edit,btn.dataset.v14Vehicle);};
+    });
+    root.querySelectorAll('[data-v14-delete]').forEach(btn=>{
+        btn.onclick=(ev)=>{ev.stopPropagation();v14DeleteRecord(btn.dataset.v14Kind,btn.dataset.v14Delete);};
+    });
+}
+
+function renderUpcoming(){
+    const box=document.getElementById('upcomingPayments');if(!box)return;
+    const final=getUnifiedUpcomingV12(10);
+    if(!final.length){box.innerHTML='<div class="empty">No upcoming payments.</div>';return;}
+    box.innerHTML=final.map((e,i)=>{
+        const days=Math.max(0,Math.ceil((e.date-new Date())/86400000));
+        const when=days===0?'Today':days===1?'Tomorrow':`In ${days} days`;
+        return `<div class="card" style="margin-bottom:8px" data-upcoming-index="${i}">
+            <div style="display:flex;justify-content:space-between;gap:10px"><div><b>${escapeHtml(e.name)}</b><div class="small">${escapeHtml(e.source||e.category||'')} · ${e.date.toLocaleDateString('en-IN')}</div></div><b class="red">${money(e.amount)}</b></div>
+            <div class="small" style="margin-top:5px">${when}</div>
+            <div class="v3-actions" style="margin-top:8px">${v14RecordActions(e)}</div>
+        </div>`;
+    }).join('');
+    box.querySelectorAll('[data-upcoming-index]').forEach(el=>el.addEventListener('click',()=>openCalendarForEventV12(final[Number(el.dataset.upcomingIndex)])));
+    v14BindRecordActions(box);
+}
+
+
 function renderReports(){
-    const events=monthEventsV11(currentDate),categories={};
-    events.filter(e=>e.type==='expense'||e.type==='loan'||e.type==='bill'||e.type==='renewal').forEach(e=>{categories[e.category]=(categories[e.category]||0)+e.amount;});
-    const total=Object.values(categories).reduce((a,b)=>a+b,0),box=document.getElementById('categoryReport');
-    if(box){box.innerHTML='';const sorted=Object.entries(categories).sort((a,b)=>b[1]-a[1]);if(!sorted.length)box.innerHTML='<div class="empty">No expenses this month.</div>';sorted.forEach(([cat,value])=>{const percent=total?value/total*100:0;box.innerHTML+=`<div class="report-row"><div class="report-head"><span>${escapeHtml(cat)}</span><b>${money(value)}</b></div><div class="progress"><div class="progress-bar" style="width:${percent}%"></div></div></div>`;});}
-    const specialBox=document.getElementById('specialReport');if(specialBox){specialBox.innerHTML='';['Investment','Loan / EMI','Insurance'].forEach(name=>{const value=events.filter(e=>e.category===name&&e.type!=='income').reduce((s,e)=>s+e.amount,0);specialBox.innerHTML+=`<div class="card" style="margin-bottom:8px"><div class="small">${name}</div><b>${money(value)}</b></div>`;});}
-    const monthlyBox=document.getElementById('monthlyReport');if(monthlyBox){monthlyBox.innerHTML='';for(let i=5;i>=0;i--){const d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),s=cashflowStatsV11(d);monthlyBox.innerHTML+=`<div class="card" style="margin-bottom:8px"><b>${monthName(d)}</b><div>Income: ${money(s.income)}</div><div>Outflow: ${money(s.outflow)}</div><div class="green">Net: ${money(s.net)}</div></div>`;}}
+    const events=monthEventsV11(currentDate);
+    const categories={};
+    events.filter(e=>e.type!=='income'&&e.type!=='life'&&e.type!=='saving').forEach(e=>{categories[e.category||'Other']=(categories[e.category||'Other']||0)+num(e.amount);});
+    const total=Object.values(categories).reduce((a,b)=>a+b,0);
+    const box=document.getElementById('categoryReport');
+    if(box){
+        const sorted=Object.entries(categories).sort((a,b)=>b[1]-a[1]);
+        box.innerHTML=sorted.length?sorted.map(([cat,value])=>`<div class="report-row"><div class="report-head"><span>${escapeHtml(cat)}</span><b>${money(value)}</b></div><div class="progress"><div class="progress-bar" style="width:${total?value/total*100:0}%"></div></div></div>`).join(''):'<div class="empty">No outflow recorded this month.</div>';
+    }
+    const specialBox=document.getElementById('specialReport');
+    if(specialBox){
+        const specs=[
+            ['Loan / EMI','loan'],['Household Bills','bill'],['Renewals','renewal'],['Shared Expenses','shared'],['Vehicle Expenses','vehicle'],['Savings','saving']
+        ];
+        specialBox.innerHTML=specs.map(([label,type])=>{const value=events.filter(e=>e.type===type).reduce((s,e)=>s+num(e.amount),0);return `<div class="card" style="margin-bottom:8px"><div class="small">${label}</div><b>${money(value)}</b></div>`;}).join('');
+    }
+    const monthlyBox=document.getElementById('monthlyReport');
+    if(monthlyBox){
+        let h='';for(let i=5;i>=0;i--){const d=new Date(currentDate.getFullYear(),currentDate.getMonth()-i,1),x=cashflowStatsV11(d);h+=`<div class="card" style="margin-bottom:8px"><b>${monthName(d)}</b><div>Income: ${money(x.income)}</div><div>Outflow: ${money(x.outflow)}</div><div>Savings: ${money(x.savings)}</div><div class="${x.net>=0?'green':'red'}">Net: ${money(x.net)}</div></div>`;}monthlyBox.innerHTML=h;
+    }
 }
 
 function renderDashboard(){
@@ -4883,6 +5429,16 @@ function renderDashboard(){
 }
 
 
+
+/* V14 consistency audit: all tabs consume the same canonical in-memory collections. */
+function v14DataAudit(){
+    return {
+        counts:{expenses:expenses.length,income:income.length,recurringIncome:recurringIncome.length,loans:loans.length,savingsGoals:savingsGoals.length,savingsTransactions:savingsTransactions.length,budgets:budgets.length,creditCards:creditCards.length,assets:assets.length,investments:investments.length,oneTimeExpenses:oneTimeExpenses.length,financeRules:financeRules.length,renewals:renewals.length,vehicles:vehicles.length,vehicleLogs:vehicleLogs.length,householdBills:householdBills.length,lifeEvents:lifeEvents.length,documents:documents.length,sharedExpenses:sharedExpenses.length},
+        month:monthKey(currentDate),
+        cashflow:cashflowStatsV11(currentDate)
+    };
+}
+window.v14DataAudit=v14DataAudit;
 </script>
 
 
@@ -4891,7 +5447,7 @@ function renderDashboard(){
 
 
 
-<!-- ========================= V10.10 CALENDAR MASTER FIX ========================= -->
+<!-- ========================= V14 CALENDAR MASTER ========================= -->
 
 
 </body>
