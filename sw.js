@@ -1,10 +1,5 @@
-const CACHE_NAME = "expense-calendar-v18-production-1";
-
-const APP_SHELL = [
-    "./",
-    "./index.html",
-    "./manifest.json"
-];
+const CACHE_NAME = "expense-calendar-v19-production-1";
+const APP_SHELL = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", event => {
     event.waitUntil(
