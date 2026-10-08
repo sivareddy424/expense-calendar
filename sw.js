@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v11-production-1";
+const CACHE_NAME = "expense-calendar-v14-production-1";
 
 const APP_SHELL = [
     "./",
@@ -33,52 +33,34 @@ self.addEventListener("fetch", event => {
 
     const url = new URL(event.request.url);
 
-    // Only handle requests from this GitHub Pages site
     if (url.origin !== self.location.origin) return;
 
-    // For page navigation:
-    // Always try the newest online version first.
     if (event.request.mode === "navigate") {
         event.respondWith(
             fetch(event.request)
                 .then(response => {
                     const copy = response.clone();
-
                     caches.open(CACHE_NAME)
-                        .then(cache => {
-                            cache.put("./index.html", copy);
-                        })
+                        .then(cache => cache.put("./index.html", copy))
                         .catch(() => {});
-
                     return response;
                 })
-                .catch(() => {
-                    return caches.match("./index.html");
-                })
+                .catch(() => caches.match("./index.html"))
         );
-
         return;
     }
 
-    // For other local files:
-    // Cache first, then download and cache if not available.
     event.respondWith(
         caches.match(event.request)
             .then(cachedResponse => {
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
+                if (cachedResponse) return cachedResponse;
 
                 return fetch(event.request)
                     .then(response => {
                         const copy = response.clone();
-
                         caches.open(CACHE_NAME)
-                            .then(cache => {
-                                cache.put(event.request, copy);
-                            })
+                            .then(cache => cache.put(event.request, copy))
                             .catch(() => {});
-
                         return response;
                     });
             })
