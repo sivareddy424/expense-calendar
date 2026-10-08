@@ -1,4 +1,4 @@
-const CACHE_NAME = "expense-calendar-v20-production-1";
+const CACHE_NAME = "expense-calendar-v21-production-1";
 
 const APP_SHELL = [
     "./",
@@ -17,13 +17,11 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
     event.waitUntil(
         caches.keys()
-            .then(keys =>
-                Promise.all(
-                    keys
-                        .filter(key => key !== CACHE_NAME)
-                        .map(key => caches.delete(key))
-                )
-            )
+            .then(keys => Promise.all(
+                keys
+                    .filter(key => key !== CACHE_NAME)
+                    .map(key => caches.delete(key))
+            ))
             .then(() => self.clients.claim())
     );
 });
@@ -53,7 +51,6 @@ self.addEventListener("fetch", event => {
         caches.match(event.request)
             .then(cached => {
                 if (cached) return cached;
-
                 return fetch(event.request)
                     .then(response => {
                         const copy = response.clone();
