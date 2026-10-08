@@ -7,7 +7,7 @@
 <meta content="#2563eb" name="theme-color"/>
 <meta content="Personal Finance Manager" name="description"/>
 <link href="manifest.json" rel="manifest"/>
-<title>Expense Calendar · Personal Finance · V24</title>
+<title>Expense Calendar · Personal Finance · V25</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 </script>
 <style>
@@ -658,7 +658,7 @@ header{backdrop-filter:saturate(140%);}
 .v14-source-record button{padding:3px 6px;font-size:10px}
 .v14-record-action{cursor:pointer}
 </style>
-<meta content="V24 UI Refresh" name="expense-calendar-version"/>
+<meta content="V25 UI Refresh" name="expense-calendar-version"/>
 <style id="v17-unified-groups-css">
 .v17-unified-groups #v15UnifiedLedger .v3-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
 .v17-unified-groups .v16-overview-actions{display:flex;gap:7px;flex-wrap:wrap}
@@ -7922,7 +7922,7 @@ header h1{font-size:20px !important;letter-spacing:-.3px}
 </script>
 <div id="v10Documents" style="display:none!important"></div>
 <style id="v24-design-system-css">
-/* ============================== V24 UI / UX REFRESH ==============================
+/* ============================== V25 UI / UX REFRESH ==============================
    Visual-only refinement layer. Existing V3→V23 data/rendering logic remains intact.
 */
 :root{
@@ -8378,6 +8378,318 @@ tbody tr:hover td{background:#f8fbff !important}
   else setTimeout(polish,0);
   setTimeout(polish,400);
   setTimeout(polish,1000);
+})();
+</script>
+
+
+<style id="v25-design-system">
+:root{
+  --v25-bg:#f4f7fb;--v25-surface:#ffffff;--v25-surface-2:#f8fafc;
+  --v25-text:#0f172a;--v25-muted:#64748b;--v25-border:#e2e8f0;--v25-border-2:#cbd5e1;
+  --v25-primary:#2563eb;--v25-primary-2:#1d4ed8;--v25-green:#16a34a;--v25-red:#dc2626;
+  --v25-orange:#ea580c;--v25-purple:#7c3aed;--v25-shadow:0 10px 30px rgba(15,23,42,.07);
+  --v25-shadow-lg:0 22px 70px rgba(15,23,42,.16);--v25-radius:16px;--v25-radius-sm:12px;
+}
+html{background:var(--v25-bg)}
+body{
+  background:radial-gradient(1200px 420px at 50% -120px,rgba(37,99,235,.13),transparent 62%),var(--v25-bg)!important;
+  color:var(--v25-text)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+}
+body.v25-dark{--v25-bg:#0b1220;--v25-surface:#111827;--v25-surface-2:#172033;--v25-text:#f8fafc;--v25-muted:#94a3b8;--v25-border:#263247;--v25-border-2:#334155;--v25-shadow:0 10px 30px rgba(0,0,0,.22);--v25-shadow-lg:0 22px 70px rgba(0,0,0,.40);background:linear-gradient(180deg,#07101e 0,#0b1220 360px,#0b1220 100%)!important}
+body.v25-dark .section,body.v25-dark .card,body.v25-dark .v3-item,body.v25-dark .v9-card,body.v25-dark .v10-panel,body.v25-dark .v23-home-panel,body.v25-dark .v25-card,
+body.v25-dark .v25-modal-box,body.v25-dark table,body.v25-dark .v20-money-view,body.v25-dark .v23-recurring-wrap{background:var(--v25-surface)!important;color:var(--v25-text)!important;border-color:var(--v25-border)!important}
+body.v25-dark .small,body.v25-dark .v9-muted,body.v25-dark .v23-muted,body.v25-dark .overview-subtitle,body.v25-dark .stat-title,body.v25-dark td{color:var(--v25-muted)!important}
+body.v25-dark input,body.v25-dark select,body.v25-dark textarea{background:#0f172a!important;color:#f8fafc!important;border-color:#334155!important}
+body.v25-compact .section,body.v25-compact .v10-panel,body.v25-compact .v23-home-panel{padding:13px!important;margin-bottom:12px!important}
+body.v25-compact .card{padding:11px!important}
+
+.container{max-width:1440px!important;padding:18px 20px 60px!important}
+header{backdrop-filter:blur(10px);position:sticky!important;top:0!important}
+header h1{font-weight:900!important;letter-spacing:-.55px!important}
+.header-actions>button{min-height:40px!important;border-radius:12px!important}
+#v20NavHost{margin:12px 0 8px!important}
+.v20-nav{background:rgba(255,255,255,.86)!important;border:1px solid var(--v25-border)!important;box-shadow:var(--v25-shadow)!important;backdrop-filter:blur(14px)!important;padding:6px!important}
+.v20-tab{font-weight:850!important;border-radius:11px!important;color:#475569!important;transition:all .16s ease!important}
+.v20-tab:hover{transform:translateY(-1px)!important;background:#eef4ff!important;color:#1d4ed8!important}
+.v20-tab.active{background:#1d4ed8!important;color:#fff!important;box-shadow:0 5px 15px rgba(29,78,216,.18)!important}
+.v20-subnav{gap:5px!important;border-bottom:1px solid var(--v25-border)!important;margin-bottom:14px!important}
+.v20-subtab{border-radius:10px!important;font-weight:800!important}
+.v20-subtab.active{background:#eaf2ff!important;color:#1d4ed8!important}
+
+/* Home 2.0 */
+#v25Home{display:block}
+.v25-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr);gap:16px;align-items:stretch;margin-bottom:16px}
+.v25-hero-main,.v25-hero-side,.v25-card{border:1px solid var(--v25-border);background:var(--v25-surface);border-radius:var(--v25-radius);box-shadow:var(--v25-shadow)}
+.v25-hero-main{padding:22px;background:radial-gradient(460px 200px at 100% 0,rgba(59,130,246,.15),transparent 65%),linear-gradient(135deg,#fff,#f8fbff)}
+.v25-kicker{font-size:11px;font-weight:900;color:#1d4ed8;text-transform:uppercase;letter-spacing:.09em}
+.v25-hero-title{font-size:clamp(25px,3vw,38px);line-height:1.04;letter-spacing:-1.2px;font-weight:950;margin:7px 0 8px;color:var(--v25-text)}
+.v25-hero-sub{color:var(--v25-muted);font-size:13px;max-width:760px;line-height:1.55}
+.v25-quick-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.v25-btn{border:1px solid var(--v25-border)!important;border-radius:12px!important;padding:10px 13px!important;font-size:12px!important;font-weight:900!important;cursor:pointer!important;background:var(--v25-surface)!important;color:var(--v25-text)!important}
+.v25-btn.primary{background:var(--v25-primary)!important;color:#fff!important;border-color:var(--v25-primary)!important;box-shadow:0 7px 16px rgba(37,99,235,.18)}
+.v25-btn.success{background:#16a34a!important;color:#fff!important;border-color:#16a34a!important}
+.v25-btn.ghost{background:transparent!important}
+.v25-btn:hover{transform:translateY(-1px);box-shadow:0 7px 17px rgba(15,23,42,.10)}
+.v25-hero-side{padding:17px;display:flex;flex-direction:column;justify-content:space-between}
+.v25-health-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.v25-score{font-size:40px;line-height:1;font-weight:950;letter-spacing:-1px}
+.v25-score-ring{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--v25-primary) var(--v25-score,0%),#e9eef5 0);position:relative}
+.v25-score-ring:after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--v25-surface)}
+.v25-score-ring span{position:relative;z-index:1;font-weight:950;font-size:18px}
+.v25-grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.v25-stat{padding:15px;border:1px solid var(--v25-border);background:var(--v25-surface);border-radius:14px;box-shadow:var(--v25-shadow);min-height:98px}
+.v25-stat .label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--v25-muted);font-weight:900}
+.v25-stat .value{font-size:25px;font-weight:950;letter-spacing:-.65px;margin-top:6px}
+.v25-stat .meta{font-size:10px;color:var(--v25-muted);margin-top:5px}
+.v25-green{color:var(--v25-green)}.v25-red{color:var(--v25-red)}.v25-orange{color:var(--v25-orange)}.v25-blue{color:var(--v25-primary)}.v25-purple{color:var(--v25-purple)}
+.v25-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:16px}
+.v25-card{padding:17px}
+.v25-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:11px}
+.v25-card-title{font-weight:950;font-size:15px;letter-spacing:-.2px}.v25-card-sub{font-size:11px;color:var(--v25-muted);margin-top:3px}
+.v25-attention{display:grid;gap:7px}.v25-attn{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:10px 11px;border:1px solid var(--v25-border);border-radius:12px;background:var(--v25-surface-2)}
+.v25-attn-dot{width:9px;height:9px;border-radius:50%;background:#94a3b8}.v25-attn-dot.warn{background:#f59e0b}.v25-attn-dot.bad{background:#ef4444}.v25-attn-dot.good{background:#22c55e}
+.v25-attn .title{font-size:12px;font-weight:850}.v25-attn .desc{font-size:10px;color:var(--v25-muted);margin-top:2px}.v25-attn button{border:0;background:transparent;color:#1d4ed8;font-weight:850;font-size:10px;cursor:pointer}
+.v25-timeline{display:grid;gap:7px}.v25-day{display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:start}.v25-day-date{padding-top:6px;font-size:10px;text-transform:uppercase;color:var(--v25-muted);font-weight:900}.v25-day-items{display:grid;gap:5px}.v25-tx{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--v25-border);border-radius:11px}.v25-tx-name{font-size:11px;font-weight:850}.v25-tx-meta{font-size:9px;color:var(--v25-muted);margin-top:2px}.v25-tx-amt{font-size:11px;font-weight:950;white-space:nowrap}
+.v25-bars{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-items:end;height:170px;padding-top:8px}.v25-bar-col{display:grid;gap:5px;justify-items:center;height:100%;align-content:end}.v25-bar{width:min(34px,70%);border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#60a5fa,#2563eb);min-height:5px}.v25-bar.negative{background:linear-gradient(180deg,#fb7185,#dc2626)}.v25-bar-label{font-size:9px;color:var(--v25-muted);font-weight:800}.v25-bar-value{font-size:9px;font-weight:850;max-width:70px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v25-progress{height:9px;background:#e9eef5;border-radius:999px;overflow:hidden}.v25-progress>div{height:100%;background:linear-gradient(90deg,#60a5fa,#2563eb);border-radius:999px}.v25-list{display:grid;gap:7px}.v25-list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--v25-border)}.v25-list-row:last-child{border-bottom:0}.v25-list-row b{font-size:11px}.v25-list-row span{font-size:10px;color:var(--v25-muted)}
+
+/* Money / Calendar / Planning / Reports / Insights */
+.v20-money-view,.v20-ledger-section,.v10-panel,.section{border:1px solid var(--v25-border)!important;border-radius:var(--v25-radius)!important;box-shadow:var(--v25-shadow)!important}
+.v20-money-hero{border-radius:var(--v25-radius)!important}
+.v25-focusbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:9px 0 1px}
+.v25-focusbar .chip{border:1px solid var(--v25-border);background:var(--v25-surface);color:#475569;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:900;cursor:pointer}.v25-focusbar .chip.active{background:#eaf2ff;color:#1d4ed8;border-color:#bfd5ff}
+.v25-mobile-nav{display:none}
+.v25-mobile-fab{display:none}
+.v25-timeline-panel{margin-bottom:14px}
+.v25-planning-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.v25-strip{padding:13px 14px;border:1px solid var(--v25-border);border-radius:13px;background:var(--v25-surface);box-shadow:var(--v25-shadow)}
+.v25-strip .k{font-size:9px;color:var(--v25-muted);font-weight:900;text-transform:uppercase;letter-spacing:.06em}.v25-strip .v{font-size:18px;font-weight:950;margin-top:4px}
+.v25-report-summary{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;margin-bottom:14px}.v25-narrative{line-height:1.55;font-size:12px;color:var(--v25-text)}
+.v25-insight-actions{display:flex;gap:7px;flex-wrap:wrap}.v25-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--v25-border);border-radius:999px;padding:5px 8px;font-size:9px;font-weight:900;color:var(--v25-muted)}
+
+/* Quick Add 2.0 */
+.v25-overlay{position:fixed;inset:0;z-index:100001;background:rgba(15,23,42,.46);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:12px}
+.v25-overlay.open{display:flex}.v25-modal-box{width:min(680px,100%);max-height:min(92vh,850px);overflow:auto;border-radius:22px;box-shadow:var(--v25-shadow-lg);padding:18px;border:1px solid var(--v25-border);background:var(--v25-surface)}
+.v25-modal-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.v25-modal-head h2{margin:0;font-size:21px;font-weight:950}.v25-close{border:0;background:var(--v25-surface-2);color:var(--v25-muted);border-radius:10px;padding:8px 10px;font-weight:900;cursor:pointer}
+.v25-message-box{display:flex;gap:8px;margin-top:13px}.v25-message-box textarea{min-height:100px!important;resize:vertical}.v25-parse-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:9px;flex-wrap:wrap}.v25-preview{margin-top:13px;padding:13px;border:1px solid #bfd5ff;border-radius:14px;background:#f7faff}.v25-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.v25-fieldlabel{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--v25-muted);font-weight:900}.v25-fieldvalue{font-size:12px;font-weight:900;margin-top:3px}.v25-save-row{display:flex;gap:7px;justify-content:flex-end;margin-top:13px}
+
+/* Alerts / Appearance */
+.v25-popover{position:fixed;z-index:100000;background:var(--v25-surface);border:1px solid var(--v25-border);border-radius:16px;box-shadow:var(--v25-shadow-lg);padding:9px;display:none;width:min(360px,calc(100vw - 18px))}.v25-popover.open{display:block}.v25-popover h3{font-size:12px;margin:3px 5px 8px}.v25-notif{padding:9px;border-bottom:1px solid var(--v25-border);display:grid;gap:3px}.v25-notif:last-child{border-bottom:0}.v25-notif b{font-size:11px}.v25-notif span{font-size:10px;color:var(--v25-muted)}
+.v25-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.v25-setting{padding:12px;border:1px solid var(--v25-border);border-radius:12px}.v25-setting b{font-size:11px}.v25-setting p{font-size:10px;color:var(--v25-muted);margin:4px 0 8px}.v25-segment{display:flex;gap:5px;flex-wrap:wrap}.v25-segment button{border:1px solid var(--v25-border);background:var(--v25-surface);color:var(--v25-text);border-radius:9px;padding:7px 9px;font-size:10px;font-weight:850;cursor:pointer}.v25-segment button.active{background:#eaf2ff;color:#1d4ed8;border-color:#bfd5ff}
+
+/* Micro-interactions */
+button,.card,.section,.v25-card,.v3-item,.v9-card,.v10-panel{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease!important}
+button:active{transform:scale(.985)!important}.v25-card:hover,.v3-item:hover,.v9-card:hover{box-shadow:0 12px 32px rgba(15,23,42,.09)!important}
+input,select,textarea{min-height:42px!important}
+
+@media(max-width:1100px){
+  .v25-hero,.v25-layout{grid-template-columns:1fr}.v25-grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.v25-report-summary{grid-template-columns:1fr}.v25-planning-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .container{padding:12px 10px 84px!important}.v25-hero-main{padding:17px}.v25-hero-title{font-size:26px}.v25-grid4{grid-template-columns:1fr 1fr}.v25-stat{min-height:88px;padding:12px}.v25-stat .value{font-size:20px}.v25-layout{gap:10px}.v25-card{padding:13px}.v25-bars{height:140px}.v25-planning-strip{grid-template-columns:1fr 1fr}
+  .header-actions{display:none!important}.header-inner{display:flex!important;align-items:center!important}.header-inner h1{font-size:17px!important}.v20-subnav{overflow-x:auto;flex-wrap:nowrap!important}.v20-subtab{flex:0 0 auto}.v25-mobile-nav{position:fixed;display:flex;left:8px;right:8px;bottom:8px;z-index:9000;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border:1px solid var(--v25-border);box-shadow:0 15px 34px rgba(15,23,42,.16);border-radius:16px;padding:6px;gap:4px}.v25-mobile-nav button{flex:1;border:0;background:transparent;color:#64748b;border-radius:11px;padding:8px 4px;font-size:9px;font-weight:900}.v25-mobile-nav button.active{background:#eaf2ff;color:#1d4ed8}.v25-mobile-fab{position:fixed;display:grid;place-items:center;right:20px;bottom:76px;width:54px;height:54px;border-radius:50%;z-index:9001;background:#2563eb;color:#fff;font-size:25px;font-weight:500;box-shadow:0 15px 30px rgba(37,99,235,.30);border:0}
+  .v25-settings-grid{grid-template-columns:1fr}.v25-preview-grid{grid-template-columns:1fr 1fr}.v25-message-box{display:block}.v25-message-box .v25-btn{margin-top:7px}
+}
+@media(max-width:430px){.v25-grid4{grid-template-columns:1fr 1fr}.v25-preview-grid{grid-template-columns:1fr}.v25-hero-side{padding:13px}.v25-hero-title{font-size:24px}.v25-bar-value{max-width:48px}.v20-tab{padding-inline:8px!important;font-size:10px!important}.v25-mobile-nav button{font-size:8px;padding:8px 2px}}
+@media(prefers-reduced-motion:reduce){button,.card,.section,.v25-card,.v3-item,.v9-card,.v10-panel{transition:none!important}.v25-bar{animation:none!important}}
+</style>
+
+<script id="v25-experience-runtime">
+(function(){
+'use strict';
+const V25='expense-calendar-v25';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const moneySafe=v=>typeof money==='function'?money(Number(v||0)):'₹'+Number(v||0).toLocaleString('en-IN');
+const dateK=v=>typeof dateKey==='function'?dateKey(new Date(v)):new Date(v).toISOString().slice(0,10);
+const escapeSafe=v=>typeof escapeHtml==='function'?escapeHtml(v??''):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+function months(){const d=new Date();return Array.from({length:6},(_,i)=>new Date(d.getFullYear(),d.getMonth()-5+i,1));}
+function monthLabel(d){return d.toLocaleDateString('en-IN',{month:'short'});}
+function allEvents(d){try{return typeof v15MonthEvents==='function'?v15MonthEvents(new Date(d.getFullYear(),d.getMonth(),1)):[];}catch(_){return[]}}
+function smartAlerts(){try{return typeof getSmartAlerts==='function'?getSmartAlerts():[]}catch(_){return[]}}
+function health(d){try{return typeof calcHealth==='function'?calcHealth(d):{score:50,savingsRate:0,pendingRatio:0,surplus:0,debt:0}}catch(_){return{score:50,savingsRate:0,pendingRatio:0,surplus:0,debt:0}}}
+
+function ensureHome(){
+  const host=$('#v20-home .v20-group-content'); if(!host)return;
+  let home=$('#v25Home');
+  if(!home){ home=document.createElement('div'); home.id='v25Home'; host.insertBefore(home,host.firstChild); }
+  renderHome();
+}
+function renderHome(){
+  const home=$('#v25Home'); if(!home)return;
+  const d=new Date(currentDate?.getFullYear?.()||new Date().getFullYear(), currentDate?.getMonth?.()||new Date().getMonth(),1);
+  const st=typeof v15CashflowStats==='function'?v15CashflowStats(d):{income:0,outflow:0,paid:0,pending:0,net:0};
+  const h=health(d);
+  const nw=(Number(assets||[]).length?assets.reduce((s,x)=>s+Number(x.current_value||0),0):0)+ (Array.isArray(vehicles)?vehicles.reduce((s,x)=>s+Number(x.current_value||0),0):0)+(Array.isArray(investments)?investments.reduce((s,x)=>s+Number(x.current_value||0),0):0)-(Array.isArray(loans)?loans.reduce((s,x)=>s+Number(x.outstanding_amount||0),0):0)-(Array.isArray(creditCards)?creditCards.reduce((s,x)=>s+Number(x.current_used||0),0):0);
+  const now=new Date(); now.setHours(0,0,0,0);
+  const upcoming=[]; for(let i=0;i<7;i++){const dt=new Date(now);dt.setDate(now.getDate()+i); allEvents(dt).filter(e=>e.type!=='income'&&e.type!=='life').forEach(e=>upcoming.push({...e,date:new Date(dt)}));}
+  upcoming.sort((a,b)=>a.date-b.date);
+  const dueToday=upcoming.filter(e=>dateK(e.date)===dateK(now)).reduce((s,e)=>s+Number(e.amount||0),0);
+  const alertRows=smartAlerts().slice(0,5);
+  const goals=(Array.isArray(savingsGoals)?savingsGoals:[]).slice().sort((a,b)=>{
+    const ap=a.target_date?new Date(a.target_date).getTime():Infinity,bp=b.target_date?new Date(b.target_date).getTime():Infinity; return ap-bp;
+  }).slice(0,4);
+  const trend=months().map(md=>{const x=typeof v15CashflowStats==='function'?v15CashflowStats(md):{net:0};return {...x,date:md}});
+  const maxAbs=Math.max(1,...trend.map(x=>Math.abs(Number(x.net||0))));
+  const greeting=now.getHours()<12?'Good morning':now.getHours()<18?'Good afternoon':'Good evening';
+  home.innerHTML=`
+    <div class="v25-hero">
+      <div class="v25-hero-main">
+        <div class="v25-kicker">Personal finance command center</div>
+        <div class="v25-hero-title">${greeting} 👋</div>
+        <div class="v25-hero-sub">Everything important for ${monthName(d)} is here. See your cash flow, upcoming commitments, goals and financial health without opening multiple screens.</div>
+        <div class="v25-quick-actions">
+          <button class="v25-btn primary" type="button" data-v25-action="add">＋ Add entry</button>
+          <button class="v25-btn" type="button" data-v25-action="quick">⚡ Quick Add</button>
+          <button class="v25-btn" type="button" data-v25-action="calendar">📅 View calendar</button>
+          <button class="v25-btn" type="button" data-v25-action="planning">🎯 Planning</button>
+        </div>
+      </div>
+      <div class="v25-hero-side">
+        <div class="v25-health-top"><div><div class="v25-card-sub">Financial health</div><div class="v25-score">${h.score}<span style="font-size:14px;color:var(--v25-muted)">/100</span></div><div class="v25-card-sub">Savings rate ${Number(h.savingsRate||0).toFixed(1)}%</div></div><div class="v25-score-ring" style="--v25-score:${h.score}%"><span>${h.score}</span></div></div>
+        <div style="margin-top:12px"><div class="v25-progress"><div style="width:${Math.max(0,Math.min(100,h.score))}%"></div></div><div class="v25-card-sub" style="margin-top:7px">${h.score>=80?'Strong position':h.score>=60?'Healthy, with room to improve':h.score>=40?'Watch your commitments':'Action needed this month'}</div></div>
+      </div>
+    </div>
+    <div class="v25-grid4">
+      <div class="v25-stat"><div class="label">Income</div><div class="value v25-green">${moneySafe(st.income)}</div><div class="meta">${monthName(d)}</div></div>
+      <div class="v25-stat"><div class="label">Expense</div><div class="value v25-red">${moneySafe(st.outflow)}</div><div class="meta">Planned outflow</div></div>
+      <div class="v25-stat"><div class="label">Surplus / deficit</div><div class="value ${st.net>=0?'v25-blue':'v25-red'}">${moneySafe(st.net)}</div><div class="meta">Income − expense</div></div>
+      <div class="v25-stat"><div class="label">Pending</div><div class="value v25-orange">${moneySafe(st.pending)}</div><div class="meta">${dueToday?moneySafe(dueToday)+' due today':'Nothing due today'}</div></div>
+    </div>
+    <div class="v25-layout">
+      <div class="v25-card">
+        <div class="v25-card-head"><div><div class="v25-card-title">What needs your attention?</div><div class="v25-card-sub">The most useful actions from your existing financial data.</div></div><span class="v25-pill">${alertRows.length} alerts</span></div>
+        <div class="v25-attention">${alertRows.length?alertRows.map((a,i)=>`<div class="v25-attn"><span class="v25-attn-dot ${a.level==='bad'?'bad':a.level==='warn'?'warn':'good'}"></span><div><div class="title">${escapeSafe(a.title||a.name||'Financial alert')}</div><div class="desc">${escapeSafe(a.body||a.message||'Review this item')}</div></div><button type="button" data-v25-alert-index="${i}">Open</button></div>`).join(''):`<div class="v25-attn"><span class="v25-attn-dot good"></span><div><div class="title">You are on track</div><div class="desc">No urgent alerts were generated from the current data.</div></div></div>`}</div>
+      </div>
+      <div class="v25-card">
+        <div class="v25-card-head"><div><div class="v25-card-title">Next 7 days</div><div class="v25-card-sub">Upcoming money commitments.</div></div><button class="v25-btn" type="button" style="padding:7px 9px!important" data-v25-action="calendar">Calendar</button></div>
+        <div class="v25-timeline">${renderTimeline(upcoming.slice(0,8))}</div>
+      </div>
+    </div>
+    <div class="v25-layout" style="margin-top:16px">
+      <div class="v25-card"><div class="v25-card-head"><div><div class="v25-card-title">6-month surplus trend</div><div class="v25-card-sub">Monthly net cash flow after planned outflow.</div></div><span class="v25-pill">Current ${monthLabel(d)}</span></div><div class="v25-bars">${trend.map(x=>{const n=Number(x.net||0),hgt=Math.max(8,Math.round(Math.abs(n)/maxAbs*118));return `<div class="v25-bar-col"><div class="v25-bar-value">${moneySafe(n)}</div><div class="v25-bar ${n<0?'negative':''}" style="height:${hgt}px"></div><div class="v25-bar-label">${monthLabel(x.date)}</div></div>`}).join('')}</div></div>
+      <div class="v25-card"><div class="v25-card-head"><div><div class="v25-card-title">Goals snapshot</div><div class="v25-card-sub">Your nearest savings targets.</div></div><button class="v25-btn" type="button" style="padding:7px 9px!important" data-v25-action="goals">Goals</button></div><div class="v25-list">${goals.length?goals.map(g=>{const t=Number(g.target_amount||0),c=Number(g.current_amount||0),p=t?Math.max(0,Math.min(100,c/t*100)):0;return `<div><div class="v25-list-row"><div><b>${escapeSafe(g.name||'Goal')}</b><div><span>${moneySafe(c)} saved${g.target_date?' · '+escapeSafe(new Date(g.target_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})):''}</span></div></div><b class="v25-blue">${p.toFixed(0)}%</b></div><div class="v25-progress"><div style="width:${p}%"></div></div></div>`}).join(''):`<div class="v25-card-sub">No savings goals yet.</div>`}</div></div>
+    </div>
+    <div class="v25-card" style="margin-top:16px"><div class="v25-card-head"><div><div class="v25-card-title">Net worth snapshot</div><div class="v25-card-sub">Assets + investments + vehicles − loans − card balances.</div></div><button class="v25-btn" type="button" style="padding:7px 9px!important" data-v25-action="networth">Open Net Worth</button></div><div class="v25-grid4" style="margin:0"><div class="v25-stat"><div class="label">Net worth</div><div class="value ${nw>=0?'v25-blue':'v25-red'}">${moneySafe(nw)}</div></div><div class="v25-stat"><div class="label">Debt</div><div class="value v25-red">${moneySafe((Array.isArray(loans)?loans:[]).reduce((s,x)=>s+Number(x.outstanding_amount||0),0))}</div></div><div class="v25-stat"><div class="label">Investments</div><div class="value v25-purple">${moneySafe((Array.isArray(investments)?investments:[]).reduce((s,x)=>s+Number(x.current_value||0),0))}</div></div><div class="v25-stat"><div class="label">Assets + vehicles</div><div class="value">${moneySafe((Array.isArray(assets)?assets:[]).reduce((s,x)=>s+Number(x.current_value||0),0)+(Array.isArray(vehicles)?vehicles.reduce((s,x)=>s+Number(x.current_value||0),0):0))}</div></div></div></div>`;
+  home.onclick=e=>{
+    const act=e.target.closest('[data-v25-action]'); if(act){const a=act.dataset.v25Action; if(a==='add'&&typeof openCommonEntryModal==='function')openCommonEntryModal(); else if(a==='quick')openV25QuickAdd(); else if(a==='calendar'&&typeof openGroup==='function')openGroup('calendar'); else if(a==='planning'&&typeof openGroup==='function')openGroup('planning'); else if(a==='goals'&&typeof activateSubview==='function')openGroup('planning'),activateSubview('planning','v3-goals'); else if(a==='networth'&&typeof openGroup==='function')openGroup('money'),activateMoneyTab('v3-networth'); return;} const ai=e.target.closest('[data-v25-alert-index]'); if(ai){openV25Alerts();}};
+}
+function renderTimeline(rows){
+ if(!rows.length)return '<div class="v25-card-sub">No upcoming outflow in the next 7 days.</div>';
+ const map={};rows.forEach(e=>{const k=dateK(e.date);(map[k] ||= []).push(e)});
+ return Object.entries(map).map(([k,arr])=>`<div class="v25-day"><div class="v25-day-date">${new Date(k+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})}</div><div class="v25-day-items">${arr.slice(0,4).map(e=>`<div class="v25-tx"><div><div class="v25-tx-name">${escapeSafe(e.name||'Expense')}</div><div class="v25-tx-meta">${escapeSafe(e.subtype||e.category||e.source||'Expense')} · ${e.paid?'Paid':'Pending'}</div></div><div class="v25-tx-amt ${e.paid?'v25-green':'v25-orange'}">${moneySafe(e.amount)}</div></div>`).join('')}</div></div>`).join('');
+}
+
+function ensureMobileNav(){
+ if($('#v25MobileNav'))return;
+ const nav=document.createElement('nav');nav.id='v25MobileNav';nav.className='v25-mobile-nav';
+ const items=[['home','⌂','Home'],['calendar','▦','Calendar'],['money','₹','Money'],['planning','◈','Plan'],['reports','▤','Reports'],['insights','✦','Insights']];
+ nav.innerHTML=items.map(x=>`<button type="button" data-v25-mobile="${x[0]}"><span style="font-size:15px;display:block">${x[1]}</span>${x[2]}</button>`).join('');document.body.appendChild(nav);
+ const fab=document.createElement('button');fab.id='v25MobileFab';fab.className='v25-mobile-fab';fab.type='button';fab.textContent='+';fab.title='Add entry';fab.onclick=()=>typeof openCommonEntryModal==='function'&&openCommonEntryModal();document.body.appendChild(fab);
+ nav.onclick=e=>{const b=e.target.closest('[data-v25-mobile]');if(!b)return;const g=b.dataset.v25Mobile;if(typeof openGroup==='function')openGroup(g);};
+}
+function syncMobileNav(){ const g=(typeof currentGroup!=='undefined'?currentGroup:''); $$('[data-v25-mobile]').forEach(b=>b.classList.toggle('active',b.dataset.v25Mobile===g)); }
+
+function removeFileUI(){ $$('input[type="hidden" data-v25-disabled-file="1"],#importFile,#documentFile,#documentModal').forEach(el=>{try{el.remove()}catch(_){} }); }
+
+function openV25Alerts(){
+ let p=$('#v25Alerts');if(!p){p=document.createElement('div');p.id='v25Alerts';p.className='v25-popover';document.body.appendChild(p)}
+ const alerts=smartAlerts();p.innerHTML=`<h3>Notifications</h3>${alerts.length?alerts.slice(0,10).map(a=>`<div class="v25-notif"><b>${escapeSafe(a.title||a.name||'Alert')}</b><span>${escapeSafe(a.body||a.message||'Review this alert')}</span></div>`).join(''):`<div class="v25-notif"><b>All clear</b><span>No smart alerts right now.</span></div>`}`;
+ const btn=$$('header .header-actions button').find(b=>/Alerts/i.test(b.textContent||'')); if(btn){const r=btn.getBoundingClientRect();p.style.right=Math.max(8,window.innerWidth-r.right+8)+'px';p.style.top=(r.bottom+8)+'px';}p.classList.toggle('open');
+}
+function closePopovers(){ $$('.v25-popover').forEach(p=>p.classList.remove('open')); }
+
+function parseQuickMessage(text){
+ const raw=String(text||'').trim(); const lower=raw.toLowerCase();
+ const amts=[...raw.matchAll(/(?:₹|rs\.?|inr\s*)?\s*([0-9]{1,3}(?:,[0-9]{2,3})*(?:\.\d+)?|[0-9]+(?:\.\d+)?)(?:\s*(?:rs|rupees|inr))?/ig)].map(m=>Number(String(m[1]).replaceAll(',',''))).filter(n=>Number.isFinite(n)&&n>0);
+ const amount=amts.sort((a,b)=>b-a)[0]||0;
+ let type='expense'; if(/\b(salary|income|received|recieved|got paid|credit(?:ed)?|bonus|refund)\b/i.test(lower))type='income';
+ if(/\b(save|saved|savings|goal contribution|put aside)\b/i.test(lower)&&/\b(goal|savings?)\b/i.test(lower))type='saving';
+ let date=dateK(new Date()); if(/\btomorrow\b/i.test(lower)){const d=new Date();d.setDate(d.getDate()+1);date=dateK(d)} else if(/\byesterday\b/i.test(lower)){const d=new Date();d.setDate(d.getDate()-1);date=dateK(d)}
+ let cleaned=raw.replace(/(?:₹|rs\.?|inr\s*)?\s*[0-9]{1,3}(?:,[0-9]{2,3})*(?:\.\d+)?(?:\s*(?:rs|rupees|inr))?/ig,' ').replace(/\btoday\b|\btomorrow\b|\byesterday\b/ig,' ').replace(/\b(paid|spent|spend|bought|buy|received|salary|income|saved|save|for|on|at|the|of)\b/ig,' ').replace(/\s+/g,' ').trim();
+ if(!cleaned)cleaned=type==='income'?'Income':type==='saving'?'Savings contribution':'Expense';
+ let category='Other'; try{const suggested=typeof suggestCategoryV10==='function'?suggestCategoryV10(cleaned):null;if(suggested)category=suggested}catch(_){}
+ if(/\b(emi|loan)\b/i.test(raw))category='Loan / EMI';
+ if(/\b(electricity|power)\b/i.test(raw))category='Utilities';
+ if(/\b(rent|house rent)\b/i.test(raw))category='Housing';
+ return {type,name:cleaned.replace(/^[-–—]+|[-–—]+$/g,'').trim(),amount,date,category,note:raw};
+}
+function ensureQuickModal(){
+ if($('#v25QuickModal'))return $('#v25QuickModal');
+ const o=document.createElement('div');o.id='v25QuickModal';o.className='v25-overlay';o.innerHTML=`<div class="v25-modal-box"><div class="v25-modal-head"><div><h2>⚡ Quick Add</h2><div class="v25-card-sub">Type a financial entry naturally. The app will turn it into a structured record before saving.</div></div><button class="v25-close" type="button" data-v25-close>Close</button></div><div class="v25-message-box"><textarea id="v25QuickText" placeholder="Example: Paid 850 electricity today\nExample: Salary 52000 received\nExample: Paid 18000 house loan EMI"></textarea></div><div class="v25-parse-actions"><button class="v25-btn" type="button" data-v25-sample>Use example</button><button class="v25-btn primary" type="button" data-v25-parse>Parse entry</button></div><div id="v25QuickPreview"></div></div>`;document.body.appendChild(o);
+ o.onclick=e=>{if(e.target===o)e.stopPropagation();if(e.target.closest('[data-v25-close]'))closeV25QuickAdd();if(e.target.closest('[data-v25-sample]')){$('#v25QuickText').value='Paid 850 electricity today';renderQuickPreview(parseQuickMessage($('#v25QuickText').value))}if(e.target.closest('[data-v25-parse]'))renderQuickPreview(parseQuickMessage($('#v25QuickText').value));};
+ return o;
+}
+function openV25QuickAdd(){const m=ensureQuickModal();m.classList.add('open');$('#v25QuickText').focus();}
+function closeV25QuickAdd(){const m=$('#v25QuickModal');if(m)m.classList.remove('open')}
+function renderQuickPreview(p){const box=$('#v25QuickPreview');if(!box)return;box.innerHTML=`<div class="v25-preview"><div class="v25-card-title">Ready to save</div><div class="v25-preview-grid" style="margin-top:10px"><div><div class="v25-fieldlabel">Type</div><div class="v25-fieldvalue">${escapeSafe(p.type)}</div></div><div><div class="v25-fieldlabel">Amount</div><div class="v25-fieldvalue">${moneySafe(p.amount)}</div></div><div><div class="v25-fieldlabel">Entry</div><div class="v25-fieldvalue">${escapeSafe(p.name)}</div></div><div><div class="v25-fieldlabel">Date</div><div class="v25-fieldvalue">${escapeSafe(new Date(p.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}))}</div></div><div><div class="v25-fieldlabel">Category</div><div class="v25-fieldvalue">${escapeSafe(p.category)}</div></div><div><div class="v25-fieldlabel">Note</div><div class="v25-fieldvalue">${escapeSafe(p.note)}</div></div></div><div class="v25-save-row"><button class="v25-btn" type="button" data-v25-close>Cancel</button><button class="v25-btn primary" type="button" data-v25-save>Save entry</button></div></div>`;box.querySelector('[data-v25-close]').onclick=closeV25QuickAdd;box.querySelector('[data-v25-save]').onclick=()=>saveParsed(p);}
+async function saveParsed(p){
+ if(!currentUser)return; if(!p.amount||!p.name)return alert('Please include a name and amount.');
+ try{
+  let data,error;
+  if(p.type==='income')({data,error}=await supabaseClient.from('income').insert({user_id:currentUser.id,name:p.name,amount:p.amount,income_date:p.date}).select().single());
+  else if(p.type==='saving'){
+   const goal=(Array.isArray(savingsGoals)?savingsGoals:[]).find(g=>String(p.name).toLowerCase().includes(String(g.name||'').toLowerCase())) || (Array.isArray(savingsGoals)?savingsGoals.slice().sort((a,b)=>Number(a.current_amount||0)-Number(b.current_amount||0))[0]:null);
+   if(!goal)return alert('Add a savings goal first, then use Quick Add for a goal contribution.');
+   ({data,error}=await supabaseClient.from('savings_transactions').insert({user_id:currentUser.id,goal_id:goal.id,amount:p.amount,transaction_date:p.date,note:p.note||'Quick Add contribution'}).select().single());
+   if(!error){savingsTransactions.push(data);const upd=await supabaseClient.from('savings_goals').update({current_amount:Number(goal.current_amount||0)+p.amount}).eq('id',goal.id).eq('user_id',currentUser.id).select().single();if(!upd.error)Object.assign(goal,upd.data)}
+  } else ({data,error}=await supabaseClient.from('one_time_expenses').insert({user_id:currentUser.id,name:p.name,amount:p.amount,expense_date:p.date,category:p.category,note:p.note}).select().single());
+  if(error)throw error;
+  if(p.type==='income')income.unshift(data); else if(p.type==='expense')oneTimeExpenses.unshift(data);
+  closeV25QuickAdd(); if(typeof saveOfflineSnapshot==='function')saveOfflineSnapshot(); if(typeof renderAll==='function')renderAll(); if(typeof showV101Toast==='function')showV101Toast('Quick Add saved ✓');
+ }catch(e){alert(e.message||'Could not save entry.');}
+}
+
+function ensureAppearance(){
+ if($('#v25AppearanceModal'))return;
+ const o=document.createElement('div');o.id='v25AppearanceModal';o.className='v25-overlay';o.innerHTML=`<div class="v25-modal-box"><div class="v25-modal-head"><div><h2>🎨 Appearance & Dashboard</h2><div class="v25-card-sub">Make the app look the way you prefer.</div></div><button class="v25-close" type="button" data-close>Close</button></div><div class="v25-settings-grid" style="margin-top:14px"><div class="v25-setting"><b>Theme</b><p>Choose how the finance dashboard should look.</p><div class="v25-segment" id="v25ThemeSeg"><button data-theme="light">Light</button><button data-theme="dark">Dark</button><button data-theme="auto">System</button></div></div><div class="v25-setting"><b>Density</b><p>Compact mode reduces card spacing.</p><div class="v25-segment" id="v25DensitySeg"><button data-density="comfortable">Comfortable</button><button data-density="compact">Compact</button></div></div></div></div>`;document.body.appendChild(o);
+ o.onclick=e=>{if(e.target.closest('[data-close]'))o.classList.remove('open');const t=e.target.closest('[data-theme]');if(t){localStorage.setItem(V25+'-theme',t.dataset.theme);applyTheme()}const d=e.target.closest('[data-density]');if(d){localStorage.setItem(V25+'-density',d.dataset.density);applyDensity()}};
+}
+function applyTheme(){let t=localStorage.getItem(V25+'-theme')||'light';if(t==='auto')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.body.classList.toggle('v25-dark',t==='dark');$$('#v25ThemeSeg button').forEach(b=>b.classList.toggle('active',b.dataset.theme===localStorage.getItem(V25+'-theme')||(!localStorage.getItem(V25+'-theme')&&b.dataset.theme==='light')))}
+function applyDensity(){const d=localStorage.getItem(V25+'-density')||'comfortable';document.body.classList.toggle('v25-compact',d==='compact');$$('#v25DensitySeg button').forEach(b=>b.classList.toggle('active',b.dataset.density===d))}
+function openAppearance(){ensureAppearance();$('#v25AppearanceModal').classList.add('open');applyTheme();applyDensity();}
+
+function injectPlanningStrip(){const host=$('#v20-planning .v20-group-content');if(!host||$('#v25PlanningStrip'))return;const strip=document.createElement('div');strip.id='v25PlanningStrip';strip.className='v25-planning-strip';host.insertBefore(strip,host.querySelector('.v20-subnav')?.nextSibling||host.firstChild);renderPlanningStrip();}
+function renderPlanningStrip(){const el=$('#v25PlanningStrip');if(!el)return;const debt=(Array.isArray(loans)?loans:[]).reduce((s,l)=>s+Number(l.outstanding_amount||0),0);const emi=(Array.isArray(loans)?loans:[]).reduce((s,l)=>s+Number(l.emi_amount||0),0);const gt=(Array.isArray(savingsGoals)?savingsGoals:[]).reduce((s,g)=>s+Number(g.target_amount||0),0);const gc=(Array.isArray(savingsGoals)?savingsGoals:[]).reduce((s,g)=>s+Number(g.current_amount||0),0);const budgetStats=typeof getBudgetStats==='function'?getBudgetStats(new Date(currentDate.getFullYear(),currentDate.getMonth(),1)):[];const bl=budgetStats.reduce((s,x)=>s+Number(x.limit||0),0),bp=budgetStats.reduce((s,x)=>s+Number(x.planned||0),0);el.innerHTML=`<div class="v25-strip"><div class="k">Outstanding debt</div><div class="v v25-red">${moneySafe(debt)}</div></div><div class="v25-strip"><div class="k">Monthly EMI</div><div class="v v25-orange">${moneySafe(emi)}</div></div><div class="v25-strip"><div class="k">Goals progress</div><div class="v v25-blue">${gt?((gc/gt)*100).toFixed(0):0}%</div></div><div class="v25-strip"><div class="k">Budget used</div><div class="v ${bp>bl?'v25-red':'v25-green'}">${bl?((bp/bl)*100).toFixed(0):0}%</div></div>`}
+function injectCalendarTimeline(){const view=$('#v3-calendar');if(!view||$('#v25CalendarTimeline'))return;const p=document.createElement('div');p.id='v25CalendarTimeline';p.className='v25-card v25-timeline-panel';view.insertBefore(p,view.firstChild);renderCalendarTimeline()}
+function renderCalendarTimeline(){const p=$('#v25CalendarTimeline');if(!p)return;const d=new Date();d.setHours(0,0,0,0);const rows=[];for(let i=0;i<7;i++){const dt=new Date(d);dt.setDate(d.getDate()+i);allEvents(dt).filter(e=>e.type!=='income'&&e.type!=='life').forEach(e=>rows.push({...e,date:dt}));}p.innerHTML=`<div class="v25-card-head"><div><div class="v25-card-title">This week at a glance</div><div class="v25-card-sub">A quick timeline before the full calendar.</div></div><span class="v25-pill">${rows.length} scheduled</span></div><div class="v25-timeline">${renderTimeline(rows.slice(0,12))}</div>`}
+function injectInsightPanel(){const host=$('#v20-insights .v20-group-content');if(!host||$('#v25InsightPanel'))return;const p=document.createElement('div');p.id='v25InsightPanel';p.className='v25-card';p.style.marginBottom='14px';host.insertBefore(p,host.querySelector('.v20-subnav')?.nextSibling||host.firstChild);renderInsightPanel()}
+function renderInsightPanel(){const p=$('#v25InsightPanel');if(!p)return;const d=new Date(currentDate.getFullYear(),currentDate.getMonth(),1),st=v15CashflowStats(d),h=health(d);const next=smartAlerts().slice(0,3);p.innerHTML=`<div class="v25-card-head"><div><div class="v25-card-title">Smart next steps</div><div class="v25-card-sub">A simple action layer over your existing insights.</div></div><span class="v25-pill">Health ${h.score}/100</span></div><div class="v25-insight-actions"><span class="v25-pill">Surplus ${moneySafe(st.net)}</span><span class="v25-pill">Pending ${moneySafe(st.pending)}</span><span class="v25-pill">Debt ${moneySafe(h.debt)}</span></div>${next.length?'<div style="margin-top:10px">'+next.map(a=>`<div class="v25-attn" style="margin-top:7px"><span class="v25-attn-dot ${a.level==='bad'?'bad':a.level==='warn'?'warn':'good'}"></span><div><div class="title">${escapeSafe(a.title||a.name||'Alert')}</div><div class="desc">${escapeSafe(a.body||a.message||'Review your financial data')}</div></div></div>`).join('')+'</div>':'<div class="v25-card-sub" style="margin-top:10px">No urgent action is suggested right now.</div>'}`}
+function injectReportsSummary(){const host=$('#v20-reports .v20-group-content');if(!host||$('#v25ReportsSummary'))return;const p=document.createElement('div');p.id='v25ReportsSummary';p.className='v25-card';p.style.marginBottom='14px';host.insertBefore(p,host.querySelector('.v20-subnav')?.nextSibling||host.firstChild);renderReportsSummary()}
+function renderReportsSummary(){const p=$('#v25ReportsSummary');if(!p)return;const d=new Date(currentDate.getFullYear(),currentDate.getMonth(),1),st=v15CashflowStats(d);const prev=new Date(d.getFullYear(),d.getMonth()-1,1),pst=v15CashflowStats(prev);const pct=pst.outflow?((st.outflow-pst.outflow)/pst.outflow*100):0;const txt=st.net>=0?`You currently have a ${moneySafe(st.net)} monthly surplus. Expense movement is ${Math.abs(pct).toFixed(1)}% ${pct>=0?'higher':'lower'} than last month.`:`Your planned outflow is ${moneySafe(Math.abs(st.net))} above income this month. Review pending commitments before adding discretionary spending.`;p.innerHTML=`<div class="v25-report-summary"><div><div class="v25-card-title">Executive summary · ${monthName(d)}</div><div class="v25-narrative" style="margin-top:8px">${escapeSafe(txt)}</div></div><div><div class="v25-card-title">Key figures</div><div class="v25-list" style="margin-top:7px"><div class="v25-list-row"><span>Income</span><b class="v25-green">${moneySafe(st.income)}</b></div><div class="v25-list-row"><span>Expense</span><b class="v25-red">${moneySafe(st.outflow)}</b></div><div class="v25-list-row"><span>Paid</span><b>${moneySafe(st.paid)}</b></div><div class="v25-list-row"><span>Pending</span><b class="v25-orange">${moneySafe(st.pending)}</b></div></div></div></div>`}
+
+function addAppearanceToMore(){
+ const m=$('#v23MoreMenu'); if(!m||m.dataset.v25==='1')return; m.dataset.v25='1'; const div=document.createElement('div');div.className='v23-more-divider';m.appendChild(div);const b=document.createElement('button');b.type='button';b.className='v23-more-item';b.innerHTML='🎨 <span>Appearance & Dashboard</span>';b.onclick=e=>{e.preventDefault();e.stopPropagation();closeMore?.();openAppearance()};m.appendChild(b);
+}
+function patchTopbar(){
+ const alerts=$$('header .header-actions button').find(b=>/Alerts/i.test(b.textContent||'')); if(alerts&&alerts.dataset.v25!=='1'){alerts.dataset.v25='1';alerts.onclick=e=>{e.preventDefault();e.stopPropagation();openV25Alerts()}}
+ const qa=$$('header .header-actions button').find(b=>/Quick Add/i.test(b.textContent||'')); if(qa&&qa.dataset.v25!=='1'){qa.dataset.v25='1';qa.onclick=e=>{e.preventDefault();e.stopPropagation();openV25QuickAdd()}}
+ const more=$('#v23MoreMenu'); if(more)addAppearanceToMore();
+ const m=$('#v25MobileFab');if(m)m.setAttribute('aria-label','Add entry');
+}
+function wrapRender(fnName,after){
+ const orig=window[fnName];if(typeof orig!=='function'||orig.__v25Wrapped)return;function wrapped(){const r=orig.apply(this,arguments);try{after()}catch(e){console.warn('V25 refresh',e)}return r}wrapped.__v25Wrapped=true;wrapped.__v25Orig=orig;window[fnName]=wrapped;
+}
+function refreshAllV25(){
+ ensureHome();injectPlanningStrip();injectCalendarTimeline();injectInsightPanel();injectReportsSummary();patchTopbar();syncMobileNav();removeFileUI();applyTheme();applyDensity();
+ try{renderPlanningStrip()}catch(_){} try{renderCalendarTimeline()}catch(_){} try{renderInsightPanel()}catch(_){} try{renderReportsSummary()}catch(_){} try{const fm=$('#v20MoneyView');if(fm&&!$('#v25MoneyFocus')){const x=document.createElement('div');x.id='v25MoneyFocus';x.className='v25-focusbar';x.innerHTML='<span style="font-size:10px;font-weight:900;color:var(--v25-muted);margin-right:2px">Focus</span><button class="chip active" data-mf="all">All</button><button class="chip" data-mf="income">Income</button><button class="chip" data-mf="expense">Expense</button><button class="chip" data-mf="paid">Paid</button><button class="chip" data-mf="pending">Pending</button>';fm.querySelector('.v20-money-hero')?.appendChild(x);x.onclick=e=>{const b=e.target.closest('[data-mf]');if(!b)return;$$('[data-mf]',x).forEach(c=>c.classList.toggle('active',c===b));const filter=b.dataset.mf;const els=$$('#v20IncomeList > *,#v20ExpenseList > *',fm);els.forEach(el=>{const t=(el.textContent||'').toLowerCase();let show=true;if(filter==='income')show=fm.querySelector('#v20IncomeList')?.contains(el);else if(filter==='expense')show=fm.querySelector('#v20ExpenseList')?.contains(el);else if(filter==='paid')show=t.includes('paid')||t.includes('✓');else if(filter==='pending')show=t.includes('pending')||!t.includes('paid');el.style.display=show?'':'none'});};}}catch(_){}
+}
+
+window.openV25QuickAdd=openV25QuickAdd;window.closeV25QuickAdd=closeV25QuickAdd;window.openV25Alerts=openV25Alerts;window.openV25Appearance=openAppearance;
+window.addEventListener('click',e=>{if(!e.target.closest('.v25-popover')&&!e.target.closest('header .header-actions'))closePopovers()},{capture:true});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){closePopovers();closeV25QuickAdd();$('#v25AppearanceModal')?.classList.remove('open')}});
+window.addEventListener('resize',()=>{try{const p=$('#v25Alerts');if(p&&p.classList.contains('open'))openV25Alerts()}catch(_){}},{passive:true});
+window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if((localStorage.getItem(V25+'-theme')||'light')==='auto')applyTheme()});
+
+document.addEventListener('DOMContentLoaded',()=>{
+ ensureMobileNav();ensureAppearance();refreshAllV25();
+ setTimeout(refreshAllV25,250);setTimeout(refreshAllV25,900);
+});
+
+/* Wrap the app's refresh functions only once, keeping all original finance logic intact. */
+setTimeout(()=>{
+ wrapRender('renderMoney',()=>{});wrapRender('renderAll',refreshAllV25);wrapRender('renderCalendar',()=>renderCalendarTimeline());wrapRender('renderCreditCards',()=>{});wrapRender('renderNetWorth',()=>{});
+},50);
+
 })();
 </script>
 
