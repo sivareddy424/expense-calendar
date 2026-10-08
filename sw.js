@@ -1,4 +1,4 @@
-const CACHE_NAME="expense-calendar-v25-production-1";
+const CACHE_NAME="expense-calendar-v27-production-1";
 const APP_SHELL=["./","./index.html","./manifest.json","./icon.svg"];
 self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(APP_SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
