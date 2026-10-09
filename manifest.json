@@ -1,11 +1,10 @@
 {
   "name": "Expense Calendar",
   "short_name": "Expense Calendar",
-  "start_url": "./index.html",
+  "start_url": "./?source=pwa",
   "display": "standalone",
-  "background_color": "#f4f7fb",
-  "theme_color": "#2563eb",
-  "description": "Personal finance manager",
-  "orientation": "portrait-primary",
+  "background_color": "#f3f6fb",
+  "theme_color": "#2459d6",
+  "description": "Personal finance calendar and planner",
   "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
 }
